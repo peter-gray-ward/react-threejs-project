@@ -34,7 +34,19 @@ function Scene(props) {
 						}
 					}
 				})
+
 			}
+      if (e.key.toLowerCase() == 's') {
+        props.dispatch({ type: 'START_RUN_BACK', 
+          payload: {
+            model: {
+              ...props.state.model,
+              run: true,
+              speed: -1
+            }
+          }
+        })
+      }
 			setKeys((prevKeys) => ({ ...prevKeys, [e.key.toLowerCase()]: true }));
 		};
 
@@ -50,6 +62,17 @@ function Scene(props) {
 					}
 				})
 			}
+      if (e.key.toLowerCase() == 's') {
+        props.dispatch({ type: 'STOP_RUN_BACK', 
+          payload: {
+            model: {
+              ...props.state.model,
+              run: false,
+              speed: -1
+            }
+          }
+        })
+      }
 			setKeys((prevKeys) => ({ ...prevKeys, [e.key.toLowerCase()]: false }));
 		};
 
@@ -70,16 +93,6 @@ function Scene(props) {
 		if (keys.w) {
 			modelRef.current.position.z += Math.cos(modelRef.current.rotation.y) * speed;
 			camera.position.z -= Math.cos(camera.rotation.y) * speed;
-
-			props.dispatch({ type: 'START_RUN',
-				payload: {
-					model: {
-						...props.state.model,
-						run: true,
-						speed: 1
-					}
-				}
-			})
 		} else if (keys.s) {
 			modelRef.current.position.z -= Math.cos(modelRef.current.rotation.y) * speed;
 			camera.position.z += Math.cos(camera.rotation.y) * speed;

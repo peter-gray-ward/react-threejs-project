@@ -45,6 +45,26 @@ function sceneReducer(state, action) {
           animation: 3
         }
       }
+    case 'START_RUN_BACK':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          run: true,
+          speed: -1,
+          animation: 3
+        }
+      }
+    case 'STOP_RUN_BACK':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          run: false,
+          speed: -0.5,
+          animation: 3
+        }
+      }
     case 'ROTATE_LEFT':
       var YRotation = state.model.rotation.y - 0.005;
       if (YRotation < 0) {

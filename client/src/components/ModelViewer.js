@@ -30,7 +30,7 @@ const ModelViewer = forwardRef((props, ref) => {
 		if (!mixerRef.current || !model.animations.length) return
 
 		const action = mixerRef.current.clipAction(model.animations[3]);
-		
+		action.timeScale = props.state.model.speed * 0.85;
 
 		if (props.state.model.run) {
 			action.reset().play();
