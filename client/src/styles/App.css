@@ -1,3 +1,16 @@
+#test {
+  position: absolute;
+  width: 300px;
+  height: 200px;
+  left: calc(50% - 150px);
+  top: 10px;
+  background: white;
+  border: 1px solid;
+  outline: 2px solid white;
+  z-index: 1;
+}
+
+
 .App {
   text-align: center;
   width: 100%;
