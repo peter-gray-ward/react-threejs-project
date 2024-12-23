@@ -16,7 +16,7 @@ const props = {
       x: 0, y: 0, z: 0
     },
     position: {
-      x: 0, y: 1, z: 2
+      x: 0, y: -1.5, z: 2
     }
   },
   tasks: []
@@ -65,7 +65,7 @@ function sceneReducer(state, action) {
           animation: 3
         }
       }
-    case 'ROTATE_LEFT':
+    case 'START_ROTATE_LEFT':
       var YRotation = state.model.rotation.y - 0.005;
       if (YRotation < 0) {
         YRotation = Math.PI * 2;
@@ -74,14 +74,15 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
+          rotateLeft: true,
           rotation: {
             ...state.model.rotation,
             y: YRotation
           }
         }
       }
-    case 'ROTATE_RIGHT':
-      var YRotation = state.model.rotation.y + 0.005;
+    case 'START_ROTATE_RIGHT':
+      var YRotation = state.model.rotation.y - 0.005;
       if (YRotation > Math.PI * 2) {
         YRotation = 0;
       }
@@ -89,10 +90,27 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
+          rotateRight: true,
           rotation: {
             ...state.model.rotation,
             y: YRotation
           }
+        }
+      }
+    case 'STOP_ROTATE_LEFT':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateLeft: false,
+        }
+      }
+    case 'STOP_ROTATE_RIGHT':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateRight: false
         }
       }
   }

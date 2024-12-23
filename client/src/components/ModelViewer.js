@@ -2,7 +2,8 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import {
-  AnimationMixer
+  AnimationMixer,
+  Vector3
 } from 'three'
 
 
@@ -25,7 +26,6 @@ const ModelViewer = forwardRef((props, ref) => {
 		}
 	});
 
-	
 	useEffect(() => {
 		if (!mixerRef.current || !model.animations.length) return
 
@@ -43,6 +43,10 @@ const ModelViewer = forwardRef((props, ref) => {
 		};
 	}, [props.state.model.run, model])
 
+	useEffect(() => {
+
+	}, [props.state.model.rotateRight])
+
 	var StandingLounge = () => {
 		if (!mixerRef.current || !model.animations.length) return
 
@@ -59,12 +63,18 @@ const ModelViewer = forwardRef((props, ref) => {
 		};
 	}
 	useEffect(StandingLounge, [props.state.model.run, model])
-	
 
+
+	var x = props.state.model.position.x
+	var y = props.state.model.position.y
+	var z = props.state.model.position.z
+
+	props.camera.position.set(x, y + 2, z - 5)
+	props.camera.lookAt(new Vector3(x, y, z))
+	
 	return <primitive object={model.scene}
 					  ref={ref}
-					  position={props.position}
-					  rotation={[0, Math.PI, 0]}
+					  position={[x, y, z]}
 					  scale={1} />;
 });
 

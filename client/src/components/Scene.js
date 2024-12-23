@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import ModelViewer from './ModelViewer';
 import Planet from './Planet';
+import { Vector3 } from 'three'
 
 function Scene(props) {
 	
@@ -47,6 +48,12 @@ function Scene(props) {
           }
         })
       }
+      if (e.key.toLowerCase() == 'arrowleft') {
+        props.dispatch({ type: 'START_ROTATE_LEFT' })
+      }
+      if (e.key.toLowerCase() == 'arrowright') {
+        props.dispatch({ type: 'START_ROTATE_RIGHT' })
+      }
 			setKeys((prevKeys) => ({ ...prevKeys, [e.key.toLowerCase()]: true }));
 		};
 
@@ -73,6 +80,12 @@ function Scene(props) {
           }
         })
       }
+      if (e.key.toLowerCase() == 'arrowleft') {
+        props.dispatch({ type: 'STOP_ROTATE_LEFT' })
+      }
+      if (e.key.toLowerCase() == 'arrowright') {
+        props.dispatch({ type: 'STOP_ROTATE_RIGHT' })
+      }
 			setKeys((prevKeys) => ({ ...prevKeys, [e.key.toLowerCase()]: false }));
 		};
 
@@ -90,30 +103,51 @@ function Scene(props) {
 	var controlModel = () => {
 		if (!modelRef.current) return;
 
-		if (keys.w) {
-			modelRef.current.position.z += Math.cos(modelRef.current.rotation.y) * speed;
-			camera.position.z -= Math.cos(camera.rotation.y) * speed;
-		} else if (keys.s) {
-			modelRef.current.position.z -= Math.cos(modelRef.current.rotation.y) * speed;
-			camera.position.z += Math.cos(camera.rotation.y) * speed;
-		}
+		if (keys.a || keys.w || keys.d || keys.s || keys.arrowleft || keys.arrowright) {
+      const forwardDirection = modelRef.current.getWorldDirection(new Vector3())
+      const rightDirection = new Vector3().crossVectors(
+        forwardDirection,
+        new Vector3(0, 1, 0)
+      ).normalize();
+      const movement = new Vector3();
+      if (keys.a) {
+        movement.add(rightDirection.multiplyScalar(-0.03));
+      }
+      if (keys.w) {
+        movement.add(forwardDirection.multiplyScalar(0.07));
+      }
+      if (keys.d) {
+        movement.add(rightDirection.multiplyScalar(0.03));
+      }
+      if (keys.s) {
+        movement.add(forwardDirection.multiplyScalar(-0.07));
+      }
+      modelRef.current.position.add(movement);
 
-		if (keys.a) {
-			modelRef.current.position.x += Math.cos(modelRef.current.rotation.y) * speed;
-			camera.position.x -= Math.cos(camera.rotation.y) * speed;
-		}
-		if (keys.d) {
-			modelRef.current.position.x -= Math.cos(modelRef.current.rotation.y) * speed;
-			camera.position.x += Math.cos(camera.rotation.y) * speed;
-		
-		}
+      if (keys.arrowleft) {
+        modelRef.current.rotation.y += 0.05;
+      }
+      if (keys.arrowright) {
+        modelRef.current.rotation.y += -0.05;
+      }
+    }
+
+    var cameraOffset = new Vector3(0, 2, -3);
+    var cameraPosition = new Vector3()
+      .copy(modelRef.current.position)
+      .add(cameraOffset.applyQuaternion(modelRef.current.quaternion))
+    camera.position.copy(cameraPosition);
+    var lookPosition = new Vector3()
+      .copy(modelRef.current.position)
+      .add(new Vector3(0, 2, 0))
+    camera.lookAt(lookPosition)
 	}
 
 	useFrame(controlModel);
 
 	
 
-	const model = <ModelViewer state={props.state} dispatch={props.dispatch} ref={modelRef} position={[0, -1.5, 2]}/>
+	const model = <ModelViewer camera={camera} state={props.state} dispatch={props.dispatch} ref={modelRef} />
 
 
 
