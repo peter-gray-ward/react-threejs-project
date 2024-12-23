@@ -42,6 +42,23 @@ const ModelViewer = forwardRef((props, ref) => {
 			action.stop();
 		};
 	}, [props.state.model.run, model])
+
+	var StandingLounge = () => {
+		if (!mixerRef.current || !model.animations.length) return
+
+		const action = mixerRef.current.clipAction(model.animations[1])
+
+		if (props.state.model.run == false) {
+			action.reset().play();
+		} else {
+			action.stop();
+		}
+
+		return () => {
+			action.stop();
+		};
+	}
+	useEffect(StandingLounge, [props.state.model.run, model])
 	
 
 	return <primitive object={model.scene}
