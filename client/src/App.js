@@ -9,7 +9,7 @@ import './styles/App.css';
 
 const props = {
   model: {
-    run: false,
+    walk: false,
     animation: 0,
     speed: 1,
     rotation: {
@@ -25,43 +25,56 @@ const props = {
 function sceneReducer(state, action) {
 
   switch (action.type) {
-    case 'START_RUN':
+    case 'START_WALK':
       return { 
         ...state,
         model: {
           ...state.model,
-          run: true,
-          speed: 1,
+          walk: true,
+          position: {
+            ...state.model.position,
+            speed: 0.03
+          },
           animation: 3
         }
       }
-    case 'STOP_RUN':
+    case 'STOP_WALK':
       return { 
         ...state,
         model: {
           ...state.model,
-          run: false,
+          walk: false,
           speed: 0.5,
-          animation: 3
+          animation: 3,
+          position: {
+            ...state.model.position,
+            speed: 0
+          },
         }
       }
-    case 'START_RUN_BACK':
+    case 'START_WALK_BACK':
       return { 
         ...state,
         model: {
           ...state.model,
-          run: true,
-          speed: -1,
-          animation: 3
+          walk: true,
+          animation: 3,
+          position: {
+            ...state.model.position,
+            speed: -0.03
+          }
         }
       }
-    case 'STOP_RUN_BACK':
+    case 'STOP_WALK_BACK':
       return { 
         ...state,
         model: {
           ...state.model,
-          run: false,
-          speed: -0.5,
+          walk: false,
+          position: {
+            ...state.model.position,
+            speed: -0.3
+          },
           animation: 3
         }
       }
@@ -111,6 +124,38 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           rotateRight: false
+        }
+      }
+    case 'START_ROTATE_UP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateUp: true
+        }
+      }
+    case 'START_ROTATE_DOWN':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateDown: true
+        }
+      }
+    case 'STOP_ROTATE_UP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateUp: true
+        }
+      }
+    case 'STOP_ROTATE_DOWN':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateDown: true
         }
       }
   }

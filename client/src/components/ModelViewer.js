@@ -29,10 +29,10 @@ const ModelViewer = forwardRef((props, ref) => {
 	useEffect(() => {
 		if (!mixerRef.current || !model.animations.length) return
 
-		const action = mixerRef.current.clipAction(model.animations[3]);
-		action.timeScale = props.state.model.speed * 0.85;
+		const action = mixerRef.current.clipAction(model.animations[6]);
+		action.timeScale = props.state.model.speed * 1.3
 
-		if (props.state.model.run) {
+		if (props.state.model.walk) {
 			action.reset().play();
 		} else {
 			action.stop();
@@ -41,7 +41,28 @@ const ModelViewer = forwardRef((props, ref) => {
 		return () => {
 			action.stop();
 		};
-	}, [props.state.model.run, model])
+	}, [props.state.model.walk, model])
+
+	useEffect(() => {
+
+	}, [props.state.model.rotateRight])
+
+	useEffect(() => {
+		if (!mixerRef.current || !model.animations.length) return
+
+		const action = mixerRef.current.clipAction(model.animations[6]);
+		action.timeScale = props.state.model.speed * 1.3
+
+		if (props.state.model.walk) {
+			action.reset().play();
+		} else {
+			action.stop();
+		}
+
+		return () => {
+			action.stop();
+		};
+	}, [props.state.model.walk, model])
 
 	useEffect(() => {
 
@@ -52,7 +73,7 @@ const ModelViewer = forwardRef((props, ref) => {
 
 		const action = mixerRef.current.clipAction(model.animations[1])
 
-		if (props.state.model.run == false) {
+		if (props.state.model.walk == false) {
 			action.reset().play();
 		} else {
 			action.stop();
@@ -62,7 +83,7 @@ const ModelViewer = forwardRef((props, ref) => {
 			action.stop();
 		};
 	}
-	useEffect(StandingLounge, [props.state.model.run, model])
+	useEffect(StandingLounge, [props.state.model.walk, model])
 
 
 	var x = props.state.model.position.x

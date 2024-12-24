@@ -26,11 +26,11 @@ function Scene(props) {
 	var addEvents = () => {
 		const handleKeyDown = (e) => {
 			if (e.key.toLowerCase() == 'w') {
-				props.dispatch({ type: 'START_RUN', 
+				props.dispatch({ type: 'START_WALK', 
 					payload: {
 						model: {
 							...props.state.model,
-							run: true,
+							walk: true,
 							speed: 1
 						}
 					}
@@ -38,11 +38,11 @@ function Scene(props) {
 
 			}
       if (e.key.toLowerCase() == 's') {
-        props.dispatch({ type: 'START_RUN_BACK', 
+        props.dispatch({ type: 'START_WALK_BACK', 
           payload: {
             model: {
               ...props.state.model,
-              run: true,
+              walk: true,
               speed: -1
             }
           }
@@ -54,27 +54,33 @@ function Scene(props) {
       if (e.key.toLowerCase() == 'arrowright') {
         props.dispatch({ type: 'START_ROTATE_RIGHT' })
       }
+      if (e.key.toLowerCase() == 'arrowup') {
+        props.dispatch({ type: 'START_ROTATE_UP' })
+      }
+      if (e.key.toLowerCase() == 'arrowdown') {
+        props.dispatch({ type: 'START_ROTATE_DOWN' })
+      }
 			setKeys((prevKeys) => ({ ...prevKeys, [e.key.toLowerCase()]: true }));
 		};
 
 		const handleKeyUp = (e) => {
 			if (e.key.toLowerCase() == 'w') {
-				props.dispatch({ type: 'STOP_RUN', 
+				props.dispatch({ type: 'STOP_WALK', 
 					payload: {
 						model: {
 							...props.state.model,
-							run: false,
+							walk: false,
 							speed: 0.5
 						}
 					}
 				})
 			}
       if (e.key.toLowerCase() == 's') {
-        props.dispatch({ type: 'STOP_RUN_BACK', 
+        props.dispatch({ type: 'STOP_WALK_BACK', 
           payload: {
             model: {
               ...props.state.model,
-              run: false,
+              walk: false,
               speed: -1
             }
           }
@@ -114,13 +120,13 @@ function Scene(props) {
         movement.add(rightDirection.multiplyScalar(-0.03));
       }
       if (keys.w) {
-        movement.add(forwardDirection.multiplyScalar(0.07));
+        movement.add(forwardDirection.multiplyScalar(props.state.model.position.speed));
       }
       if (keys.d) {
         movement.add(rightDirection.multiplyScalar(0.03));
       }
       if (keys.s) {
-        movement.add(forwardDirection.multiplyScalar(-0.07));
+        movement.add(forwardDirection.multiplyScalar(props.state.model.position.speed));
       }
       modelRef.current.position.add(movement);
 
