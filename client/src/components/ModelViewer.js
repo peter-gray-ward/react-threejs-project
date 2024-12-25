@@ -1,102 +1,158 @@
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { useLoader, useFrame } from '@react-three/fiber';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import {
   AnimationMixer,
-  Vector3
+  Vector3,
+  Box3,
+  LoopRepeat,
+  Quaternion
 } from 'three'
 
 
-const ModelViewer = forwardRef((props, ref) => {
-	console.log("inside the model viewer")
 
-	const model = useLoader(GLTFLoader, '/Xbot.glb');
-	const mixerRef = useRef(null)
+function ModelViewer(props) {
+	let mixerRef = useRef(null);
 
-	useEffect(() => {
-		if (model && model.scene) {
-			const modelAnimationMixer = new AnimationMixer(model.scene);
-			mixerRef.current = modelAnimationMixer
-		}
-	}, [model])
+	const modelAnimationMixer = new AnimationMixer(props.state.model.scene);
+	mixerRef.current = modelAnimationMixer;
 
-	useFrame((state, delta) => {
-		if (mixerRef.current) {
-			mixerRef.current.update(delta);
-		}
-	});
-
-	useEffect(() => {
-		if (!mixerRef.current || !model.animations.length) return
-
-		const action = mixerRef.current.clipAction(model.animations[6]);
-		action.timeScale = props.state.model.speed * 1.3
-
-		if (props.state.model.walk) {
+	var walk = () => {
+		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
+		const action = mixerRef.current.clipAction(props.state.model.animations[6]);
+		if (props.state.model.walk && !props.state.model.walking) {
+			console.log("playing walking...")
 			action.reset().play();
 		} else {
 			action.stop();
 		}
-
 		return () => {
 			action.stop();
 		};
-	}, [props.state.model.walk, model])
+	}
 
-	useEffect(() => {
-
-	}, [props.state.model.rotateRight])
-
-	useEffect(() => {
-		if (!mixerRef.current || !model.animations.length) return
-
-		const action = mixerRef.current.clipAction(model.animations[6]);
-		action.timeScale = props.state.model.speed * 1.3
-
-		if (props.state.model.walk) {
+	var strafe = () => {
+		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
+		const action = mixerRef.current.clipAction(props.state.model.animations[6]);
+		if (props.state.model.strafe && !props.state.model.strafeing) {
+			console.log("playing strafeing...")
 			action.reset().play();
 		} else {
 			action.stop();
 		}
-
 		return () => {
 			action.stop();
 		};
-	}, [props.state.model.walk, model])
-
-	useEffect(() => {
-
-	}, [props.state.model.rotateRight])
-
+	}
+	
 	var StandingLounge = () => {
-		if (!mixerRef.current || !model.animations.length) return
-
-		const action = mixerRef.current.clipAction(model.animations[1])
-
+		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
+		const action = mixerRef.current.clipAction(props.state.model.animations[1])
 		if (props.state.model.walk == false) {
 			action.reset().play();
 		} else {
 			action.stop();
 		}
-
 		return () => {
 			action.stop();
 		};
 	}
-	useEffect(StandingLounge, [props.state.model.walk, model])
+
+	var jump = () => {
+		if (!mixerRef.current || !props.state.model.animations.length) return
+		const action = mixerRef.current.clipAction(props.state.model.animations[5]);
+		action.timeScale = props.state.model.speed * .05
+		if (props.state.model.jump) {
+			action.reset().play();
+		} else {
+			action.stop();
+		}		
+		return () => {
+			action.stop();
+		};
+	}
+
+	var rotate = () => {
+
+	}
+
+	useEffect(walk, [props.state.model.walk])
+	useEffect(StandingLounge, [props.state.model.walk])
+	useEffect(strafe, [props.state.model.strafe])
+	useEffect(jump, [props.state.model.jump])
+
+	useFrame((state, delta) => {
+		if (mixerRef && mixerRef.current) {
+			mixerRef.current.update(delta);
+		}
+
+		if (!props.state.model) return;
+
+    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3())
+		const backwardDirection = forwardDirection.clone().negate();
+		const { cameraRadius, cameraTheta } = props.state;
+		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
+
+		cameraOffset.y += 2.5;
+
+		const cameraPosition = new Vector3()
+		  .copy(props.state.model.scene.position)
+		  .add(cameraOffset);
+
+		props.camera.position.copy(cameraPosition);
+
+		const lookPosition = new Vector3()
+		  .copy(props.state.model.scene.position)
+		  .add(new Vector3(0, 2, 0));
+
+		props.camera.lookAt(lookPosition);
+
+		function modelHittingTheFloor() {
+			if (props.state.model) {
+				props.state.model.jumpFloor = true
+				props.state.model.jump = false
+			}
+		}
+
+		if (props.state.model.walk) {
+		    // Incrementally update position by moving forward
+		    forwardDirection.multiplyScalar(props.state.model.speed.walk);
+		    props.state.model.scene.position.add(forwardDirection);
+		}
 
 
-	var x = props.state.model.position.x
-	var y = props.state.model.position.y
-	var z = props.state.model.position.z
+		if (Number.isNaN(props.state.model.scene.position.x)) debugger
 
-	props.camera.position.set(x, y + 2, z - 5)
-	props.camera.lookAt(new Vector3(x, y, z))
-	
-	return <primitive object={model.scene}
-					  ref={ref}
-					  position={[x, y, z]}
-					  scale={1} />;
-});
+		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+		    const rotationStep = 0.01; // Rotation step in radians
+
+		    if (props.state.model.rotateLeft) {
+		        // Increment Y rotation (yaw) for left rotation
+		        props.state.model.scene.rotation.y += rotationStep;
+		    }
+		    if (props.state.model.rotateRight) {
+		        // Decrement Y rotation (yaw) for right rotation
+		        props.state.model.scene.rotation.y -= rotationStep;
+		    }
+		}
+
+
+		if (Number.isNaN(props.state.model.scene.position.x)) debugger
+
+		if (props.state.model.strafe) {
+			const rightDirection = new Vector3();
+    	rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
+			rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
+		  props.state.model.scene.position.add(rightDirection);
+		  if (Number.isNaN(props.state.model.scene.position.x)) debugger
+		}
+
+		if (Number.isNaN(props.state.model.scene.position.x)) debugger
+
+	});
+
+	props.dispatch({ type: 'MODEL_CHANGE', payload: props.state.model })
+
+	return <primitive object={props.state.model.scene} scale={1} />;
+}
 
 export default ModelViewer;

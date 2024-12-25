@@ -4,38 +4,90 @@ import React, {
   useReducer,
   useRef
 } from 'react';
+import {
+  Box3,
+  Vector3
+} from 'three';
+import { useLoader } from '@react-three/fiber';
 import CanvasContainer from './components/CanvasContainer';
 import './styles/App.css';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
+let __dispatch__ = '';
+
+const SPEED = {
+  GRAVITY: -0.007,
+  WALK: 0.05,
+  STRAFE: 0.035,
+  CAMERA: {
+    SIN: 0.1
+  },
+  JUMP: 0.09
+}
+
+const MASS = {
+  syl: {
+
+  },
+  planet: {
+    radius: 3000
+  }
+}
+
+const cameraRadius = 2.5
 
 const props = {
+  keys: { 
+    w: false,
+    s: false,
+    a: false,
+    d: false 
+  },
+  cameraPhi: Math.PI * 2,
+  cameraRadius,
   model: {
     walk: false,
+    walking: false,
+    strafe: false,
+    strafing: false,
+    jump: false,
     animation: 0,
-    speed: 1,
-    rotation: {
-      x: 0, y: 0, z: 0
-    },
-    position: {
-      x: 0, y: -1.5, z: 2
-    }
+    speed: SPEED,
+    weight:  0.5,
   },
-  tasks: []
+  tasks: [],
+  planet: {
+    position: [
+      0, 
+      -MASS.planet.radius, 
+      0
+    ]
+  }
 };
 
 function sceneReducer(state, action) {
-
+  __dispatch__ = action.type;
   switch (action.type) {
+    case 'MODEL_LOADED':
+      return {
+        ...state,
+        model: {
+          loaded: true,
+          ...action.model,
+          ...state.model
+        }
+      }
     case 'START_WALK':
       return { 
         ...state,
         model: {
           ...state.model,
           walk: true,
-          position: {
-            ...state.model.position,
-            speed: 0.03
-          },
-          animation: 3
+          walking: false,
+          speed: {
+            ...state.model.speed,
+            walk: SPEED.WALK
+          }
         }
       }
     case 'STOP_WALK':
@@ -44,12 +96,24 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: false,
-          speed: 0.5,
-          animation: 3,
-          position: {
-            ...state.model.position,
-            speed: 0
-          },
+          walking: false,
+          speed: {
+            ...state.model.speed,
+            walk: 0
+          }
+        }
+      }
+    case 'WALK':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          walk: true,
+          walking: true,
+          speed: {
+            ...state.model.speed,
+            walk: SPEED.WALK
+          }
         }
       }
     case 'START_WALK_BACK':
@@ -58,10 +122,9 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: true,
-          animation: 3,
-          position: {
-            ...state.model.position,
-            speed: -0.03
+          speed: {
+            ...state.model.speed,
+            walk: -SPEED.WALK
           }
         }
       }
@@ -71,43 +134,88 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: false,
-          position: {
-            ...state.model.position,
-            speed: -0.3
-          },
-          animation: 3
+          speed: {
+            ...state.model.speed,
+            walk: 0
+          }
+        }
+      }
+    //
+    case 'START_STRAFE_RIGHT':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          strafe: 1,
+          speed: {
+            ...state.model.speed,
+            strafe: SPEED.STRAFE
+          }
+        }
+      }
+    case 'STOP_STRAFE_RIGHT':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          strafe: 0,
+          speed: {
+            ...state.model.speed,
+            strafe: 0
+          }
+        }
+      }
+    case 'STRAFE':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          strafing: true,
+          speed: {
+            ...state.model.speed,
+            strafe: SPEED.STRAFE
+          }
+        }
+      }
+    case 'START_STRAFE_LEFT':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          strafe: -1,
+          speed: {
+            ...state.model.speed,
+            strafe: SPEED.STRAFE
+          }
+        }
+      }
+    case 'STOP_STRAFE_LEFT':
+      return { 
+        ...state,
+        model: {
+          ...state.model,
+          strafe: false,
+          strafing: false,
+          speed: {
+            ...state.model.speed,
+            strafe: 0
+          }
         }
       }
     case 'START_ROTATE_LEFT':
-      var YRotation = state.model.rotation.y - 0.005;
-      if (YRotation < 0) {
-        YRotation = Math.PI * 2;
-      }
       return {
         ...state,
         model: {
           ...state.model,
-          rotateLeft: true,
-          rotation: {
-            ...state.model.rotation,
-            y: YRotation
-          }
+          rotateLeft: true
         }
       }
     case 'START_ROTATE_RIGHT':
-      var YRotation = state.model.rotation.y - 0.005;
-      if (YRotation > Math.PI * 2) {
-        YRotation = 0;
-      }
       return {
         ...state,
         model: {
           ...state.model,
-          rotateRight: true,
-          rotation: {
-            ...state.model.rotation,
-            y: YRotation
-          }
+          rotateRight: true
         }
       }
     case 'STOP_ROTATE_LEFT':
@@ -126,20 +234,20 @@ function sceneReducer(state, action) {
           rotateRight: false
         }
       }
-    case 'START_ROTATE_UP':
-      return {
-        ...state,
-        model: {
-          ...state.model,
-          rotateUp: true
-        }
-      }
     case 'START_ROTATE_DOWN':
       return {
         ...state,
         model: {
           ...state.model,
           rotateDown: true
+        }
+      }
+    case 'START_ROTATE_UP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotateUp: true
         }
       }
     case 'STOP_ROTATE_UP':
@@ -158,17 +266,192 @@ function sceneReducer(state, action) {
           rotateDown: true
         }
       }
+    case 'START_JUMP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          jump: true,
+          jump_velocity: SPEED.JUMP,
+          gravity: SPEED.GRAVITY,
+          weight: 0.5,
+          jumpFloor: false
+        }
+      }
+    case 'JUMP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          jump: true,
+          jump_velocity: state.model.jump_velocity + state.model.weight * state.model.gravity
+        }
+      }
+    case 'STOP_JUMP':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          jump: false,
+          jump_velocity: SPEED.JUMP
+        }
+      }
+    default:
+      return state;
   }
 }
+
+
+var done = {
+  'START_WALK': false,
+  'START_WALK_BACK': false
+}
+
 
 function App() {
 
   const [state, dispatch] = useReducer(sceneReducer, props);
+  const model = useLoader(GLTFLoader, '/Xbot.glb')
+  
+  var addEvents = () => {
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      if (key == 'w') {
+        if (!done.START_WALK) {
+          done.START_WALK = true;
+          dispatch({ type: 'START_WALK' });
+        }
+      }
+      if (key == 's') {
+        if (!done.START_WALK_BACK) {
+          done.START_WALK_BACK = true;
+          dispatch({ type: 'START_WALK_BACK' });
+        }
+      }
+      if (key == 'a') {
+        if (!done.START_STRAFE_LEFT) {
+          done.START_STRAFE_LEFT = true;
+          dispatch({ type: 'START_STRAFE_LEFT' });
+        }
+      }
+      if (key == 'd') {
+        if (!done.START_STRAFE_RIGHT) {
+          done.START_STRAFE_RIGHT = true;
+          dispatch({ type: 'START_STRAFE_RIGHT' });
+        }
+      }
+      if (key == 'arrowleft') {
+        dispatch({ type: 'START_ROTATE_LEFT' })
+      }
+      if (key == 'arrowright') {
+        dispatch({ type: 'START_ROTATE_RIGHT' })
+      }
+      if (key == 'arrowup') {
+        dispatch({ type: 'START_ROTATE_UP' })
+      }
+      if (key == 'arrowdown') {
+        dispatch({ type: 'START_ROTATE_DOWN' })
+      }
+      if (key.trim() == '') {
+        dispatch({ type: 'START_JUMP' })
+      }
+      if (key == 'enter') {
+        dispatch({ type: 'MODEL_LOADED', model })
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      const key = e.key.toLowerCase();
+
+      if (key == 'w') {
+        done.START_WALK = false;
+        dispatch({ type: 'STOP_WALK' })
+      }
+      if (key == 's') {
+        done.START_WALK_BACK = false;
+        dispatch({ type: 'STOP_WALK_BACK' })
+      }
+      if (key == 'a') {
+        done.START_STRAFE_LEFT = false;
+        dispatch({ type: 'STOP_STRAFE_LEFT' })
+      }
+      if (key == 'd') {
+        done.START_STRAFE_RIGHT = false;
+        dispatch({ type: 'STOP_STRAFE_RIGHT' })
+      }
+      if (key == 'arrowleft') {
+        dispatch({ type: 'STOP_ROTATE_LEFT' })
+      }
+      if (key == 'arrowright') {
+        dispatch({ type: 'STOP_ROTATE_RIGHT' })
+      }
+      if (key == 'arrowup') {
+        dispatch({ type: 'STOP_ROTATE_UP' })
+      }
+      if (key == 'arrowdown') {
+        dispatch({ type: 'STOP_ROTATE_DOWN' })
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }
+
+  useEffect(addEvents, []);
+
+  if (!state.model.scene) {
+    return <div className="App"></div>
+  }
 
   return (
     <div className="App">
+      <div id="stats">
+        <div>
+          <ul>
+            <li><div>Planet:</div>
+              <section>
+                <i>position: </i>
+                <span className="number">{new Number(state.planet.position[0]).toFixed(2)}</span>,
+                <span className="number">{new Number(state.planet.position[1]).toFixed(2)}</span>,
+                <span className="number">{new Number(state.planet.position[2]).toFixed(2)}</span>
+              </section>
+            </li>
+            <li><div>Model:</div>
+              <section>
+                <i>position: </i>
+                <span className="number">{new Number(state.model.scene.position.x).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.position.y).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.position.z).toFixed(2)}</span>
+              
+                <br/>
+                
+                <i>rotation: </i>
+                <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.rotation._z).toFixed(2)}</span>
+              </section>
+            </li>
+            <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
+          </ul>
+        </div>
+        <div>
+          <article>
+            <h3>{__dispatch__}</h3>
+          </article>
+          <article>
+            <ul>  
+              <li><i>strafing: </i>{state.model.strafe}</li>
+            </ul> 
+          </article>
+        </div>
+      </div>
       <CanvasContainer 
-        state={state} 
+        state={state}
         dispatch={dispatch} />
     </div>
   );
