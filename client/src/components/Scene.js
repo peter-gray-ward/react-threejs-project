@@ -5,9 +5,11 @@ import Planet from './Planet'
 import { Vector3 } from 'three'
 
 function Scene(props) {
-	const { camera } = useThree();
-	
+	const { camera, scene } = useThree();
 
+	useEffect(() => {
+		props.dispatch({ type: 'ADD_SCENE', scene })
+	}, [])
 
 	const manageInteractions = () => {
 	}
@@ -19,10 +21,14 @@ function Scene(props) {
   		props.state.planet
   	]);
 
+
+
+
 	return (
 		<>
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
+			{ props.state.model.dial }
 		</>
 	);
 }

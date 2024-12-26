@@ -92,6 +92,10 @@ ul li span.number {
     font-family: charter;
 }
 
+.number:not(.number:last-of-type) {
+    margin-right: 0.5rem;
+}
+
 ul li span.boolean {
     color: green;
     font-size: 0.5rem;

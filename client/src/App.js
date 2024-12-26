@@ -7,14 +7,25 @@ import React, {
 import {
   Box3,
   Vector3,
-  Sphere
+  Sphere,
+  Quaternion
 } from 'three';
-import { useLoader, useFrame } from '@react-three/fiber';
+import { 
+  useLoader, 
+  useFrame, 
+  useThree 
+} from '@react-three/fiber';
 import CanvasContainer from './components/CanvasContainer';
 import './styles/App.css';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { SPEED, MASS, cameraRadius, props } from './models/constants';
 import Planet from './components/Planet';
+import { 
+  coords, 
+  child, 
+  coordsToVector3,
+  coordsToQuaternion
+} from './util';
 
 let __dispatch__ = '';
 let hidden = ['ENGAGE_INTERACTIONS']
@@ -26,7 +37,6 @@ Array.prototype.contains = function(str) {
   }
   return false
 }
-
 function sceneReducer(state, action) {
   __dispatch__ = action.type;
   if (!hidden.contains(__dispatch__)) {
@@ -40,6 +50,8 @@ function sceneReducer(state, action) {
       return {
         ...state,
         model: {
+          dial: action.dial,
+          scene: action.scene,
           loaded: true,
           ...action.model,
           ...state.model
@@ -304,6 +316,11 @@ function sceneReducer(state, action) {
           distanceTo: action.distanceTo
         }
       }
+    case 'ADD_SCENE':
+      return {
+        ...state,
+        scene: action.scene
+      }
     default:
       return state;
   }
@@ -337,7 +354,17 @@ function App() {
   const model = useLoader(GLTFLoader, '/Xbot.glb');
 
   useEffect(() => {
-    dispatch({ type: 'MODEL_LOADED', model })
+    
+    const dial = <mesh name="dial" position={state.planet.position}>
+        <boxGeometry args={[
+          1,
+          state.planet.radius * 2.05,
+          1,
+          1
+        ]} />
+        <meshBasicMaterial transparent opacity={0.5} color="blue" />
+      </mesh>
+    dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 
 
@@ -440,6 +467,22 @@ function App() {
     return <div className="App"></div>
   }
 
+  const planetCenter = new Vector3(...state.planet.position);
+  const coordinates = coords(state.model.scene);
+
+  const dial = state.scene ? child(state.scene, "dial") : null;
+  var v = null;
+  var quaternion = null;
+
+  if (dial && state.model.scene) {
+    quaternion = coordsToQuaternion(coords(state.model.scene))
+    dial.quaternion.copy(quaternion);
+    state.model.scene.quaternion.copy(quaternion);
+
+
+    v = coordsToVector3(coords(state.model.scene))
+  }
+
   return (
     <div className="App">
       <div id="stats">
@@ -448,8 +491,8 @@ function App() {
             <li><div>Planet:</div>
               <section>
                 <i>position: </i>
-                <span className="number">{new Number(state.planet.position[0]).toFixed(2)}</span>,
-                <span className="number">{new Number(state.planet.position[1]).toFixed(2)}</span>,
+                <span className="number">{new Number(state.planet.position[0]).toFixed(2)},</span>
+                <span className="number">{new Number(state.planet.position[1]).toFixed(2)},</span>
                 <span className="number">{new Number(state.planet.position[2]).toFixed(2)}</span>
                 <br/>
                 <i>radius: <strong>{MASS.planet.radius}</strong></i>
@@ -458,23 +501,50 @@ function App() {
             <li><div>Model:</div>
               <section>
                 <i>position: </i>
-                <span className="number">{new Number(state.model.scene.position.x).toFixed(2)}</span>, 
-                <span className="number">{new Number(state.model.scene.position.y).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.position.x).toFixed(2)},</span> 
+                <span className="number">{new Number(state.model.scene.position.y).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.position.z).toFixed(2)}</span>
               
                 <br/>
+                { v ?
+                  <>
+                    <i>test position: </i>
+                    <span className="number">{new Number(v.x).toFixed(2)},</span> 
+                    <span className="number">{new Number(v.y).toFixed(2)},</span> 
+                    <span className="number">{new Number(v.z).toFixed(2)}</span>
+                    
+                  </> : null
+                }
+                
+                <br/>
                 
                 <i>rotation: </i>
-                <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)}</span>, 
-                <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)}</span>, 
+                <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)},</span> 
+                <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.rotation._z).toFixed(2)}</span>
               </section>
+            </li>
+            <li>dial: { dial ? <>
+                  <i>rotation: </i>
+                  <span className="number">{new Number(dial.rotation._x).toFixed(2)},</span> 
+                  <span className="number">{new Number(dial.rotation._y).toFixed(2)},</span> 
+                  <span className="number">{new Number(dial.rotation._z).toFixed(2)}</span>
+                </>
+                : null }
             </li>
             <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
             <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
             <li>
               gravity distance {state.planet.distanceTo}
             </li>
+            { (state.model.scene && state.planet.position) ?
+              <li>
+                <i>(radial distance, polar angle, azimuthal angle)</i><br/>
+                (<span className="number">{new Number(coordinates.radialDistance).toFixed(3)},</span>
+                  <span className="number">{new Number(coordinates.polarAngle).toFixed(3)},</span>
+                  <span className="number">{new Number(coordinates.azimuthalAngle).toFixed(3)}</span>)
+              </li> : null
+            }
             <li>
               <ol id="interactions">
                 {
@@ -488,11 +558,13 @@ function App() {
                 }
               </ol>
             </li>
+            
           </ul>
         </div>
       </div>
       <CanvasContainer 
         state={state}
+        quaternion={quaternion}
         dispatch={dispatch} />
     </div>
   );

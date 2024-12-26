@@ -5,8 +5,10 @@ import {
   Vector3,
   Box3,
   LoopRepeat,
-  Quaternion
+  Quaternion,
+  Sphere
 } from 'three'
+import { getUpAndBackwardVector } from '../util';
 
 function ModelViewer(props) {
 	let mixerRef = useRef(null);
@@ -87,7 +89,7 @@ function ModelViewer(props) {
     var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());
 		const backwardDirection = forwardDirection.clone().negate();
 		const { cameraRadius, cameraTheta } = props.state;
-		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
+		var cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
 
 
 		function modelHittingTheFloor() {
@@ -109,10 +111,6 @@ function ModelViewer(props) {
 		if (distanceToCenter !== sphereRadius) {
 		    const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
 		    model.scene.position.copy(correctedPosition);
-
-		  	// model.scene.lookAt(...planet.position);
-		  	// model.scene.quaternion.copy
-
 				props.camera.quaternion.copy(model.scene.quaternion);
 		    forwardDirection = model.scene.getWorldDirection(new Vector3());
 		}
@@ -120,7 +118,7 @@ function ModelViewer(props) {
 		directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
 
 		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-		    const rotationStep = 0.01; 
+		    const rotationStep = props.state.model.speed.rotate; 
 		    const radialUp = directionToCenter; 
 		    const rotationQuaternion = new Quaternion();
 		    if (props.state.model.rotateLeft) {
@@ -144,22 +142,41 @@ function ModelViewer(props) {
 		    props.state.model.scene.position.add(forwardDirection);
 		}
 
+		const modelDirection = props.state.model.scene.getWorldDirection(new Vector3());
+		const modelPosition = props.state.model.scene.position.clone();
 
 		const cameraPosition = new Vector3()
 		  .copy(props.state.model.scene.position)
 		  .add(cameraOffset);
 
-		props.camera.position.copy(cameraPosition);
-		const lookPosition = new Vector3()
-		  .copy(props.state.model.scene.position)
-		  .add(new Vector3(0, 0, 0));
+ 		if (props.quaternion) {
+			props.camera.quaternion.copy(props.quaternion)
+			props.camera.position.copy(props.state.model.scene.position.clone())
+			var direction = props.state.model.scene.getWorldDirection(new Vector3());
+			props.camera.position.add(new Vector3(0, 1, 1.75).applyQuaternion(props.quaternion));
+			props.camera.lookAt(props.state.model.scene.position)
+			props.camera.quaternion.copy(props.quaternion)
+		}
 
-		props.camera.lookAt(lookPosition);
-		props.camera.position.y += 1.5
+
+
+
 	});
 
 
-	return <primitive object={props.state.model.scene} />;
+	return (<>
+		<primitive object={props.state.model.scene} />
+		<mesh position={props.state.model.position} 
+		  rotation={[Math.PI / 2, 0, 0]}>
+			<sphereGeometry args={[
+				0.5,
+				300,
+				50
+			]} />
+			<meshBasicMaterial wireframe color="lawngreen" />
+	</mesh>
+		</>
+	)
 }
 
 export default ModelViewer;
