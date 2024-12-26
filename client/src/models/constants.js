@@ -23,7 +23,7 @@ export const MASS = {
   }
 }
 
-export const cameraRadius = 2.5
+export const cameraRadius = 7.5
 
 export const props = {
   keys: { 

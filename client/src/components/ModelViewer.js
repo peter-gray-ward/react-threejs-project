@@ -90,10 +90,6 @@ function ModelViewer(props) {
 		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
 
 
-		
-
-		
-
 		function modelHittingTheFloor() {
 			if (props.state.model) {
 				props.state.model.jumpFloor = true
@@ -126,28 +122,48 @@ function ModelViewer(props) {
     const sphereCenter = new Vector3(...planet.position);
     const sphereRadius = planet.radius;
 
-    const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
-    if (distanceToCenter !== sphereRadius) {
-        const directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
-        const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
-        model.scene.position.copy(correctedPosition);
-    }
-		
+   	const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
+   	var directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+		if (distanceToCenter !== sphereRadius) {
+		    // Step 1: Correct the position
+		    
+		    const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+		    model.scene.position.copy(correctedPosition);
 
-		if (Number.isNaN(props.state.model.scene.position.x)) debugger
+		  	model.scene.lookAt(...planet.position)
 
+		  	const quaternion = new Quaternion();
+				quaternion.setFromAxisAngle(new Vector3(-1, 0, 0), Math.PI / 2); // Rotate 90° around Y-axis
+				model.scene.quaternion.multiply(quaternion);
+		    // // Step 4: Ensure the forward direction aligns correctly
+		    forwardDirection = model.scene.getWorldDirection(new Vector3());
+		}
+
+		directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+
+		// Handle rotation (rotateLeft or rotateRight)
 		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
 		    const rotationStep = 0.01; // Rotation step in radians
 
+		    // Use the already computed radial up vector
+		    const radialUp = directionToCenter; // Radial "up" vector from the sphere center
+
+		    // Create a quaternion for rotation around the radial "up" vector
+		    const rotationQuaternion = new Quaternion();
 		    if (props.state.model.rotateLeft) {
-		        // Increment Y rotation (yaw) for left rotation
-		        props.state.model.scene.rotation.y += rotationStep;
+		        // Rotate counter-clockwise around the radial "up" vector
+		        rotationQuaternion.setFromAxisAngle(radialUp, rotationStep);
 		    }
 		    if (props.state.model.rotateRight) {
-		        // Decrement Y rotation (yaw) for right rotation
-		        props.state.model.scene.rotation.y -= rotationStep;
+		        // Rotate clockwise around the radial "up" vector
+		        rotationQuaternion.setFromAxisAngle(radialUp, -rotationStep);
 		    }
+
+		    // Apply the quaternion to the model's current rotation
+		    model.scene.quaternion.premultiply(rotationQuaternion);
 		}
+
+
 
 
 		if (Number.isNaN(props.state.model.scene.position.x)) debugger

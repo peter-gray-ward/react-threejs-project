@@ -444,13 +444,6 @@ function App() {
     <div className="App">
       <div id="stats">
         <div>
-          <article>
-            <ul>  
-              <li><i>strafing: </i>{state.model.strafe}</li>
-            </ul> 
-          </article>
-        </div>
-        <div>
           <ul>
             <li><div>Planet:</div>
               <section>
