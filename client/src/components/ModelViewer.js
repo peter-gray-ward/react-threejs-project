@@ -97,10 +97,53 @@ function ModelViewer(props) {
 			}
 		}
 
+	
+		const { model, planet } = props.state;
+		if (!model || !planet) return;
+
+    const sphereCenter = new Vector3(...planet.position);
+    const sphereRadius = planet.radius;
+
+   	const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
+   	var directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+		if (distanceToCenter !== sphereRadius) {
+		    const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+		    model.scene.position.copy(correctedPosition);
+
+		  	// model.scene.lookAt(...planet.position);
+		  	// model.scene.quaternion.copy
+
+				props.camera.quaternion.copy(model.scene.quaternion);
+		    forwardDirection = model.scene.getWorldDirection(new Vector3());
+		}
+
+		directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+
+		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+		    const rotationStep = 0.01; 
+		    const radialUp = directionToCenter; 
+		    const rotationQuaternion = new Quaternion();
+		    if (props.state.model.rotateLeft) {
+		        rotationQuaternion.setFromAxisAngle(radialUp, rotationStep);
+		    }
+		    if (props.state.model.rotateRight) {
+		        rotationQuaternion.setFromAxisAngle(radialUp, -rotationStep);
+		    }
+		    model.scene.quaternion.premultiply(rotationQuaternion);
+		}
+
+		if (props.state.model.strafe) {
+			const rightDirection = new Vector3();
+    	rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
+			rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
+		  props.state.model.scene.position.add(rightDirection);
+		}
+
 		if (props.state.model.walk) {
 		    forwardDirection.multiplyScalar(props.state.model.speed.walk);
 		    props.state.model.scene.position.add(forwardDirection);
 		}
+
 
 		const cameraPosition = new Vector3()
 		  .copy(props.state.model.scene.position)
@@ -113,71 +156,6 @@ function ModelViewer(props) {
 
 		props.camera.lookAt(lookPosition);
 		props.camera.position.y += 1.5
-
-
-	
-		const { model, planet } = props.state;
-		if (!model || !planet) return;
-
-    const sphereCenter = new Vector3(...planet.position);
-    const sphereRadius = planet.radius;
-
-   	const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
-   	var directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
-		if (distanceToCenter !== sphereRadius) {
-		    // Step 1: Correct the position
-		    
-		    const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
-		    model.scene.position.copy(correctedPosition);
-
-		  	model.scene.lookAt(...planet.position)
-
-		  	const quaternion = new Quaternion();
-				quaternion.setFromAxisAngle(new Vector3(-1, 0, 0), Math.PI / 2); // Rotate 90° around Y-axis
-				model.scene.quaternion.multiply(quaternion);
-		    // // Step 4: Ensure the forward direction aligns correctly
-		    forwardDirection = model.scene.getWorldDirection(new Vector3());
-		}
-
-		directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
-
-		// Handle rotation (rotateLeft or rotateRight)
-		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-		    const rotationStep = 0.01; // Rotation step in radians
-
-		    // Use the already computed radial up vector
-		    const radialUp = directionToCenter; // Radial "up" vector from the sphere center
-
-		    // Create a quaternion for rotation around the radial "up" vector
-		    const rotationQuaternion = new Quaternion();
-		    if (props.state.model.rotateLeft) {
-		        // Rotate counter-clockwise around the radial "up" vector
-		        rotationQuaternion.setFromAxisAngle(radialUp, rotationStep);
-		    }
-		    if (props.state.model.rotateRight) {
-		        // Rotate clockwise around the radial "up" vector
-		        rotationQuaternion.setFromAxisAngle(radialUp, -rotationStep);
-		    }
-
-		    // Apply the quaternion to the model's current rotation
-		    model.scene.quaternion.premultiply(rotationQuaternion);
-		}
-
-
-
-
-		if (Number.isNaN(props.state.model.scene.position.x)) debugger
-
-		if (props.state.model.strafe) {
-			const rightDirection = new Vector3();
-    	rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
-			rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
-		  props.state.model.scene.position.add(rightDirection);
-		  if (Number.isNaN(props.state.model.scene.position.x)) debugger
-		}
-
-		if (Number.isNaN(props.state.model.scene.position.x)) debugger
-
 	});
 
 

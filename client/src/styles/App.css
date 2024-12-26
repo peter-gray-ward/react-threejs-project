@@ -85,11 +85,11 @@ article ul li {
 }
 
 ul li span.number {
-    color: blue;
-    text-shadow: .3px .3px white;
-    font-size: 1rem;
+    color: aliceblue;
+    text-shadow: .3px .3px blue;
+    font-size: 0.7rem;
     font-weight: 700;
-    font-family: fantasy;
+    font-family: charter;
 }
 
 ul li span.boolean {

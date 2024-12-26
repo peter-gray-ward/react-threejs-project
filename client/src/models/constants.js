@@ -1,7 +1,7 @@
 export const SPEED = {
   GRAVITY: -0.007,
   WALK: 1,
-  STRAFE: 0.035,
+  STRAFE: 0.33,
   CAMERA: {
     SIN: .1
   },
@@ -23,7 +23,7 @@ export const MASS = {
   }
 }
 
-export const cameraRadius = 7.5
+export const cameraRadius = 3.5
 
 export const props = {
   keys: { 

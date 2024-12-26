@@ -471,6 +471,7 @@ function App() {
               </section>
             </li>
             <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
+            <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
             <li>
               gravity distance {state.planet.distanceTo}
             </li>
