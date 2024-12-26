@@ -12,58 +12,10 @@ import { useLoader } from '@react-three/fiber';
 import CanvasContainer from './components/CanvasContainer';
 import './styles/App.css';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { SPEED, MASS, cameraRadius, props } from './models/constants';
 
 let __dispatch__ = '';
 
-const SPEED = {
-  GRAVITY: -0.007,
-  WALK: 0.05,
-  STRAFE: 0.035,
-  CAMERA: {
-    SIN: 0.1
-  },
-  JUMP: 0.09
-}
-
-const MASS = {
-  syl: {
-
-  },
-  planet: {
-    radius: 3000
-  }
-}
-
-const cameraRadius = 2.5
-
-const props = {
-  keys: { 
-    w: false,
-    s: false,
-    a: false,
-    d: false 
-  },
-  cameraPhi: Math.PI * 2,
-  cameraRadius,
-  model: {
-    walk: false,
-    walking: false,
-    strafe: false,
-    strafing: false,
-    jump: false,
-    animation: 0,
-    speed: SPEED,
-    weight:  0.5,
-  },
-  tasks: [],
-  planet: {
-    position: [
-      0, 
-      -MASS.planet.radius, 
-      0
-    ]
-  }
-};
 
 function sceneReducer(state, action) {
   __dispatch__ = action.type;
@@ -140,7 +92,6 @@ function sceneReducer(state, action) {
           }
         }
       }
-    //
     case 'START_STRAFE_RIGHT':
       return { 
         ...state,
@@ -308,9 +259,24 @@ var done = {
 }
 
 
+function scaleModelToHeight(model, desiredHeight) {
+    const boundingBox = new Box3().setFromObject(model.scene);
+    const size = new Vector3();
+    boundingBox.getSize(size);
+
+    const height = size.y; // Current height of the model
+    const scaleFactor = desiredHeight / height; // Calculate scaling factor
+
+    model.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    const center = new Vector3();
+    boundingBox.getCenter(center);
+    model.scene.position.sub(center.setY(0)); 
+}
+
 function App() {
 
-  const [state, dispatch] = useReducer(sceneReducer, props);
+  const [ state, dispatch ] = useReducer(sceneReducer, props);
   const model = useLoader(GLTFLoader, '/Xbot.glb')
   
   var addEvents = () => {
@@ -403,6 +369,7 @@ function App() {
   }
 
   useEffect(addEvents, []);
+  useEffect(() => {}, [done])
 
   if (!state.model.scene) {
     return <div className="App"></div>
@@ -419,6 +386,8 @@ function App() {
                 <span className="number">{new Number(state.planet.position[0]).toFixed(2)}</span>,
                 <span className="number">{new Number(state.planet.position[1]).toFixed(2)}</span>,
                 <span className="number">{new Number(state.planet.position[2]).toFixed(2)}</span>
+                <br/>
+                <i>radius: <strong>{MASS.planet.radius}</strong></i>
               </section>
             </li>
             <li><div>Model:</div>

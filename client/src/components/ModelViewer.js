@@ -8,8 +8,6 @@ import {
   Quaternion
 } from 'three'
 
-
-
 function ModelViewer(props) {
 	let mixerRef = useRef(null);
 
@@ -92,7 +90,6 @@ function ModelViewer(props) {
 		const { cameraRadius, cameraTheta } = props.state;
 		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
 
-		cameraOffset.y += 2.5;
 
 		const cameraPosition = new Vector3()
 		  .copy(props.state.model.scene.position)
@@ -102,9 +99,10 @@ function ModelViewer(props) {
 
 		const lookPosition = new Vector3()
 		  .copy(props.state.model.scene.position)
-		  .add(new Vector3(0, 2, 0));
+		  .add(new Vector3(0, 0, 0));
 
 		props.camera.lookAt(lookPosition);
+		props.camera.position.y += 1.5
 
 		function modelHittingTheFloor() {
 			if (props.state.model) {
@@ -152,7 +150,8 @@ function ModelViewer(props) {
 
 	props.dispatch({ type: 'MODEL_CHANGE', payload: props.state.model })
 
-	return <primitive object={props.state.model.scene} scale={1} />;
+
+	return <primitive object={props.state.model.scene} />;
 }
 
 export default ModelViewer;

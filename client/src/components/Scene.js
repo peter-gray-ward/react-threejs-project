@@ -11,7 +11,7 @@ function Scene(props) {
 	return (
 		<>
 			<ModelViewer camera={camera} state={props.state} dispatch={props.dispatch} />
-			<Planet state={props.state} />
+			<Planet {...props} />
 		</>
 	);
 }
