@@ -10,9 +10,11 @@ import {
 
 function ModelViewer(props) {
 	let mixerRef = useRef(null);
-
 	const modelAnimationMixer = new AnimationMixer(props.state.model.scene);
-	mixerRef.current = modelAnimationMixer;
+
+	useEffect(() => {
+		mixerRef.current = modelAnimationMixer;
+	}, [])
 
 	var start_walk = () => {
 		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
@@ -88,18 +90,9 @@ function ModelViewer(props) {
 		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
 
 
-		const cameraPosition = new Vector3()
-		  .copy(props.state.model.scene.position)
-		  .add(cameraOffset);
+		
 
-		props.camera.position.copy(cameraPosition);
-
-		const lookPosition = new Vector3()
-		  .copy(props.state.model.scene.position)
-		  .add(new Vector3(0, 0, 0));
-
-		props.camera.lookAt(lookPosition);
-		props.camera.position.y += 1.5
+		
 
 		function modelHittingTheFloor() {
 			if (props.state.model) {
@@ -109,12 +102,37 @@ function ModelViewer(props) {
 		}
 
 		if (props.state.model.walk) {
-		    // Incrementally update position by moving forward
 		    forwardDirection.multiplyScalar(props.state.model.speed.walk);
 		    props.state.model.scene.position.add(forwardDirection);
-		    props.dispatch({ type: 'WALK' })
 		}
 
+		const cameraPosition = new Vector3()
+		  .copy(props.state.model.scene.position)
+		  .add(cameraOffset);
+
+		props.camera.position.copy(cameraPosition);
+		const lookPosition = new Vector3()
+		  .copy(props.state.model.scene.position)
+		  .add(new Vector3(0, 0, 0));
+
+		props.camera.lookAt(lookPosition);
+		props.camera.position.y += 1.5
+
+
+	
+		const { model, planet } = props.state;
+		if (!model || !planet) return;
+
+    const sphereCenter = new Vector3(...planet.position);
+    const sphereRadius = planet.radius;
+
+    const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
+    if (distanceToCenter !== sphereRadius) {
+        const directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+        const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+        model.scene.position.copy(correctedPosition);
+    }
+		
 
 		if (Number.isNaN(props.state.model.scene.position.x)) debugger
 

@@ -419,6 +419,9 @@ function App() {
       if (key == 'arrowdown') {
         dispatch({ type: 'STOP_ROTATE_DOWN' })
       }
+      if (key.trim() == '') {
+        dispatch({ type: 'STOP_JUMP' })
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
