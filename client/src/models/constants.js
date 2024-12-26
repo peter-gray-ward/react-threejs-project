@@ -32,10 +32,12 @@ export const props = {
     d: false 
   },
   scenes: {
-    after_weathertop: 'The hills now began to shut them in...Trees with old and twisted roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.'
+    after_weathertop: `The hills now began to shut them in...Trees with old and twisted 
+      roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.`
   },
   cameraPhi: Math.PI * 2,
   cameraRadius,
+  interaction: new Date().getTime(),
   model: {
     walk: false,
     walking: false,
@@ -53,6 +55,8 @@ export const props = {
       0, 
       -MASS.planet.radius, 
       0
-    ]
-  }
+    ],
+    distanceTo: undefined
+  },
+  interactions: new Set()
 };

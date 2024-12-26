@@ -14,8 +14,8 @@
   position: absolute;
   background: white;
   font-family: Charter;
-  width: 30vw;
-  height: 20vw;
+  width: 90vw;
+  height: 40vw;
   left: 0;
   top: 0;
   color: black;
@@ -39,6 +39,10 @@
   width: 50%;
 }
 
+#stats div article:last-of-type {
+  align-items: end;
+}
+
 #stats pre {
   text-align: left;
   padding: 0.15rem;
@@ -54,6 +58,12 @@
   margin-top: 0;
 }
 
+#interactions {
+  background: blue;
+  color: white;
+  font-family: Charter;
+}
+
 #stats section {
   padding-left: 1rem;
 }
@@ -64,7 +74,11 @@ ul {
 }
 
 ul, li {
-  text-align: left;
+  text-align: initial;
+}
+
+article ul li {
+  text-align: right;
 }
 
 ul li span.number {

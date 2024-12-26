@@ -14,11 +14,10 @@ function ModelViewer(props) {
 	const modelAnimationMixer = new AnimationMixer(props.state.model.scene);
 	mixerRef.current = modelAnimationMixer;
 
-	var walk = () => {
+	var start_walk = () => {
 		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
 		const action = mixerRef.current.clipAction(props.state.model.animations[6]);
 		if (props.state.model.walk && !props.state.model.walking) {
-			console.log("playing walking...")
 			action.reset().play();
 		} else {
 			action.stop();
@@ -28,11 +27,10 @@ function ModelViewer(props) {
 		};
 	}
 
-	var strafe = () => {
+	var start_strafe = () => {
 		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
 		const action = mixerRef.current.clipAction(props.state.model.animations[6]);
 		if (props.state.model.strafe && !props.state.model.strafeing) {
-			console.log("playing strafeing...")
 			action.reset().play();
 		} else {
 			action.stop();
@@ -42,7 +40,7 @@ function ModelViewer(props) {
 		};
 	}
 	
-	var StandingLounge = () => {
+	var start_standing_lounge = () => {
 		if (!mixerRef.current || !props.state.model || !props.state.model.animations.length) return
 		const action = mixerRef.current.clipAction(props.state.model.animations[1])
 		if (props.state.model.walk == false) {
@@ -55,7 +53,7 @@ function ModelViewer(props) {
 		};
 	}
 
-	var jump = () => {
+	var start_jump = () => {
 		if (!mixerRef.current || !props.state.model.animations.length) return
 		const action = mixerRef.current.clipAction(props.state.model.animations[5]);
 		action.timeScale = props.state.model.speed * .05
@@ -70,13 +68,12 @@ function ModelViewer(props) {
 	}
 
 	var rotate = () => {
-
 	}
 
-	useEffect(walk, [props.state.model.walk])
-	useEffect(StandingLounge, [props.state.model.walk])
-	useEffect(strafe, [props.state.model.strafe])
-	useEffect(jump, [props.state.model.jump])
+	useEffect(start_walk, [props.state.model.walk])
+	useEffect(start_standing_lounge, [props.state.model.walk])
+	useEffect(start_strafe, [props.state.model.strafe])
+	useEffect(start_jump, [props.state.model.jump])
 
 	useFrame((state, delta) => {
 		if (mixerRef && mixerRef.current) {
@@ -85,7 +82,7 @@ function ModelViewer(props) {
 
 		if (!props.state.model) return;
 
-    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3())
+    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());
 		const backwardDirection = forwardDirection.clone().negate();
 		const { cameraRadius, cameraTheta } = props.state;
 		const cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
@@ -115,6 +112,7 @@ function ModelViewer(props) {
 		    // Incrementally update position by moving forward
 		    forwardDirection.multiplyScalar(props.state.model.speed.walk);
 		    props.state.model.scene.position.add(forwardDirection);
+		    props.dispatch({ type: 'WALK' })
 		}
 
 
@@ -147,8 +145,6 @@ function ModelViewer(props) {
 		if (Number.isNaN(props.state.model.scene.position.x)) debugger
 
 	});
-
-	props.dispatch({ type: 'MODEL_CHANGE', payload: props.state.model })
 
 
 	return <primitive object={props.state.model.scene} />;

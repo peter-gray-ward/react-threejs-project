@@ -6,19 +6,35 @@ import React, {
 } from 'react';
 import {
   Box3,
-  Vector3
+  Vector3,
+  Sphere
 } from 'three';
-import { useLoader } from '@react-three/fiber';
+import { useLoader, useFrame } from '@react-three/fiber';
 import CanvasContainer from './components/CanvasContainer';
 import './styles/App.css';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { SPEED, MASS, cameraRadius, props } from './models/constants';
+import Planet from './components/Planet';
 
 let __dispatch__ = '';
-
+let hidden = ['ENGAGE_INTERACTIONS']
+Array.prototype.contains = function(str) {
+  for (var i = 0 ;i < this.length; i++) {
+    if (this[i] == str) {
+      return true
+    }
+  }
+  return false
+}
 
 function sceneReducer(state, action) {
   __dispatch__ = action.type;
+  if (!hidden.contains(__dispatch__)) {
+    state.interactions.add(JSON.stringify({
+      dispatch: __dispatch__,
+      date: new Date().getTime()
+    }));
+  }
   switch (action.type) {
     case 'MODEL_LOADED':
       return {
@@ -247,6 +263,47 @@ function sceneReducer(state, action) {
           jump_velocity: SPEED.JUMP
         }
       }
+    case 'START_PLANET':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          ...action.planet
+        }
+      }
+    case 'ADD_PLANET':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          planetElement: action.planetElement
+        }
+      }
+    case 'ENGAGE_INTERACTIONS':
+      return {
+        ...state,
+        interactions: new Set([...state.interactions].filter(interaction => {
+          interaction = JSON.parse(interaction);
+          var time = new Date().getTime();
+          if (time - interaction.date > 300) {
+            return false;
+          }
+          return JSON.stringify(interaction);
+        })),
+        interaction: new Date().getTime(),
+        planet: {
+          ...state.planet,
+          distanceTo: action.distanceTo
+        }
+      }
+    case 'ENGAGE_PLANET':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          distanceTo: action.distanceTo
+        }
+      }
     default:
       return state;
   }
@@ -277,8 +334,13 @@ function scaleModelToHeight(model, desiredHeight) {
 function App() {
 
   const [ state, dispatch ] = useReducer(sceneReducer, props);
-  const model = useLoader(GLTFLoader, '/Xbot.glb')
-  
+  const model = useLoader(GLTFLoader, '/Xbot.glb');
+
+  useEffect(() => {
+    dispatch({ type: 'MODEL_LOADED', model })
+  }, []);
+
+
   var addEvents = () => {
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
@@ -369,7 +431,7 @@ function App() {
   }
 
   useEffect(addEvents, []);
-  useEffect(() => {}, [done])
+  useEffect(() => {}, [done, state.interactions])
 
   if (!state.model.scene) {
     return <div className="App"></div>
@@ -378,6 +440,13 @@ function App() {
   return (
     <div className="App">
       <div id="stats">
+        <div>
+          <article>
+            <ul>  
+              <li><i>strafing: </i>{state.model.strafe}</li>
+            </ul> 
+          </article>
+        </div>
         <div>
           <ul>
             <li><div>Planet:</div>
@@ -406,17 +475,23 @@ function App() {
               </section>
             </li>
             <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
+            <li>
+              gravity distance {state.planet.distanceTo}
+            </li>
+            <li>
+              <ol id="interactions">
+                {
+                  Array.from(new Set(Array.from(state.interactions).map(interaction => {
+                    var i = JSON.parse(interaction);
+                    delete i.date;
+                    return JSON.stringify(i);
+                  }))).sort().map((interaction, i) => {
+                    return <li key={i}>{interaction}</li>
+                  })
+                }
+              </ol>
+            </li>
           </ul>
-        </div>
-        <div>
-          <article>
-            <h3>{__dispatch__}</h3>
-          </article>
-          <article>
-            <ul>  
-              <li><i>strafing: </i>{state.model.strafe}</li>
-            </ul> 
-          </article>
         </div>
       </div>
       <CanvasContainer 
