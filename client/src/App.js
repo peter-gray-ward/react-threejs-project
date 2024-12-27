@@ -8,7 +8,8 @@ import {
   Box3,
   Vector3,
   Sphere,
-  Quaternion
+  Quaternion,
+  Color
 } from 'three';
 import { 
   useLoader, 
@@ -321,6 +322,11 @@ function sceneReducer(state, action) {
         ...state,
         scene: action.scene
       }
+    case 'LOAD_STARS':
+      return {
+        ...state,
+        stars: action.stars
+      }
     default:
       return state;
   }
@@ -357,9 +363,9 @@ function App() {
     
     const dial = <mesh name="dial" position={state.planet.position}>
         <boxGeometry args={[
-          1,
+          .2,
           state.planet.radius * 2.05,
-          1,
+          .2,
           1
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />

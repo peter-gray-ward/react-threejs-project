@@ -50,7 +50,7 @@ export const getUpAndBackwardVector = (modelScene) => { // Step 1: Get the model
 	const upVector = new Vector3(0, 1, 0).applyQuaternion(modelQuaternion); // Step 3: Calculate the "backward" vector using the quaternion 
 	const forwardVector = new Vector3(0, 0, 1).applyQuaternion(modelQuaternion); 
 	forwardVector.add(modelPosition)
-	const backwardVector = forwardVector.negate(); // Step 4: Combine "up" and "backward" vectors 
+	const backwardVector = forwardVector; // Step 4: Combine "up" and "backward" vectors 
 	const upAndBackwardVector = upVector.add(backwardVector).normalize(); 
 	return { upVector, backwardVector, upAndBackwardVector }; 
 };
@@ -67,4 +67,16 @@ export const child = (scene, name) => {
 		}
 	}
 	return null;
+}
+
+
+export const pointOnSphere = (center, radius) => {
+	const theta = Math.acos(2 * Math.random() - 1); 
+	const phi = 2 * Math.PI * Math.random(); 
+	const x = radius * Math.sin(theta) * Math.cos(phi); 
+	const y = radius * Math.sin(theta) * Math.sin(phi); 
+	const z = radius * Math.cos(theta);
+	const vector = new Vector3(x, y, z);
+	vector.add(center);
+	return vector;
 }

@@ -158,9 +158,6 @@ function ModelViewer(props) {
 			props.camera.quaternion.copy(props.quaternion)
 		}
 
-
-
-
 	});
 
 
