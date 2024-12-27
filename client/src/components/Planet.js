@@ -10,8 +10,7 @@ import {
 var bi = new Date().getTime();
 
 function Planet(props) {
-	const planet = <mesh position={props.state.planet.position} 
-		  rotation={[Math.PI / 2, 0, 0]}>
+	const planet = <mesh position={props.state.planet.position}>
 		<sphereGeometry args={[
 			props.state.planet.radius,
 			300,

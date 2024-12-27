@@ -129,7 +129,7 @@ function sceneReducer(state, action) {
           strafe: 1,
           speed: {
             ...state.model.speed,
-            strafe: SPEED.STRAFE
+            strafe: state.model.scene.position.y >= 0 ? SPEED.STRAFE : -SPEED.STRAFE
           }
         }
       }
@@ -165,7 +165,7 @@ function sceneReducer(state, action) {
           strafe: -1,
           speed: {
             ...state.model.speed,
-            strafe: SPEED.STRAFE
+            strafe: state.model.scene.position.y < 0 ? SPEED.STRAFE : -SPEED.STRAFE
           }
         }
       }
@@ -370,6 +370,7 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
+    model.scene.position.set(0, 129, 0)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 
@@ -476,7 +477,7 @@ function App() {
   const planetCenter = new Vector3(...state.planet.position);
   const coordinates = coords(state.model.scene);
 
-  
+
 
   return (
     <div className="App">

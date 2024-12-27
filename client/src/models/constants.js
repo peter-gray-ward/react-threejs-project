@@ -1,12 +1,12 @@
 export const SPEED = {
   GRAVITY: -0.007,
-  WALK: .03,
+  WALK: 1,
   STRAFE: .3,
   CAMERA: {
     SIN: .1
   },
   JUMP: 0.09,
-  ROTATE: .1
+  ROTATE: .3
 }
 
 export const MASS = {
@@ -17,7 +17,7 @@ export const MASS = {
     radius: 129,
     position: [
       0,
-      -129,
+      0,
       0
     ]
   }
@@ -56,11 +56,7 @@ export const props = {
   tasks: [],
   planet: {
     radius: MASS.planet.radius,
-    position: [
-      0, 
-      -MASS.planet.radius, 
-      0
-    ],
+    position: MASS.planet.position,
     distanceTo: undefined
   },
   interactions: new Set()

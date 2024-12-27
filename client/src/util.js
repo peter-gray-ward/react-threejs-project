@@ -4,7 +4,7 @@ import {
 } from 'three';
 
 
-	const planetCenter = new Vector3(0, -129, 0);
+const planetCenter = new Vector3(0, 0, 0);
 
 export const coords = object => {
 	const objectPosition = object.position.clone().sub(planetCenter);

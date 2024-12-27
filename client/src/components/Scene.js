@@ -15,7 +15,8 @@ import {
 	BufferAttribute,
 	MeshBasicMaterial,
 	Float32BufferAttribute,
-	Group
+	Group,
+	DoubleSide
 } from 'three'
 import {
 	pointOnSphere
@@ -99,6 +100,10 @@ function Scene(props) {
 					}
 				</group>
 			}
+			<mesh position={[...props.state.planet.position]} rotation={[Math.PI / 2, 0, 0]}>
+				<planeGeometry args={[props.state.planet.radius * 2.2, props.state.planet.radius * 2.2, 50, 50]} />
+				<meshBasicMaterial transparent side={DoubleSide} opacity={0.5} color="red" />
+			</mesh>
 		</>
 	);
 }

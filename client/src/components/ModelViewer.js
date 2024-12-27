@@ -112,8 +112,9 @@ function ModelViewer(props) {
     if (props.state.model.strafe) {
         const rightDirection = new Vector3();
         rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
-        rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
-        props.state.model.scene.position.add(rightDirection);
+        rightDirection.multiplyScalar(props.state.model.speed.strafe);
+        console.log(props.state.model.speed.strafe)
+        props.state.model.scene.position.add(rightDirection.negate());
     }
 
     // Handle walking
@@ -122,6 +123,8 @@ function ModelViewer(props) {
         props.state.model.scene.position.add(forwardDirection);
         	  
     }
+
+
     const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
     props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
     props.camera.lookAt(props.state.model.scene.position);
@@ -129,8 +132,10 @@ function ModelViewer(props) {
     const dial = props.state.scene ? child(props.state.scene, "dial") : null;	
     if (dial && props.state.model.scene) {
     	forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
-	    var quaternion = coordsToQuaternion({ ...coords(props.state.model.scene),
-	    	forwardDirection, planetCenter: new Vector3(...props.state.planet.position) 
+	    var quaternion = coordsToQuaternion({ 
+	    	...coords(props.state.model.scene),
+	    	forwardDirection, 
+	    	planetCenter: new Vector3(...props.state.planet.position) 
 	   	});
 	    dial.quaternion.copy(quaternion);
 	    props.state.model.scene.quaternion.copy(quaternion);
@@ -161,7 +166,11 @@ function ModelViewer(props) {
 	return (<>
 		<primitive object={props.state.model.scene} />
 
-		<mesh position={[props.state.model.scene.position.x,props.state.model.scene.position.y,props.state.model.scene.position.z]}>
+		<mesh position={[
+			props.state.model.scene.position.x,
+			props.state.model.scene.position.y,
+			props.state.model.scene.position.z
+		]}>
 			<sphereGeometry args={[
 				0.5,
 				300,
