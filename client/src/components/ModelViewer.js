@@ -13,7 +13,8 @@ import { getUpAndBackwardVector,
 	coordsToQuaternion,
 	coords,
 	coordsToVector3,
-	child
+	child,
+	VisualizeQuaternion
 } from '../util';
 
 function ModelViewer(props) {
@@ -134,7 +135,7 @@ function ModelViewer(props) {
     	forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
 	    var quaternion = coordsToQuaternion({ 
 	    	...coords(props.state.model.scene),
-	    	forwardDirection, 
+	    	initialVector: forwardDirection,
 	    	planetCenter: new Vector3(...props.state.planet.position) 
 	   	});
 	    dial.quaternion.copy(quaternion);
@@ -159,14 +160,25 @@ function ModelViewer(props) {
       spin180(props.camera.quaternion)
 	  }
     
-});
+	});
+
+	const q = VisualizeQuaternion(props.state.model.scene.quaternion, 1, .3);
 
 
 
 	return (<>
 		<primitive object={props.state.model.scene} />
 
-		<mesh position={[
+		<group
+		    position={[
+		        props.state.model.scene.position.x,
+		        props.state.model.scene.position.y,
+		        props.state.model.scene.position.z
+		    ]}
+		>
+		     <primitive object={q.group} />
+		</group>
+		{/*<mesh position={[
 			props.state.model.scene.position.x,
 			props.state.model.scene.position.y,
 			props.state.model.scene.position.z
@@ -177,7 +189,7 @@ function ModelViewer(props) {
 				50
 			]} />
 			<meshBasicMaterial wireframe color="lawngreen" />
-		</mesh>
+		</mesh>*/}
 		</>
 	)
 }

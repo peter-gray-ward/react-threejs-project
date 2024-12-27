@@ -25,7 +25,8 @@ import {
   coords, 
   child, 
   coordsToVector3,
-  coordsToQuaternion
+  coordsToQuaternion,
+  VisualizeQuaternion
 } from './util';
 
 let __dispatch__ = '';
@@ -477,7 +478,7 @@ function App() {
   const planetCenter = new Vector3(...state.planet.position);
   const coordinates = coords(state.model.scene);
 
-
+  const q = VisualizeQuaternion(state.model.scene.quaternion, 1, .3);
 
   return (
     <div className="App">
@@ -507,6 +508,14 @@ function App() {
                 <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.rotation._z).toFixed(2)}</span>
+
+                <br />
+
+                <i>quaternion: </i>
+                <span className="number">{new Number(q.quaternion.w).toFixed(2)},</span> 
+                <span className="number">{new Number(q.quaternion.x).toFixed(2)},</span> 
+                <span className="number">{new Number(q.quaternion.y).toFixed(2)},</span> 
+                <span className="number">{new Number(q.quaternion.z).toFixed(2)}</span>
 
 
               </section>

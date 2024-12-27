@@ -50,8 +50,9 @@ export const props = {
       rotate: SPEED.ROTATE,
       walk: SPEED.WALK
     },
-    rotation: [0, 0, 0],
-    weight:  0.5
+    rotation: 0,
+    weight:  0.5,
+    rotationIncrement: 0.1
   },
   tasks: [],
   planet: {

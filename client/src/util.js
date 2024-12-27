@@ -1,6 +1,8 @@
 import {
 	Vector3,
-	Quaternion
+	Quaternion,
+	Group,
+	ArrowHelper
 } from 'three';
 
 
@@ -44,13 +46,13 @@ export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, or
 	return vector; 
 };
 
-export const coordsToQuaternion = ({ radialDistance, polarAngle, azimuthalAngle }) => { // Step 1: Convert spherical to Cartesian coordinates 
+export const coordsToQuaternion = ({ initialVector, radialDistance, polarAngle, azimuthalAngle }) => { // Step 1: Convert spherical to Cartesian coordinates 
 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
 	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
 	const z = radialDistance * Math.cos(polarAngle); // Create a Vector3 from the calculated coordinates 
 	const vector = new Vector3(x, y, z); // Step 2: Calculate the rotation angles and axis // Assuming that the orientation starts aligned with the x-axis 
 	const targetVector = vector.clone().normalize(); // Direction vector 
-	const initialVector = new Vector3(0, 1, 0); // Initial direction (aligned with x-axis) 
+	initialVector = new Vector3(0, 1, 0).normalize(); // Initial direction (aligned with x-axis) 
 	const rotationAxis = new Vector3().crossVectors(initialVector, targetVector).normalize(); 
 	const rotationAngle = Math.acos(initialVector.dot(targetVector)); // Step 3: Convert to a quaternion 
 	const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
@@ -109,6 +111,42 @@ export const spin180 = (quaternion, angle) => {
 	return quaternion;
 };
 
+/**
+ * Creates a visual representation of a quaternion.
+ *
+ * @param {Quaternion} quaternion - The quaternion to visualize.
+ * @param {number} size - The length of the arrows (default: 1).
+ * @param {number} arrowThickness - The thickness of the arrows (default: 0.1).
+ * @returns {Group} A Three.js Group containing the arrows for visualization.
+ */
+var i = 0;
+export function VisualizeQuaternion(quaternion, size = 1, arrowThickness = 0.1) {
+    const group = new Group();
+
+    // Base vectors representing the local axes
+    const axes = {
+        x: new Vector3(1, 0, 0), // Local X-axis
+        y: new Vector3(0, 1, 0), // Local Y-axis
+        z: new Vector3(0, 0, 1), // Local Z-axis
+    };
+
+    const transformedAxes = {
+        x: axes.x.clone().applyQuaternion(quaternion).normalize(),
+        y: axes.y.clone().applyQuaternion(quaternion).normalize(),
+        z: axes.z.clone().applyQuaternion(quaternion).normalize(),
+    };
+
+    const xArrow = new ArrowHelper(transformedAxes.x, new Vector3(0, 0, 0), size, 0xff0000, size * arrowThickness, size * arrowThickness); // Red
+    const yArrow = new ArrowHelper(transformedAxes.y, new Vector3(0, 0, 0), size, 0x00ff00, size * arrowThickness, size * arrowThickness); // Green
+    const zArrow = new ArrowHelper(transformedAxes.z, new Vector3(0, 0, 0), size, 0x0000ff, size * arrowThickness, size * arrowThickness); // Blue
+
+    // Add arrows to the group
+    group.add(xArrow);
+    group.add(yArrow);
+    group.add(zArrow);
+
+    return { quaternion, group }
+}
 
 
 
