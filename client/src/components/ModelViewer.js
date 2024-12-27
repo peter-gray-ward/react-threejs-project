@@ -138,24 +138,15 @@ function ModelViewer(props) {
 	    	initialVector: forwardDirection,
 	    	planetCenter: new Vector3(...props.state.planet.position) 
 	   	});
+	   	const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
+	   	if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+	   		var inc = props.state.model.rotateLeft ? 0.01 : -0.01;
+	   		props.state.model.rotationIncrement += inc;
+	   	}
+			const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
+			quaternion.premultiply(incrementalRotation)
 	    dial.quaternion.copy(quaternion);
 	    props.state.model.scene.quaternion.copy(quaternion);
-	    if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-        const rotationStep = props.state.model.speed.rotate;
-        const upVector = new Vector3(0, 1, 0); // Assuming global up-axis
-
-        const rotationQuaternion = new Quaternion();
-        if (props.state.model.rotateLeft) {
-            rotationQuaternion.setFromAxisAngle(upVector, rotationStep);
-        } else if (props.state.model.rotateRight) {
-            rotationQuaternion.setFromAxisAngle(upVector, -rotationStep);
-        }
-
-        // Apply rotation to the model's quaternion
-        props.state.model.scene.quaternion.multiply(rotationQuaternion);
-        dial.quaternion.multiply(rotationQuaternion)
-    	}
-
       props.camera.quaternion.copy(dial.quaternion);
       spin180(props.camera.quaternion)
 	  }
