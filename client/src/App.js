@@ -476,18 +476,7 @@ function App() {
   const planetCenter = new Vector3(...state.planet.position);
   const coordinates = coords(state.model.scene);
 
-  const dial = state.scene ? child(state.scene, "dial") : null;
-  var v = null;
-  var quaternion = null;
-
-  if (dial && state.model.scene) {
-    quaternion = coordsToQuaternion(coords(state.model.scene))
-    dial.quaternion.copy(quaternion);
-    state.model.scene.quaternion.copy(quaternion);
-
-
-    v = coordsToVector3(coords(state.model.scene))
-  }
+  
 
   return (
     <div className="App">
@@ -512,31 +501,14 @@ function App() {
                 <span className="number">{new Number(state.model.scene.position.z).toFixed(2)}</span>
               
                 <br/>
-                { v ?
-                  <>
-                    <i>test position: </i>
-                    <span className="number">{new Number(v.x).toFixed(2)},</span> 
-                    <span className="number">{new Number(v.y).toFixed(2)},</span> 
-                    <span className="number">{new Number(v.z).toFixed(2)}</span>
-                    
-                  </> : null
-                }
-                
-                <br/>
                 
                 <i>rotation: </i>
                 <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)},</span> 
                 <span className="number">{new Number(state.model.scene.rotation._z).toFixed(2)}</span>
+
+
               </section>
-            </li>
-            <li>dial: { dial ? <>
-                  <i>rotation: </i>
-                  <span className="number">{new Number(dial.rotation._x).toFixed(2)},</span> 
-                  <span className="number">{new Number(dial.rotation._y).toFixed(2)},</span> 
-                  <span className="number">{new Number(dial.rotation._z).toFixed(2)}</span>
-                </>
-                : null }
             </li>
             <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
             <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
@@ -570,7 +542,6 @@ function App() {
       </div>
       <CanvasContainer 
         state={state}
-        quaternion={quaternion}
         dispatch={dispatch} />
     </div>
   );

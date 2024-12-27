@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef } from 'react';
-import { useLoader, useFrame } from '@react-three/fiber';
+import { useLoader, useFrame, Canvas } from '@react-three/fiber';
 import {
   AnimationMixer,
   Vector3,
@@ -8,7 +8,13 @@ import {
   Quaternion,
   Sphere
 } from 'three'
-import { getUpAndBackwardVector } from '../util';
+import { getUpAndBackwardVector,
+	spin180,
+	coordsToQuaternion,
+	coords,
+	coordsToVector3,
+	child
+} from '../util';
 
 function ModelViewer(props) {
 	let mixerRef = useRef(null);
@@ -80,98 +86,89 @@ function ModelViewer(props) {
 	useEffect(start_jump, [props.state.model.jump])
 
 	useFrame((state, delta) => {
-		if (mixerRef && mixerRef.current) {
-			mixerRef.current.update(delta);
-		}
+    if (mixerRef && mixerRef.current) {
+        mixerRef.current.update(delta);
+    }
 
-		if (!props.state.model) return;
+    if (!props.state.model) return;
 
-    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());
-		const backwardDirection = forwardDirection.clone().negate();
-		const { cameraRadius, cameraTheta } = props.state;
-		var cameraOffset = backwardDirection.multiplyScalar(cameraRadius);
-
-
-		function modelHittingTheFloor() {
-			if (props.state.model) {
-				props.state.model.jumpFloor = true
-				props.state.model.jump = false
-			}
-		}
-
-	
-		const { model, planet } = props.state;
-		if (!model || !planet) return;
+    const { model, planet } = props.state;
+    if (!model || !planet) return;
 
     const sphereCenter = new Vector3(...planet.position);
     const sphereRadius = planet.radius;
 
-   	const distanceToCenter = model.scene.position.distanceTo(sphereCenter);
-   	var directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
-		if (distanceToCenter !== sphereRadius) {
-		    const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
-		    model.scene.position.copy(correctedPosition);
-				props.camera.quaternion.copy(model.scene.quaternion);
-		    forwardDirection = model.scene.getWorldDirection(new Vector3());
-		}
+    // Correct the position if it's not on the sphere
+    const distanceToCenter = props.state.model.scene.position.distanceTo(sphereCenter);
+    var directionToCenter = props.state.model.scene.position.clone().sub(sphereCenter).normalize();
 
-		directionToCenter = model.scene.position.clone().sub(sphereCenter).normalize();
+    if (distanceToCenter !== sphereRadius) {
+        const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+        props.state.model.scene.position.copy(correctedPosition);
+    }
 
-		if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-		    const rotationStep = props.state.model.speed.rotate; 
-		    const radialUp = directionToCenter; 
-		    const rotationQuaternion = new Quaternion();
-		    if (props.state.model.rotateLeft) {
-		        rotationQuaternion.setFromAxisAngle(radialUp, rotationStep);
-		    }
-		    if (props.state.model.rotateRight) {
-		        rotationQuaternion.setFromAxisAngle(radialUp, -rotationStep);
-		    }
-		    model.scene.quaternion.premultiply(rotationQuaternion);
-		}
+    // Handle strafing
+    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
+    if (props.state.model.strafe) {
+        const rightDirection = new Vector3();
+        rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
+        rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
+        props.state.model.scene.position.add(rightDirection);
+    }
 
-		if (props.state.model.strafe) {
-			const rightDirection = new Vector3();
-    	rightDirection.crossVectors(new Vector3(0, 1, 0), forwardDirection).normalize();
-			rightDirection.multiplyScalar(-1 * props.state.model.strafe * props.state.model.speed.strafe);
-		  props.state.model.scene.position.add(rightDirection);
-		}
+    // Handle walking
+    if (props.state.model.walk) {
+        forwardDirection.multiplyScalar(props.state.model.speed.walk);
+        props.state.model.scene.position.add(forwardDirection);
+        	  
+    }
+    const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
+    props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
+    props.camera.lookAt(props.state.model.scene.position);
 
-		if (props.state.model.walk) {
-		    forwardDirection.multiplyScalar(props.state.model.speed.walk);
-		    props.state.model.scene.position.add(forwardDirection);
-		}
+    const dial = props.state.scene ? child(props.state.scene, "dial") : null;	
+    if (dial && props.state.model.scene) {
+    	forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
+	    var quaternion = coordsToQuaternion({ ...coords(props.state.model.scene),
+	    	forwardDirection, planetCenter: new Vector3(...props.state.planet.position) 
+	   	});
+	    dial.quaternion.copy(quaternion);
+	    props.state.model.scene.quaternion.copy(quaternion);
+	    if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+        const rotationStep = props.state.model.speed.rotate;
+        const upVector = new Vector3(0, 1, 0); // Assuming global up-axis
 
-		const modelDirection = props.state.model.scene.getWorldDirection(new Vector3());
-		const modelPosition = props.state.model.scene.position.clone();
+        const rotationQuaternion = new Quaternion();
+        if (props.state.model.rotateLeft) {
+            rotationQuaternion.setFromAxisAngle(upVector, rotationStep);
+        } else if (props.state.model.rotateRight) {
+            rotationQuaternion.setFromAxisAngle(upVector, -rotationStep);
+        }
 
-		const cameraPosition = new Vector3()
-		  .copy(props.state.model.scene.position)
-		  .add(cameraOffset);
+        // Apply rotation to the model's quaternion
+        props.state.model.scene.quaternion.multiply(rotationQuaternion);
+        dial.quaternion.multiply(rotationQuaternion)
+    	}
 
- 		if (props.quaternion) {
-			props.camera.quaternion.copy(props.quaternion)
-			props.camera.position.copy(props.state.model.scene.position.clone())
-			var direction = props.state.model.scene.getWorldDirection(new Vector3());
-			props.camera.position.add(new Vector3(0, 1, 1.75).applyQuaternion(props.quaternion));
-			props.camera.lookAt(props.state.model.scene.position)
-			props.camera.quaternion.copy(props.quaternion)
-		}
+      props.camera.quaternion.copy(dial.quaternion);
+      spin180(props.camera.quaternion)
+	  }
+    
+});
 
-	});
 
 
 	return (<>
 		<primitive object={props.state.model.scene} />
-		<mesh position={props.state.model.position} 
-		  rotation={[Math.PI / 2, 0, 0]}>
+
+		<mesh position={[props.state.model.scene.position.x,props.state.model.scene.position.y,props.state.model.scene.position.z]}>
 			<sphereGeometry args={[
 				0.5,
 				300,
 				50
 			]} />
 			<meshBasicMaterial wireframe color="lawngreen" />
-	</mesh>
+		</mesh>
 		</>
 	)
 }

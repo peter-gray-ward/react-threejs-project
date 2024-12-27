@@ -3,7 +3,8 @@ import {
 	Quaternion
 } from 'three';
 
-const planetCenter = new Vector3(0, -129, 0);
+
+	const planetCenter = new Vector3(0, -129, 0);
 
 export const coords = object => {
 	const objectPosition = object.position.clone().sub(planetCenter);
@@ -22,14 +23,26 @@ export const coords = object => {
 	}
 }
 
-export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle }) => { 
+// export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle }) => { 
+// 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
+// 	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
+// 	const z = radialDistance * Math.cos(polarAngle); 
+// 	var vector = new Vector3(x, y, z);
+// 	vector.add(planetCenter);
+// 	return vector;
+// }
+export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, originalDirection, planetCenter }) => { // Step 1: Convert spherical to Cartesian coordinates 
 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
 	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
-	const z = radialDistance * Math.cos(polarAngle); 
-	var vector = new Vector3(x, y, z);
-	vector.add(planetCenter);
-	return vector;
-}
+	const z = radialDistance * Math.cos(polarAngle); var vector = new Vector3(x, y, z); vector.add(planetCenter); // Adjust for planet center // Step 2: Align with the original direction 
+	const targetVector = vector.clone().normalize(); 
+	const initialVector = new Vector3(0, 1, 0); // Assuming original "up" was y-axis 
+	const rotationAxis = new Vector3().crossVectors(initialVector, originalDirection).normalize(); 
+	const rotationAngle = Math.acos(initialVector.dot(originalDirection)); 
+	const rotationQuaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
+	vector.applyQuaternion(rotationQuaternion); 
+	return vector; 
+};
 
 export const coordsToQuaternion = ({ radialDistance, polarAngle, azimuthalAngle }) => { // Step 1: Convert spherical to Cartesian coordinates 
 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
@@ -80,3 +93,23 @@ export const pointOnSphere = (center, radius) => {
 	vector.add(center);
 	return vector;
 }
+
+export function randomInRange(from, to, startDistance = 0) {
+   const min = Math.min(from, to) + startDistance;
+   const max = Math.max(from, to) + startDistance;
+   const val = Math.random() * (max - min) + min;
+   return val;
+}
+
+export const spin180 = (quaternion, angle) => { 
+	const upAxis = new Vector3(0, 1, 0); // The y-axis 
+	const rotationAngle = angle || Math.PI; // Default to 180 degrees (π radians) 
+	const rotationQuaternion = new Quaternion().setFromAxisAngle(upAxis, rotationAngle); 
+	quaternion.multiply(rotationQuaternion);
+	return quaternion;
+};
+
+
+
+
+

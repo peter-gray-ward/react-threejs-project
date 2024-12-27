@@ -14,45 +14,64 @@ import {
 	Color,
 	BufferAttribute,
 	MeshBasicMaterial,
-	Float32BufferAttribute
+	Float32BufferAttribute,
+	Group
 } from 'three'
 import {
 	pointOnSphere
 } from '../util';
+
+var RECORD = {
+	star: {
+		categories: 11,
+		sizes: [
+			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
+		]
+	}
+}
 
 function Scene(props) {
 	const { camera, scene } = useThree();
 	camera.near = 0.1;
 	camera.far = Infinity
 
-	const starsMaterial = useMemo(() => {
-		return new PointsMaterial({ 
-			vertexColors: true,
-			size: .05 + Math.random() * ((Math.random() * 2 + 1.2) - .05)
-		});
-	}, []);
-	const starsGeometry = useMemo(() => {
-		props.dispatch({ type: 'ADD_SCENE', scene })
-
-		var starsGeometry = new BufferGeometry()
-		
-		var positions = []
-		var colors = []
-		var stars = [];
-		var startCount = 3333
-		var minRadius = props.state.planet.radius * 2;
-		var planetCenter = new Vector3(...props.state.planet.position);
-		for (var i = 0; i < startCount; i++) {
-			var v = pointOnSphere(planetCenter, minRadius);
-			positions.push(v.x, v.y, v.z);
-			var r = 1.7 + Math.random() * (1 - 1.87)
-			var g = 1.7 + Math.random() * (1 - 1.87)
-			var b = 1.7 + Math.random() * (1 - 1.87)
-			colors.push(r, g, b);
+	const starsMaterials = useMemo(() => {
+		var materials = []
+		for (var i = 0; i < RECORD.star.categories; i++) {
+			materials.push(new PointsMaterial({ 
+				vertexColors: true,
+				size: RECORD.star.sizes[i]
+			}));
 		}
-		starsGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-		starsGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-		return starsGeometry;
+		return materials;
+	}, []);
+	const starsGeometries = useMemo(() => {
+		var _starGeometries = []
+		for (var i = 0; i < RECORD.star.categories; i++) {
+			props.dispatch({ type: 'ADD_SCENE', scene })
+
+			var starsGeometry = new BufferGeometry()
+			
+			var positions = []
+			var colors = []
+			var stars = [];
+			var startCount = 100
+			var minRadius = props.state.planet.radius * 2;
+			var planetCenter = new Vector3(...props.state.planet.position);
+			for (var j = 0; j < startCount; j++) {
+				var v = pointOnSphere(planetCenter, minRadius);
+				positions.push(v.x, v.y, v.z);
+				var r = 1.7 + Math.random() * (1 - 1.87)
+				var g = 1.7 + Math.random() * (1 - 1.87)
+				var b = 1.7 + Math.random() * (1 - 1.87)
+				colors.push(r, g, b);
+			}
+			starsGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+			starsGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+			_starGeometries.push(starsGeometry);
+		}
+		return _starGeometries;
+		return ;
 	}, [scene]);
 
 	const manageInteractions = () => {
@@ -66,14 +85,20 @@ function Scene(props) {
   	]);
 
 
-
-
 	return (
 		<>
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
 			{ props.state.model.dial }
-			<points args={[starsGeometry, starsMaterial]} /> 
+			{
+				<group>
+					{
+						starsGeometries.map((starGeometry, i) => {
+							return <points args={[starGeometry, starsMaterials[i]]} />
+						})
+					}
+				</group>
+			}
 		</>
 	);
 }

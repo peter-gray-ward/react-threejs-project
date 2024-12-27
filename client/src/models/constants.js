@@ -1,12 +1,12 @@
 export const SPEED = {
   GRAVITY: -0.007,
-  WALK: 1,
-  STRAFE: 0.33,
+  WALK: .03,
+  STRAFE: .3,
   CAMERA: {
     SIN: .1
   },
   JUMP: 0.09,
-  ROTATE: 0.05
+  ROTATE: .1
 }
 
 export const MASS = {
@@ -50,6 +50,7 @@ export const props = {
       rotate: SPEED.ROTATE,
       walk: SPEED.WALK
     },
+    rotation: [0, 0, 0],
     weight:  0.5
   },
   tasks: [],
