@@ -108,6 +108,10 @@ function sceneReducer(state, action) {
     case 'START_WALK_BACK':
       return { 
         ...state,
+        animations: [
+          ...state.animations,
+          'walk'
+        ],
         model: {
           ...state.model,
           walk: true,
@@ -120,6 +124,9 @@ function sceneReducer(state, action) {
     case 'STOP_WALK_BACK':
       return { 
         ...state,
+        animations: state.animations.filter((animation)=>{
+          return animation !== 'walk';
+        }),
         model: {
           ...state.model,
           walk: false,
@@ -132,21 +139,28 @@ function sceneReducer(state, action) {
     case 'START_STRAFE_RIGHT':
       return { 
         ...state,
+        animations: [
+          ...state.animations,
+          'strafe'
+        ],
         model: {
           ...state.model,
-          strafe: 1,
+          strafe: true,
           speed: {
             ...state.model.speed,
-            strafe: state.model.scene.position.y >= 0 ? SPEED.STRAFE : -SPEED.STRAFE
+            strafe:SPEED.STRAFE
           }
         }
       }
     case 'STOP_STRAFE_RIGHT':
       return { 
         ...state,
+        animations: state.animations.filter((animation)=>{
+          return animation !== 'strafe';
+        }),
         model: {
           ...state.model,
-          strafe: 0,
+          strafe: false,
           speed: {
             ...state.model.speed,
             strafe: 0
@@ -168,18 +182,25 @@ function sceneReducer(state, action) {
     case 'START_STRAFE_LEFT':
       return { 
         ...state,
+        animations: [
+          ...state.animations,
+          'strafe'
+        ],
         model: {
           ...state.model,
-          strafe: -1,
+          strafe: true,
           speed: {
             ...state.model.speed,
-            strafe: state.model.scene.position.y < 0 ? SPEED.STRAFE : -SPEED.STRAFE
+            strafe: -SPEED.STRAFE
           }
         }
       }
     case 'STOP_STRAFE_LEFT':
       return { 
         ...state,
+        animations: state.animations.filter((animation)=>{
+          return animation !== 'strafe';
+        }),
         model: {
           ...state.model,
           strafe: false,
@@ -319,6 +340,14 @@ function sceneReducer(state, action) {
         ...state,
         stars: action.stars
       }
+    case 'SET_PLANET_VERTICES':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          vertices: action.vertices
+        }
+      };
     case 'ENGAGE_INTERACTIONS':
       return {
         ...state,
@@ -335,6 +364,13 @@ function sceneReducer(state, action) {
           ...state.planet,
           distanceTo: action.distanceTo
         }
+      }
+    case 'POP_ANIMATION':
+      return {
+        ...state,
+        animations: state.animations.map(animation => {
+          return animation !== action.animation
+        })
       }
     default:
       return state;
@@ -364,7 +400,7 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
-    model.scene.position.set(0, 129, 0)
+    model.scene.position.set(0, state.planet.radius, 0)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 
@@ -526,7 +562,7 @@ function App() {
                   <span className="number">{new Number(coordinates.azimuthalAngle).toFixed(3)}</span>)
               </li> : null
             }
-            <li>
+           {/* <li>
               <i>DISPATCHES</i>
               <ol id="interactions">
                 {
@@ -539,7 +575,7 @@ function App() {
                   })
                 }
               </ol>
-            </li>
+            </li>*/}
 
             <li>
               <i>animations</i>

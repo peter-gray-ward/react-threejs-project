@@ -10,15 +10,6 @@ import {
 var bi = new Date().getTime();
 
 function Planet(props) {
-	const planet = <mesh position={props.state.planet.position}>
-		<sphereGeometry args={[
-			props.state.planet.radius,
-			50,
-			150
-		]} />
-		<meshBasicMaterial wireframe color="white" />
-	</mesh>;
-
 	var i = new Date().getTime();
 	useEffect(() => {
 		function engageInteractions(a) {
@@ -40,7 +31,21 @@ function Planet(props) {
 	}, []);
 
 
-	return planet;
+	return <group>
+		<mesh position={props.state.planet.position}>
+			<sphereGeometry args={[
+				props.state.planet.radius,
+				props.state.planet.radius * 0.25,
+				props.state.planet.radius * 0.75
+			]} />
+			<meshBasicMaterial wireframe color="lawngreen" />
+		</mesh>
+		<mesh position={[props.state.planet.position.x, props.state.planet.radius, props.state.planet.position.z]}
+				rotation={[Math.PI / 2,0,0]}>
+			<planeGeometry args={[300,300,100]} />
+			<meshBasicMaterial wireframe color="blue" />
+		</mesh>
+	</group>
 }
 
 export default Planet;

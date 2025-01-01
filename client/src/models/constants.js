@@ -6,7 +6,7 @@ export const SPEED = {
     SIN: .1
   },
   JUMP: 0.09,
-  ROTATE: .08
+  ROTATE: .07
 }
 
 export const MASS = {
@@ -14,7 +14,7 @@ export const MASS = {
 
   },
   planet: {
-    radius: 808,
+    radius: 80,
     position: [
       0,
       0,
@@ -45,6 +45,7 @@ export const props = {
     walking: false,
     strafe: false,
     strafing: false,
+    lounge: true,
     jump: false,
     animation: 0,
     speed: {
@@ -59,7 +60,8 @@ export const props = {
   planet: {
     radius: MASS.planet.radius,
     position: MASS.planet.position,
-    distanceTo: undefined
+    distanceTo: undefined,
+    vertices: []
   },
   interactions: new Set()
 };
