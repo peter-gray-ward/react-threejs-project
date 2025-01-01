@@ -62,6 +62,10 @@ function sceneReducer(state, action) {
     case 'START_WALK':
       return { 
         ...state,
+        animations: [
+          ...state.animations,
+          'walk'
+        ],
         model: {
           ...state.model,
           walk: true,
@@ -75,6 +79,9 @@ function sceneReducer(state, action) {
     case 'STOP_WALK':
       return { 
         ...state,
+        animations: state.animations.filter((animation)=>{
+          return animation !== 'walk';
+        }),
         model: {
           ...state.model,
           walk: false,
@@ -293,23 +300,7 @@ function sceneReducer(state, action) {
           planetElement: action.planetElement
         }
       }
-    case 'ENGAGE_INTERACTIONS':
-      return {
-        ...state,
-        interactions: new Set([...state.interactions].filter(interaction => {
-          interaction = JSON.parse(interaction);
-          var time = new Date().getTime();
-          if (time - interaction.date > 300) {
-            return false;
-          }
-          return JSON.stringify(interaction);
-        })),
-        interaction: new Date().getTime(),
-        planet: {
-          ...state.planet,
-          distanceTo: action.distanceTo
-        }
-      }
+    
     case 'ENGAGE_PLANET':
       return {
         ...state,
@@ -328,6 +319,23 @@ function sceneReducer(state, action) {
         ...state,
         stars: action.stars
       }
+    case 'ENGAGE_INTERACTIONS':
+      return {
+        ...state,
+        interactions: new Set([...state.interactions].filter(interaction => {
+          interaction = JSON.parse(interaction);
+          var time = new Date().getTime();
+          if (time - interaction.date > 1000) {
+            return false;
+          }
+          return JSON.stringify(interaction);
+        })),
+        interaction: new Date().getTime(),
+        planet: {
+          ...state.planet,
+          distanceTo: action.distanceTo
+        }
+      }
     default:
       return state;
   }
@@ -339,21 +347,6 @@ var done = {
   'START_WALK_BACK': false
 }
 
-
-function scaleModelToHeight(model, desiredHeight) {
-    const boundingBox = new Box3().setFromObject(model.scene);
-    const size = new Vector3();
-    boundingBox.getSize(size);
-
-    const height = size.y; // Current height of the model
-    const scaleFactor = desiredHeight / height; // Calculate scaling factor
-
-    model.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-    const center = new Vector3();
-    boundingBox.getCenter(center);
-    model.scene.position.sub(center.setY(0)); 
-}
 
 function App() {
 
@@ -534,6 +527,7 @@ function App() {
               </li> : null
             }
             <li>
+              <i>DISPATCHES</i>
               <ol id="interactions">
                 {
                   Array.from(new Set(Array.from(state.interactions).map(interaction => {
@@ -542,6 +536,17 @@ function App() {
                     return JSON.stringify(i);
                   }))).sort().map((interaction, i) => {
                     return <li key={i}>{interaction}</li>
+                  })
+                }
+              </ol>
+            </li>
+
+            <li>
+              <i>animations</i>
+              <ol id="interactions">
+                {
+                  state.animations.map((animation, i) => {
+                    return <li key={i}>{animation}</li>
                   })
                 }
               </ol>

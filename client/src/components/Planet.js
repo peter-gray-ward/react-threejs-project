@@ -13,8 +13,8 @@ function Planet(props) {
 	const planet = <mesh position={props.state.planet.position}>
 		<sphereGeometry args={[
 			props.state.planet.radius,
-			300,
-			50
+			50,
+			150
 		]} />
 		<meshBasicMaterial wireframe color="white" />
 	</mesh>;
@@ -33,10 +33,6 @@ function Planet(props) {
 
 					props.dispatch({ type: 'ENGAGE_INTERACTIONS', distanceTo: distance });
 				}
-			}
-
-			if (props.state.model.walk) {
-				props.dispatch({ type: 'WALK' });
 			}
 			window.requestAnimationFrame(engageInteractions);
 		}

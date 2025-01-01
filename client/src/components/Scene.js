@@ -19,11 +19,18 @@ import {
 	DoubleSide
 } from 'three'
 import {
-	pointOnSphere
+	pointOnSphere,
+	randomInRange
 } from '../util';
 
 var RECORD = {
 	star: {
+		categories: 11,
+		sizes: [
+			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
+		]
+	},
+	terrain: {
 		categories: 11,
 		sizes: [
 			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
@@ -46,6 +53,7 @@ function Scene(props) {
 		}
 		return materials;
 	}, []);
+	
 	const starsGeometries = useMemo(() => {
 		var _starGeometries = []
 		for (var i = 0; i < RECORD.star.categories; i++) {
@@ -75,6 +83,8 @@ function Scene(props) {
 		return ;
 	}, [scene]);
 
+
+
 	const manageInteractions = () => {
 	}
 
@@ -91,15 +101,13 @@ function Scene(props) {
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
 			{ props.state.model.dial }
-			{
-				<group>
-					{
-						starsGeometries.map((starGeometry, i) => {
-							return <points args={[starGeometry, starsMaterials[i]]} />
-						})
-					}
-				</group>
-			}
+			<group>
+				{
+					starsGeometries.map((starGeometry, i) => {
+						return <points args={[starGeometry, starsMaterials[i]]} />
+					})
+				}
+			</group>
 			<mesh position={[...props.state.planet.position]} rotation={[Math.PI / 2, 0, 0]}>
 				<planeGeometry args={[props.state.planet.radius * 2.2, props.state.planet.radius * 2.2, 50, 50]} />
 				<meshBasicMaterial transparent side={DoubleSide} opacity={0.5} color="red" />

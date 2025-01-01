@@ -6,7 +6,7 @@ export const SPEED = {
     SIN: .1
   },
   JUMP: 0.09,
-  ROTATE: .3
+  ROTATE: .08
 }
 
 export const MASS = {
@@ -14,7 +14,7 @@ export const MASS = {
 
   },
   planet: {
-    radius: 129,
+    radius: 808,
     position: [
       0,
       0,
@@ -39,6 +39,7 @@ export const props = {
   cameraPhi: Math.PI * 2,
   cameraRadius,
   interaction: new Date().getTime(),
+  animations: [],
   model: {
     walk: false,
     walking: false,

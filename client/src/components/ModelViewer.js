@@ -126,9 +126,7 @@ function ModelViewer(props) {
     }
 
 
-    const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
-    props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
-    props.camera.lookAt(props.state.model.scene.position);
+    
 
     const dial = props.state.scene ? child(props.state.scene, "dial") : null;	
     if (dial && props.state.model.scene) {
@@ -140,15 +138,23 @@ function ModelViewer(props) {
 	   	});
 	   	const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
 	   	if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-	   		var inc = props.state.model.rotateLeft ? 0.01 : -0.01;
+	   		var inc = props.state.model.rotateLeft ? props.state.model.speed.rotate : -props.state.model.speed.rotate;
 	   		props.state.model.rotationIncrement += inc;
 	   	}
-			const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
-			quaternion.premultiply(incrementalRotation)
+		const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
+		quaternion.premultiply(incrementalRotation)
+
 	    dial.quaternion.copy(quaternion);
+
 	    props.state.model.scene.quaternion.copy(quaternion);
-      props.camera.quaternion.copy(dial.quaternion);
-      spin180(props.camera.quaternion)
+
+		const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
+		props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
+		props.camera.lookAt(props.state.model.scene.position);
+		props.camera.quaternion.copy(dial.quaternion);
+		spin180(props.camera.quaternion)
+
+		
 	  }
     
 	});
