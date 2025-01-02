@@ -121,10 +121,10 @@ export const pointOnSphereBehindAndUp = (center, radius, forwardDirection, upOff
     return vector;
 };
 
-export function randomInRange(from, to, startDistance = 0) {
+export function randomInRange(from, to, randomSeed, startDistance = 0) {
    const min = Math.min(from, to) + startDistance;
    const max = Math.max(from, to) + startDistance;
-   const val = Math.random() * (max - min) + min;
+   const val = (randomSeed || Math.random()) * (max - min) + min;
    return val;
 }
 

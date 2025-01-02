@@ -28,7 +28,7 @@ var RECORD = {
 		categories: 11,
 		sizes: [
 			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
-		]
+		].map(n => n * 0.25)
 	},
 	terrain: {
 		categories: 11,
@@ -40,8 +40,15 @@ var RECORD = {
 
 function Scene(props) {
 	const { camera, scene } = useThree();
+	const starGroupRef = useRef();
+	const randomStarSeeds = useMemo(() => {
+		return Array.from({ length: RECORD.star.categories * 1000 })
+		.flatMap(n => {
+			return [Math.random(), Math.random()]
+		});
+	}, []);
 	camera.near = 0.1;
-	camera.far = Infinity
+	camera.far = 100000
 
 	const starsMaterials = useMemo(() => {
 		var materials = []
@@ -54,8 +61,9 @@ function Scene(props) {
 		return materials;
 	}, []);
 	
-	const starsGeometries = useMemo(() => {
+	var starsGeometries = useMemo(() => {
 		var _starGeometries = []
+		console.log("randomSeed", randomStarSeeds[0])
 		for (var i = 0; i < RECORD.star.categories; i++) {
 			props.dispatch({ type: 'ADD_SCENE', scene })
 
@@ -63,24 +71,25 @@ function Scene(props) {
 			
 			var positions = []
 			var colors = []
-			var stars = [];
-			var startCount = 100000
-			var minRadius = props.state.planet.radius * 2;
-			var planetCenter = new Vector3(...props.state.planet.position);
+			var startCount = 1000
+			var minRadius = 100; // Minimum radius
+			var maxRadius = 500; // Maximum radius
+			var userCenter = new Vector3(...props.state.model.scene.position);
+			console.log("processing star collection " + i)
 			for (var j = 0; j < startCount; j++) {
-				const phi = 2 * Math.PI * Math.random(); // Azimuthal angle
-				const costheta = 2 * Math.random() - 1; // cos(theta) for polar angle
-				const theta = Math.acos(costheta);
-				const radius = minRadius * Math.random() * 20; // Add variation to radius
+				const phi = randomInRange(Math.PI, Math.PI * 2, randomStarSeeds[j + j * i]) // Azimuthal angle from 0 to 2π
+				const theta = randomInRange(Math.PI, Math.PI * 2, randomStarSeeds[j + j * i + 1]); // Calculate theta from costheta
+				const radius = minRadius//minRadius + Math.random() * (maxRadius - minRadius); // Random radius between minRadius and maxRadius
 
-				const x = planetCenter.x + radius * Math.sin(theta) * Math.cos(phi);
-				const y = planetCenter.y + radius * Math.sin(theta) * Math.sin(phi);
-				const z = planetCenter.z + radius * Math.cos(theta);
+				const x = userCenter.x + radius * Math.sin(theta) * Math.cos(phi);
+				const y = userCenter.y + radius * Math.sin(theta) * Math.sin(phi);
+				const z = userCenter.z + radius * Math.cos(theta);
+
 				positions.push(x, y, z);
 
-				var r = 1.7 + Math.random() * (1 - 1.87)
-				var g = 1.7 + Math.random() * (1 - 1.87)
-				var b = 1.7 + Math.random() * (1 - 1.87)
+				var r = 1//Math.random() * (1 - 1.87);
+				var g = 1//Math.random() * (1 - 1.87);
+				var b = 1//Math.random() * (1 - 1.87);
 
 				colors.push(r, g, b);
 			}
@@ -90,29 +99,39 @@ function Scene(props) {
 		}
 		return _starGeometries;
 		return ;
-	}, [scene]);
+	}, [props.state.model.change.x,props.state.model.change.y,props.state.model.change.z]);
 
-
-
-	const manageInteractions = () => {
-	}
-
-
-
-  	useFrame(manageInteractions, [
-  		props.state.model,
-  		props.state.planet
-  	]);
-
-
+	useFrame(() => {
+		if (starGroupRef.current) {
+			starGroupRef.current.children.forEach((points) => {
+				const geometry = points.geometry;
+				const positionArray = geometry.attributes.position.array;
+	
+				for (let i = 0; i < positionArray.length; i += 3) {
+					positionArray[i] += props.state.model.change.x;   // Update X
+					positionArray[i + 1] += props.state.model.change.y; // Update Y
+					positionArray[i + 2] += props.state.model.change.z; // Update Z
+				}
+	
+				geometry.attributes.position.needsUpdate = true; // Notify Three.js of changes
+			});
+		}
+	});
+	
+	
 	return (
 		<>
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
 			{ props.state.model.dial }
-			<group>
+			<group ref={starGroupRef}>
 				{
 					starsGeometries.map((starGeometry, i) => {
+						for (let i = 0; i <  starGeometry.attributes.position.array.length; i += 3) {
+							starGeometry.attributes.position.array[i] += props.state.model.change.x; 
+							starGeometry.attributes.position.array[i + 1] += props.state.model.change.y;
+							starGeometry.attributes.position.array[i + 2] += props.state.model.change.z;
+					   	}
 						return <points key={i} args={[starGeometry, starsMaterials[i]]} />
 					})
 				}

@@ -459,6 +459,14 @@ function sceneReducer(state, action) {
           return animation !== action.animation
         })
       }
+    case 'MODEL_MOVE':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          change: action.change
+        }
+      }
     
     default:
       return state;

@@ -241,14 +241,22 @@ function ModelViewer(props) {
 		// Make the camera look at the adjusted position
 		props.camera.lookAt(lookPosition);
 
-
+		const deltaX = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.x)
+		const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
+		const deltaZ = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.z)
+		if (deltaX ||
+			deltaY ||
+			deltaZ
+		) { 
+			props.dispatch({ type: 'MODEL_MOVE', change: currentPosition.sub(props.state.model.scene.position) })
+		}
 		
 
 	});
 
 	const q = VisualizeQuaternion(props.state.model.scene.quaternion, 1, .3);
 
-
+	
 
 	return (<>
 		<primitive object={props.state.model.scene} />

@@ -3,7 +3,8 @@ const fs = require('fs')
 require('http').createServer(function(req, res) {
 	if (req.url == '/space.jpg') {
 		res.writeHead(200, {
-			'Content-Type': 'image/jpg'
+			'Content-Type': 'image/jpg',
+			'Access-Control-Allow-Origin': "*"
 		});
 		res.end(fs.readFileSync('/users/peter/desktop/react-threejs-project/client/public/space.jpg'));
 		return;

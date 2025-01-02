@@ -1,3 +1,7 @@
+import {
+  Vector3
+} from 'three';
+
 export const SPEED = {
   GRAVITY: 0.8, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
   WALK: .15,      // Average human walking speed ~2.5 meters per second
@@ -15,7 +19,7 @@ export const MASS = {
 
   },
   planet: {
-    radius: 9999,
+    radius: 100000,
     position: [
       0,
       0,
@@ -52,6 +56,7 @@ export const props = {
     jumping: false,
     rotatingCamera: false,
     animation: 0,
+    change: new Vector3(0,0,0),
     gravity: SPEED.GRAVITY,
     force: {
       y: SPEED.JUMP,
