@@ -28,6 +28,7 @@ Array.prototype.contains = function(str) {
 
 function ModelViewer(props) {
 	const [actions, setActions] = useState({});
+
 	const mixerRef = useRef(null);
 
     useEffect(() => {
@@ -49,6 +50,8 @@ function ModelViewer(props) {
         let animationIndex;
         switch (which) {
             case 'walk':
+            	animationIndex = 6;
+            	break;
             case 'strafe':
                 animationIndex = 6;
                 break;
@@ -56,7 +59,7 @@ function ModelViewer(props) {
                 animationIndex = 1;
                 break;
             case 'jump':
-                animationIndex = 5;
+                animationIndex = 2;
                 break;
             default:
                 return null;
@@ -72,6 +75,9 @@ function ModelViewer(props) {
 
         ['walk', 'strafe', 'lounge', 'jump'].forEach((action) => {
             if (props.state.model[action] && !actionAnimations[action]) {
+            	for (var animation in actionAnimations) {
+            		actionAnimations[animation].stop();
+            	}
                 actionAnimations[action] = startAnimation(action);
             } else if (!props.state.model[action] && actionAnimations[action]) {
                 actionAnimations[action].stop();
@@ -89,11 +95,6 @@ function ModelViewer(props) {
         mixerRef.current?.update(props.state.deltaTime || 0.016); // Assuming a default frame time of ~16ms
     });
 
-	// useMemo(start_walk, [props.state.model])
-	// useMemo(start_standing_lounge, [props.state.model])
-	// useMemo(start_strafe, [props.state.model])
-	// useMemo(start_jump, [props.state.model.jump])
-
 	useFrame((state, delta) => {
 	    if (mixerRef && mixerRef.current) {
 	        mixerRef.current.update(delta);
@@ -104,64 +105,100 @@ function ModelViewer(props) {
 	    const { model, planet } = props.state;
 	    if (!model || !planet) return;
 
+
+		const currentPosition = props.state.model.scene.position.clone();
 	    const sphereCenter = new Vector3(...planet.position);
 	    const sphereRadius = planet.radius;
 	    const distanceToCenter = props.state.model.scene.position.distanceTo(sphereCenter);
 	    var directionToCenter = props.state.model.scene.position.clone().sub(sphereCenter).normalize();
 
-	    if (distanceToCenter !== sphereRadius) {
-	        const correctedPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
-	        props.state.model.scene.position.copy(correctedPosition);
+	    // apply gravity
+	   	const gravity = props.state.model.gravity;
+		const targetPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+
+
+		// if (!currentPosition.equals(targetPosition)) {
+	    const stepDirection = targetPosition.clone().sub(currentPosition).normalize();
+	    const step = stepDirection.multiplyScalar(
+	    	props.state.model.jumping ? Math.abs(gravity) * props.state.model.velocity.y : 0
+	    );
+
+	    // Update the position by the step or clamp to the target position
+	    const newPosition = currentPosition.clone().add(step);
+	    const distanceToTarget = newPosition.distanceTo(targetPosition);
+
+	    if (props.state.model.jumping && distanceToTarget < 0.1) {
+	        // Clamp to the target position if within the gravity step
+	        props.state.model.scene.position.copy(targetPosition);
+	        props.dispatch({ type: 'STOP_JUMP' })
+	    } else {
+	        // Move incrementally
+	        props.state.model.scene.position.copy(newPosition);
 	    }
+
 
 	    // Handle strafing
 	    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
-        const localUp = directionToCenter.clone(); // Up is the radial vector
+        const localUp = directionToCenter.clone().normalize(); // Up is the radial vector
 		const localRight = new Vector3().crossVectors(localUp, forwardDirection).normalize();
 
 
 		if (props.state.model.strafe) {
 		    localRight.multiplyScalar(props.state.model.speed.strafe);
 		    props.state.model.scene.position.add(localRight.negate());
+		    props.dispatch({ type: "STRAFE" })
 		}
 
 	    // Handle walking
 	    if (props.state.model.walk) {
 	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
 	        props.state.model.scene.position.add(forwardDirection);
+	        
+	        if (!props.state.model.walking) {
+	        	props.dispatch({ type: "WALK" })
+	        }
 	    }
+
+	    if (props.state.model.jump) {
+			// Update position based on velocity and direction
+			props.state.model.scene.position.add(
+			    localUp.multiplyScalar(props.state.model.velocity.y)
+			);
+
+			// Dispatch JUMP action to update velocity
+			props.dispatch({ type: 'JUMP', model: props.state.model });
+
+			// Stop jump if the model reaches or falls below the sphere radius
+			if (props.state.model.scene.position.y <= sphereRadius) {
+			    props.dispatch({ type: 'STOP_JUMP' });
+			}
+		}
 
 
 	    
 
-	    const dial = props.state.scene ? child(props.state.scene, "dial") : null;	
-	    if (dial && props.state.model.scene) {
-	    	forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
-		    var quaternion = coordsToQuaternion({ 
-		    	...coords(props.state.model.scene),
-		    	initialVector: forwardDirection,
-		    	planetCenter: new Vector3(...props.state.planet.position) 
-		   	});
-		   	const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
-		   	if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-		   		var inc = props.state.model.rotateLeft ? props.state.model.speed.rotate : -props.state.model.speed.rotate;
-		   		props.state.model.rotationIncrement += inc;
-		   	}
-			const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
-			quaternion.premultiply(incrementalRotation)
+	    forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
+	    var quaternion = coordsToQuaternion({ 
+	    	...coords(props.state.model.scene),
+	    	initialVector: forwardDirection,
+	    	planetCenter: new Vector3(...props.state.planet.position) 
+	   	});
+	   	const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
+	   	if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+	   		var inc = props.state.model.rotateLeft ? props.state.model.speed.rotate : -props.state.model.speed.rotate;
+	   		props.state.model.rotationIncrement += inc;
+	   	}
+		const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
+		quaternion.premultiply(incrementalRotation)
 
-		    dial.quaternion.copy(quaternion);
 
-		    props.state.model.scene.quaternion.copy(quaternion);
+	    props.state.model.scene.quaternion.copy(quaternion);
 
-			const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
-			props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
-			props.camera.lookAt(props.state.model.scene.position);
-			props.camera.quaternion.copy(dial.quaternion);
-			spin180(props.camera.quaternion)
-
-			
-		}
+		const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
+		props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
+		props.camera.lookAt(props.state.model.scene.position);
+		props.camera.quaternion.copy(quaternion);
+		spin180(props.camera.quaternion)
 	    
 	});
 

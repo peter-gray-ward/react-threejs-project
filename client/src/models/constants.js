@@ -1,20 +1,21 @@
 export const SPEED = {
-  GRAVITY: -0.007,
-  WALK: 1,
-  STRAFE: .3,
+  GRAVITY: 0.8, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
+  WALK: .15,      // Average human walking speed ~2.5 meters per second
+  STRAFE: .1,    // Strafing is typically slower than walking forward
   CAMERA: {
-    SIN: .1
+    SIN: 0.05,    // Reduced sinusoidal camera effect for subtle motion
   },
-  JUMP: 0.09,
-  ROTATE: .07
-}
+  JUMP: 3,        // Realistic jump height considering gravity (parabolic arc ~1.25 meters with these values)
+  ROTATE: 0.05    // Reduced rotation speed for smoother turning (~2.86 degrees per frame at 60fps)
+};
+
 
 export const MASS = {
   syl: {
 
   },
   planet: {
-    radius: 80,
+    radius: 999,
     position: [
       0,
       0,
@@ -47,10 +48,22 @@ export const props = {
     strafing: false,
     lounge: true,
     jump: false,
+    jumping: false,
     animation: 0,
+    gravity: SPEED.GRAVITY,
+    force: {
+      y: SPEED.JUMP,
+      x: 0,
+      z: 0
+    },
     speed: {
       rotate: SPEED.ROTATE,
       walk: SPEED.WALK
+    },
+    velocity: {
+      x: 0,
+      y: 0, 
+      z: 0
     },
     rotation: 0,
     weight:  0.5,

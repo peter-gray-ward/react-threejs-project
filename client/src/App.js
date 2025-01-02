@@ -86,7 +86,7 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: false,
           walking: false,
-          speed: {
+           speed: {
             ...state.model.speed,
             walk: 0
           }
@@ -98,11 +98,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: true,
-          walking: true,
-          speed: {
-            ...state.model.speed,
-            walk: SPEED.WALK
-          }
+          walking: true
         }
       }
     case 'START_WALK_BACK':
@@ -161,6 +157,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           strafe: false,
+          strafing: false,
           speed: {
             ...state.model.speed,
             strafe: 0
@@ -172,11 +169,7 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          strafing: true,
-          speed: {
-            ...state.model.speed,
-            strafe: SPEED.STRAFE
-          }
+          strafing: true
         }
       }
     case 'START_STRAFE_LEFT':
@@ -278,33 +271,65 @@ function sceneReducer(state, action) {
     case 'START_JUMP':
       return {
         ...state,
+        animations: [
+          ...state.animations,
+          'jump'
+        ],
         model: {
           ...state.model,
           jump: true,
-          jump_velocity: SPEED.JUMP,
-          gravity: SPEED.GRAVITY,
-          weight: 0.5,
-          jumpFloor: false
+          jumping: false,
+          lounge: false,
+          velocity: {
+            ...state.model.velocity,
+            y: SPEED.JUMP
+          },
+          force: {
+            ...state.model.force,
+            y: SPEED.JUMP
+          }
         }
       }
     case 'JUMP':
+      const currentVelocityY = action.model.velocity.y;
+      const currentForceY = state.model.force.y;
+
+      // Reduce the upward force over time
+      const decliningForceY = Math.max(0, currentForceY - SPEED.GRAVITY);
+
+      // Calculate the new velocity with the declining force
+      const newVelocityY = currentVelocityY + decliningForceY - SPEED.GRAVITY;
+
       return {
-        ...state,
-        model: {
-          ...state.model,
-          jump: true,
-          jump_velocity: state.model.jump_velocity + state.model.weight * state.model.gravity
-        }
-      }
+          ...state,
+          model: {
+              ...state.model,
+              jumping: true,
+              force: {
+                  ...state.model.force,
+                  y: decliningForceY 
+              },
+              velocity: {
+                  ...state.model.velocity,
+                  y: newVelocityY
+              }
+          }
+      };
+
     case 'STOP_JUMP':
       return {
         ...state,
+        animations: state.animations.filter((animation) => animation !== 'jump'),
         model: {
           ...state.model,
-          jump: false,
-          jump_velocity: SPEED.JUMP
+          jumping: false,
+          lounge: true,
+          velocity: {
+              ...state.model.velocity,
+              y: 0
+          }
         }
-      }
+      };
     case 'START_PLANET':
       return {
         ...state,
@@ -400,6 +425,7 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
+  console.log(model)
     model.scene.position.set(0, state.planet.radius, 0)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
@@ -445,7 +471,10 @@ function App() {
         dispatch({ type: 'START_ROTATE_DOWN' })
       }
       if (key.trim() == '') {
-        dispatch({ type: 'START_JUMP' })
+        if (!done.START_JUMP) {
+          done.START_JUMP = true;
+          dispatch({ type: 'START_JUMP' })
+        }
       }
       if (key == 'enter') {
         dispatch({ type: 'MODEL_LOADED', model })
@@ -484,6 +513,7 @@ function App() {
         dispatch({ type: 'STOP_ROTATE_DOWN' })
       }
       if (key.trim() == '') {
+        done.START_JUMP = false;
         dispatch({ type: 'STOP_JUMP' })
       }
     };
@@ -509,6 +539,7 @@ function App() {
 
   const q = VisualizeQuaternion(state.model.scene.quaternion, 1, .3);
 
+
   return (
     <div className="App">
       <div id="stats">
@@ -533,10 +564,10 @@ function App() {
               
                 <br/>
                 
-                <i>rotation: </i>
-                <span className="number">{new Number(state.model.scene.rotation._x).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.scene.rotation._y).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.scene.rotation._z).toFixed(2)}</span>
+                <i>velocity: </i>
+                <span className="number">{new Number(state.model.velocity.x).toFixed(2)},</span> 
+                <span className="number">{new Number(state.model.velocity.y).toFixed(2)},</span> 
+                <span className="number">{new Number(state.model.velocity.z).toFixed(2)}</span>
 
                 <br />
 
@@ -549,8 +580,9 @@ function App() {
 
               </section>
             </li>
-            <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
-            <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
+            <li>walking...<span className="boolean">{new String(state.model.walking)}</span></li>
+            <li>strafing...<span className="boolean">{new String(state.model.strafing)}</span></li>
+            <li>jumping...<span className="boolean">{new String(state.model.jumping)}</span></li>
             <li>
               gravity distance {state.planet.distanceTo}
             </li>

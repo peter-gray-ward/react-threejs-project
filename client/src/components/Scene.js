@@ -64,15 +64,24 @@ function Scene(props) {
 			var positions = []
 			var colors = []
 			var stars = [];
-			var startCount = 100
+			var startCount = 100000
 			var minRadius = props.state.planet.radius * 2;
 			var planetCenter = new Vector3(...props.state.planet.position);
 			for (var j = 0; j < startCount; j++) {
-				var v = pointOnSphere(planetCenter, minRadius);
-				positions.push(v.x, v.y, v.z);
+				const phi = 2 * Math.PI * Math.random(); // Azimuthal angle
+				const costheta = 2 * Math.random() - 1; // cos(theta) for polar angle
+				const theta = Math.acos(costheta);
+				const radius = minRadius * Math.random() * 20; // Add variation to radius
+
+				const x = planetCenter.x + radius * Math.sin(theta) * Math.cos(phi);
+				const y = planetCenter.y + radius * Math.sin(theta) * Math.sin(phi);
+				const z = planetCenter.z + radius * Math.cos(theta);
+				positions.push(x, y, z);
+
 				var r = 1.7 + Math.random() * (1 - 1.87)
 				var g = 1.7 + Math.random() * (1 - 1.87)
 				var b = 1.7 + Math.random() * (1 - 1.87)
+
 				colors.push(r, g, b);
 			}
 			starsGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
@@ -104,7 +113,7 @@ function Scene(props) {
 			<group>
 				{
 					starsGeometries.map((starGeometry, i) => {
-						return <points args={[starGeometry, starsMaterials[i]]} />
+						return <points key={i} args={[starGeometry, starsMaterials[i]]} />
 					})
 				}
 			</group>

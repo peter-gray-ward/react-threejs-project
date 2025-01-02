@@ -35,8 +35,8 @@ function Planet(props) {
 		<mesh position={props.state.planet.position}>
 			<sphereGeometry args={[
 				props.state.planet.radius,
-				props.state.planet.radius * 0.25,
-				props.state.planet.radius * 0.75
+				props.state.planet.radius * 0.025,
+				props.state.planet.radius * 0.5
 			]} />
 			<meshBasicMaterial wireframe color="lawngreen" />
 		</mesh>
