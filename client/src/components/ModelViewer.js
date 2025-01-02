@@ -52,15 +52,18 @@ function ModelViewer(props) {
         if (!mixerRef.current) return null;
 
         let animationIndex;
+        let speedFactor = 0.5; // Adjust this value to slow down the animation (0.5 = half speed)
+
         switch (which) {
             case 'walk':
-            	animationIndex = 6;
-            	break;
-            case 'strafe':
                 animationIndex = 6;
+                break;
+            case 'strafe':
+                animationIndex = 6; // Assuming strafe uses the same animation as walk
                 break;
             case 'lounge':
                 animationIndex = 1;
+				speedFactor = 0.007;
                 break;
             case 'jump':
                 animationIndex = 2;
@@ -71,6 +74,7 @@ function ModelViewer(props) {
 
         const action = mixerRef.current.clipAction(props.state.model.animations[animationIndex]);
         action.reset().play();
+        action.setEffectiveTimeScale(speedFactor); // Set the speed factor for the animation
         return action;
     };
 

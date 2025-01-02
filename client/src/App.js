@@ -88,7 +88,8 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: false,
           walking: false,
-           speed: {
+          lounge: true,
+          speed: {
             ...state.model.speed,
             walk: 0
           }
@@ -128,6 +129,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: false,
+          lounge: true,
           speed: {
             ...state.model.speed,
             walk: 0
@@ -160,6 +162,8 @@ function sceneReducer(state, action) {
           ...state.model,
           strafe: false,
           strafing: false,
+
+          lounge: true,
           speed: {
             ...state.model.speed,
             strafe: 0
@@ -200,6 +204,7 @@ function sceneReducer(state, action) {
           ...state.model,
           strafe: false,
           strafing: false,
+          lounge: true,
           speed: {
             ...state.model.speed,
             strafe: 0
@@ -261,7 +266,8 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          rotateLeft: false,
+          lounge: true,
+          rotateLeft: false
         }
       }
     case 'STOP_ROTATE_RIGHT':
@@ -269,6 +275,7 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
+          lounge: true,
           rotateRight: false
         }
       }
