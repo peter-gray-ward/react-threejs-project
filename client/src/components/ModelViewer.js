@@ -46,6 +46,9 @@ function ModelViewer(props) {
         };
     }, []);
 	
+	const planetCenter = useMemo(() => {
+		return new Vector3(0, 0, 0)
+	}, [])
 
 
 	const startAnimation = (which) => {
@@ -69,7 +72,7 @@ function ModelViewer(props) {
 				speedFactor = 0.007;
                 break;
             case 'jump':
-                animationIndex = 3;
+                animationIndex = 5;
                 break;
             default:
                 return null;
@@ -138,7 +141,7 @@ function ModelViewer(props) {
 	    const newPosition = currentPosition.clone().add(step);
 	    const distanceToTarget = newPosition.distanceTo(targetPosition);
 
-	    if (props.state.model.jumping && distanceToTarget < 0.5) {
+	    if (false && props.state.model.jumping && distanceToTarget < 0.5) {
 	        // Clamp to the target position if within the gravity step
 	        props.state.model.scene.position.copy(targetPosition);
 	        props.dispatch({ type: 'STOP_JUMP' })
@@ -171,19 +174,26 @@ function ModelViewer(props) {
 
 	    }
 
-	    if (props.state.model.jump) {
-			// Update position based on velocity and direction
-			props.state.model.scene.position.add(
-			    localUp.multiplyScalar(props.state.model.velocity.y)
-			);
+		// Update position based on velocity and direction
+		var jumpUp = localUp.multiplyScalar(props.state.model.velocity.y);
+		props.state.model.scene.position.add(jumpUp);
 
-			// Dispatch JUMP action to update velocity
-			props.dispatch({ type: 'JUMP', model: props.state.model });
+		// Dispatch JUMP action to update velocity
+		props.dispatch({ type: 'JUMP', model: props.state.model });
 
-			// Stop jump if the model reaches or falls below the sphere radius
-			if (props.state.model.scene.position.y <= sphereRadius) {
-			    props.dispatch({ type: 'STOP_JUMP' });
-			}
+		// Stop jump if the model reaches or falls below the sphere radius
+		if (props.state.model.scene.position.distanceTo(planetCenter) <= sphereRadius) {
+			// Calculate the difference vector from the planet center to the model's position
+			const difference = props.state.model.scene.position.clone().sub(planetCenter);
+			
+			// Normalize the difference vector and scale it by the sphere radius
+			const adjustment = difference.normalize().multiplyScalar(sphereRadius);
+			
+			// Set the model's position to be exactly at the sphere radius
+			props.state.model.scene.position.copy(planetCenter.clone().add(adjustment));
+			
+			// Dispatch the STOP_JUMP action
+			props.dispatch({ type: 'STOP_JUMP' });
 		}
 
 

@@ -348,40 +348,22 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           jump: true,
-          jumping: false,
-          lounge: false,
           velocity: {
             ...state.model.velocity,
-            y: SPEED.JUMP
-          },
-          force: {
-            ...state.model.force,
             y: SPEED.JUMP
           }
         }
       }
     case 'JUMP':
-      const currentVelocityY = action.model.velocity.y;
-      const currentForceY = state.model.force.y;
-
-      // Reduce the upward force over time
-      const decliningForceY = Math.max(0, currentForceY - SPEED.GRAVITY);
-
-      // Calculate the new velocity with the declining force
-      const newVelocityY = currentVelocityY + decliningForceY - SPEED.GRAVITY;
-
+      
       return {
           ...state,
           model: {
               ...state.model,
               jumping: true,
-              force: {
-                  ...state.model.force,
-                  y: decliningForceY 
-              },
               velocity: {
                   ...state.model.velocity,
-                  y: newVelocityY
+                  y: state.model.velocity.y - SPEED.GRAVITY
               }
           }
       };
@@ -392,6 +374,7 @@ function sceneReducer(state, action) {
         animations: state.animations.filter((animation) => animation !== 'jump'),
         model: {
           ...state.model,
+          jump: false,
           jumping: false,
           lounge: true,
           velocity: {
