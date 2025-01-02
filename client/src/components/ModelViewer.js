@@ -8,13 +8,17 @@ import {
   Quaternion,
   Sphere
 } from 'three'
-import { getUpAndBackwardVector,
+import { 
+	getUpAndBackwardVector,
 	spin180,
 	coordsToQuaternion,
 	coords,
 	coordsToVector3,
 	child,
-	VisualizeQuaternion
+	VisualizeQuaternion,
+	pointOnSphereBehindAndUp,
+	pointOnSphere,
+	rotateCameraOffset
 } from '../util';
 
 Array.prototype.contains = function(str) {
@@ -110,11 +114,11 @@ function ModelViewer(props) {
 	    const sphereCenter = new Vector3(...planet.position);
 	    const sphereRadius = planet.radius;
 	    const distanceToCenter = props.state.model.scene.position.distanceTo(sphereCenter);
-	    var directionToCenter = props.state.model.scene.position.clone().sub(sphereCenter).normalize();
+	    var TOCENTER = props.state.model.scene.position.clone().sub(sphereCenter).normalize();
 
 	    // apply gravity
 	   	const gravity = props.state.model.gravity;
-		const targetPosition = directionToCenter.multiplyScalar(sphereRadius).add(sphereCenter);
+		const targetPosition = TOCENTER.multiplyScalar(sphereRadius).add(sphereCenter);
 
 
 		// if (!currentPosition.equals(targetPosition)) {
@@ -127,7 +131,7 @@ function ModelViewer(props) {
 	    const newPosition = currentPosition.clone().add(step);
 	    const distanceToTarget = newPosition.distanceTo(targetPosition);
 
-	    if (props.state.model.jumping && distanceToTarget < 0.1) {
+	    if (props.state.model.jumping && distanceToTarget < 0.5) {
 	        // Clamp to the target position if within the gravity step
 	        props.state.model.scene.position.copy(targetPosition);
 	        props.dispatch({ type: 'STOP_JUMP' })
@@ -139,7 +143,7 @@ function ModelViewer(props) {
 
 	    // Handle strafing
 	    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
-        const localUp = directionToCenter.clone().normalize(); // Up is the radial vector
+        const localUp = TOCENTER.clone().normalize(); // Up is the radial vector
 		const localRight = new Vector3().crossVectors(localUp, forwardDirection).normalize();
 
 
@@ -175,31 +179,61 @@ function ModelViewer(props) {
 		}
 
 
-	    
+	// Get the forward direction of the model
+forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
 
-	    forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
-	    var quaternion = coordsToQuaternion({ 
-	    	...coords(props.state.model.scene),
-	    	initialVector: forwardDirection,
-	    	planetCenter: new Vector3(...props.state.planet.position) 
-	   	});
-	   	const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
-	   	if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-	   		var inc = props.state.model.rotateLeft ? props.state.model.speed.rotate : -props.state.model.speed.rotate;
-	   		props.state.model.rotationIncrement += inc;
-	   	}
-		const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
-		quaternion.premultiply(incrementalRotation)
+// Calculate the quaternion for the model's orientation
+const quaternion = coordsToQuaternion({
+    ...coords(props.state.model.scene),
+    initialVector: forwardDirection,
+    planetCenter: new Vector3(...props.state.planet.position),
+});
+
+// Calculate the local Y-axis based on the model's quaternion
+const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
+
+// Handle rotation increments
+if (props.state.model.rotateLeft || props.state.model.rotateRight) {
+    const inc = props.state.model.rotateLeft
+        ? props.state.model.speed.rotate
+        : -props.state.model.speed.rotate;
+    props.state.model.rotationIncrement += inc;
+}
+const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
+quaternion.premultiply(incrementalRotation);
+
+// Apply the quaternion to the model's scene
+props.state.model.scene.quaternion.copy(quaternion);
+
+// Calculate the camera's position
+const radius = props.state.cameraRadius; // Distance from the model
+const cameraTheta = props.state.cameraTheta; // Vertical angle
+const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
+
+// Spherical coordinates for camera adjustment
+const sphericalX = 0//radius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
+const sphericalY = radius * Math.cos(cameraTheta);
+const sphericalZ = 0//radius * Math.sin(cameraTheta) * Math.sin(cameraPhi);
+
+// Set the camera position behind the model, adjusted by spherical coordinates
+props.camera.position.copy(
+    props.state.model.scene.position.clone()
+        .add(forwardDirection.multiplyScalar(-radius)) // Always stay behind
+        .add(new Vector3(sphericalX, sphericalY, sphericalZ)) // Apply spherical adjustments
+);
+
+// Define the look-at position based on the model's height and TOCENTER
+const lookPosition = props.state.model.scene.position.clone();
+const upDirection = TOCENTER.clone().normalize();
+lookPosition.add(upDirection.multiplyScalar(props.state.model.height / 2));
+
+// Make the camera look at the adjusted position
+props.camera.lookAt(lookPosition);
 
 
-	    props.state.model.scene.quaternion.copy(quaternion);
+		// // Optionally apply spin180 if needed
+		// props.camera.quaternion.copy(spin180(props.camera.quaternion));
 
-		const cameraOffset = new Vector3(0, 2, -5.75).applyQuaternion(props.state.model.scene.quaternion);
-		props.camera.position.copy(props.state.model.scene.position.clone().add(cameraOffset));
-		props.camera.lookAt(props.state.model.scene.position);
-		props.camera.quaternion.copy(quaternion);
-		spin180(props.camera.quaternion)
-	    
 	});
 
 	const q = VisualizeQuaternion(props.state.model.scene.quaternion, 1, .3);

@@ -4,7 +4,8 @@ import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
 	Sphere,
-	Vector3
+	Vector3,
+	DoubleSide
 } from 'three'
 
 var bi = new Date().getTime();
@@ -38,12 +39,12 @@ function Planet(props) {
 				props.state.planet.radius * 0.025,
 				props.state.planet.radius * 0.5
 			]} />
-			<meshBasicMaterial wireframe color="lawngreen" />
+			<meshBasicMaterial wireframe side={DoubleSide} color="royalblue" />
 		</mesh>
 		<mesh position={[props.state.planet.position.x, props.state.planet.radius, props.state.planet.position.z]}
 				rotation={[Math.PI / 2,0,0]}>
 			<planeGeometry args={[300,300,100]} />
-			<meshBasicMaterial wireframe color="blue" />
+			<meshBasicMaterial color="royalblue" />
 		</mesh>
 	</group>
 }

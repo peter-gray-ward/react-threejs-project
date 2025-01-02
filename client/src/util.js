@@ -96,6 +96,31 @@ export const pointOnSphere = (center, radius) => {
 	return vector;
 }
 
+export const pointOnSphereBehindAndUp = (center, radius, forwardDirection, upOffset = 0.1) => {
+    // Normalize the forward direction
+    const forward = forwardDirection.clone().normalize();
+    
+    // Generate a random angle for rotation around the forward vector
+    const theta = Math.PI; // Angle away from the forward direction
+    const phi = Math.PI * 2; // Azimuthal angle
+
+    // Calculate spherical coordinates relative to "behind" the forward direction
+    const x = radius * Math.sin(theta) * Math.cos(phi);
+    const y = radius * Math.sin(theta) * Math.sin(phi) + upOffset * radius; // Slightly "up"
+    const z = -radius * Math.cos(theta); // Negative z for "behind"
+
+    // Create the point
+    const vector = new Vector3(x, y, z);
+
+    // Rotate the point to align it with the actual forward direction
+    vector.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 0, -1), forward));
+
+    // Translate the point to the sphere's center
+    vector.add(center);
+
+    return vector;
+};
+
 export function randomInRange(from, to, startDistance = 0) {
    const min = Math.min(from, to) + startDistance;
    const max = Math.max(from, to) + startDistance;
@@ -109,6 +134,13 @@ export const spin180 = (quaternion, angle) => {
 	const rotationQuaternion = new Quaternion().setFromAxisAngle(upAxis, rotationAngle); 
 	quaternion.multiply(rotationQuaternion);
 	return quaternion;
+};
+
+export const rotateCameraOffset = (offset, theta) => {
+    // Rotate around the X-axis (up/down arc)
+    const xAxis = new Vector3(1, 0, 0); // Local X-axis for arc motion
+    const rotationQuaternion = new Quaternion().setFromAxisAngle(xAxis, theta);
+    return offset.clone().applyQuaternion(rotationQuaternion);
 };
 
 /**

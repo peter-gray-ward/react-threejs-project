@@ -24,7 +24,7 @@ export const MASS = {
   }
 }
 
-export const cameraRadius = 2.5
+export const cameraRadius = 5.5
 
 export const props = {
   keys: { 
@@ -37,6 +37,7 @@ export const props = {
     after_weathertop: `The hills now began to shut them in...Trees with old and twisted 
       roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.`
   },
+  cameraTheta: Math.PI * 2,
   cameraPhi: Math.PI * 2,
   cameraRadius,
   interaction: new Date().getTime(),

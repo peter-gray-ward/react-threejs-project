@@ -49,9 +49,11 @@ function sceneReducer(state, action) {
   }
   switch (action.type) {
     case 'MODEL_LOADED':
+      action.model.scene.boundingBox = new Box3().setFromObject(action.model.scene);
       return {
         ...state,
         model: {
+          height: action.model.scene.boundingBox.max.y - action.model.scene.boundingBox.min.y,
           dial: action.dial,
           scene: action.scene,
           loaded: true,
@@ -397,6 +399,26 @@ function sceneReducer(state, action) {
           return animation !== action.animation
         })
       }
+    case 'CAMERA_ROTATE_UP':
+      var cameraTheta = state.cameraTheta;
+      cameraTheta += 0.05;
+      if (cameraTheta > Math.PI / 1.5) {
+        cameraTheta = Math.PI / 1.5
+      }
+      return {
+        ...state,
+        cameraTheta
+      }
+    case 'CAMERA_ROTATE_DOWN':
+      var cameraTheta = state.cameraTheta;
+      cameraTheta -= 0.05;
+      if (cameraTheta < 0) {
+        cameraTheta = 0
+      }
+      return {
+        ...state,
+        cameraTheta
+      }
     default:
       return state;
   }
@@ -507,10 +529,10 @@ function App() {
         dispatch({ type: 'STOP_ROTATE_RIGHT' })
       }
       if (key == 'arrowup') {
-        dispatch({ type: 'STOP_ROTATE_UP' })
+        dispatch({ type: 'CAMERA_ROTATE_UP' })
       }
       if (key == 'arrowdown') {
-        dispatch({ type: 'STOP_ROTATE_DOWN' })
+        dispatch({ type: 'CAMERA_ROTATE_DOWN' })
       }
       if (key.trim() == '') {
         done.START_JUMP = false;
@@ -580,6 +602,7 @@ function App() {
 
               </section>
             </li>
+            <li>camera theta...<span className="number">{state.cameraTheta}</span></li>
             <li>walking...<span className="boolean">{new String(state.model.walking)}</span></li>
             <li>strafing...<span className="boolean">{new String(state.model.strafing)}</span></li>
             <li>jumping...<span className="boolean">{new String(state.model.jumping)}</span></li>
