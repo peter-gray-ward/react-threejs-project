@@ -70,8 +70,9 @@ function sceneReducer(state, action) {
         ],
         model: {
           ...state.model,
-          walk: true,
+          walk: !action.shift,
           walking: false,
+          run: action.shift,
           speed: {
             ...state.model.speed,
             walk: SPEED.WALK
@@ -88,6 +89,7 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: false,
           walking: false,
+          run: false,
           lounge: true,
           speed: {
             ...state.model.speed,
@@ -100,7 +102,6 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          walk: true,
           walking: true
         }
       }
@@ -515,7 +516,7 @@ function App() {
       if (key == 'w') {
         if (!done.START_WALK) {
           done.START_WALK = true;
-          dispatch({ type: 'START_WALK' });
+          dispatch({ type: 'START_WALK', shift: done.SHIFT });
         }
       }
       if (key == 's') {
@@ -569,6 +570,12 @@ function App() {
       if (key == 'enter') {
         dispatch({ type: 'MODEL_LOADED', model })
       }
+      if (key == 'shift') {
+        done.SHIFT = true;
+        if (done.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: done.SHIFT })
+        }
+      }
     };
 
     const handleKeyUp = (e) => {
@@ -609,6 +616,12 @@ function App() {
       if (key.trim() == '') {
         done.START_JUMP = false;
         dispatch({ type: 'STOP_JUMP' })
+      }
+      if (key == 'shift') {
+        done.SHIFT = false;
+        if (done.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: done.SHIFT })
+        }
       }
     };
 

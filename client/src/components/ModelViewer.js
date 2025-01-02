@@ -55,6 +55,9 @@ function ModelViewer(props) {
         let speedFactor = 0.5; // Adjust this value to slow down the animation (0.5 = half speed)
 
         switch (which) {
+			case 'run':
+				animationIndex = 3;
+				break;
             case 'walk':
                 animationIndex = 6;
                 break;
@@ -66,7 +69,7 @@ function ModelViewer(props) {
 				speedFactor = 0.007;
                 break;
             case 'jump':
-                animationIndex = 2;
+                animationIndex = 3;
                 break;
             default:
                 return null;
@@ -81,7 +84,7 @@ function ModelViewer(props) {
     useFrame(() => {
         const actionAnimations = { ...actions };
 
-        ['walk', 'strafe', 'lounge', 'jump'].forEach((action) => {
+        ['run', 'walk', 'strafe', 'lounge', 'jump'].forEach((action) => {
             if (props.state.model[action] && !actionAnimations[action]) {
             	for (var animation in actionAnimations) {
             		actionAnimations[animation].stop();
@@ -158,13 +161,14 @@ function ModelViewer(props) {
 		}
 
 	    // Handle walking
-	    if (props.state.model.walk) {
-	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
+	    if (props.state.model.walk || props.state.model.run) {
+	        forwardDirection.multiplyScalar(props.state.model.walk ? props.state.model.speed.walk
+				: props.state.model.speed.run
+			);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
-	        if (!props.state.model.walking) {
-	        	props.dispatch({ type: "WALK" })
-	        }
+	        props.dispatch({ type: "WALK" })
+
 	    }
 
 	    if (props.state.model.jump) {

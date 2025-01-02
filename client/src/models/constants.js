@@ -5,6 +5,7 @@ import {
 export const SPEED = {
   GRAVITY: 0.8, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
   WALK: .15,      // Average human walking speed ~2.5 meters per second
+  RUN: 0.8,
   STRAFE: .1,    // Strafing is typically slower than walking forward
   CAMERA: {
     SIN: 0.05,    // Reduced sinusoidal camera effect for subtle motion
@@ -51,7 +52,7 @@ export const props = {
     walking: false,
     strafe: false,
     strafing: false,
-    lounge: false,
+    lounge: true,
     lounging: true,
     jump: false,
     jumping: false,
@@ -66,7 +67,8 @@ export const props = {
     },
     speed: {
       rotate: SPEED.ROTATE,
-      walk: SPEED.WALK
+      walk: SPEED.WALK,
+      run: SPEED.RUN
     },
     velocity: {
       x: 0,
