@@ -15,7 +15,7 @@ export const MASS = {
 
   },
   planet: {
-    radius: 999,
+    radius: 9999,
     position: [
       0,
       0,
@@ -37,7 +37,7 @@ export const props = {
     after_weathertop: `The hills now began to shut them in...Trees with old and twisted 
       roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.`
   },
-  cameraTheta: Math.PI * 2,
+  cameraTheta: Math.PI * 1.7,
   cameraPhi: Math.PI * 2,
   cameraRadius,
   interaction: new Date().getTime(),

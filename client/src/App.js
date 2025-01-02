@@ -230,6 +230,32 @@ function sceneReducer(state, action) {
           }
         }
       }
+    case 'ROTATE_LEFT':
+      var rotationIncrement = action.state.model.rotationIncrement;
+      rotationIncrement += 0.1;
+      if (rotationIncrement > Math.PI * 2) {
+        rotationIncrement = 0;
+      }
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotationIncrement
+        }
+      }
+    case 'ROTATE_RIGHT':
+      var rotationIncrement = action.state.model.rotationIncrement;
+      rotationIncrement -= 0.1;
+      if (rotationIncrement < 0) {
+        rotationIncrement = Math.PI * 2
+      }
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          rotationIncrement
+        }
+      }
     case 'STOP_ROTATE_LEFT':
       return {
         ...state,
@@ -284,7 +310,7 @@ function sceneReducer(state, action) {
         ...state,
         cameraTheta
       }
-      
+
       
     case 'STOP_ROTATE_UP':
       return {

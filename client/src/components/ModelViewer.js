@@ -194,19 +194,11 @@ function ModelViewer(props) {
 
 		// Handle rotation increments
 		if (props.state.model.rotateLeft) {
-		    const inc = props.state.model.speed.rotate
-		    props.state.model.rotationIncrement -= inc;
-		    if (props.state.model.rotationIncrement < 0) {
-		    	props.state.model.rotationIncrement = Math.PI * 2
-		    }
+		    props.dispatch({ type: 'ROTATE_LEFT', state: props.state })
 		}
 
 		if (props.state.model.rotateRight) {
-		    const inc = -props.state.model.speed.rotate;
-		    props.state.model.rotationIncrement += inc;
-		    if (props.state.model.rotationIncrement > Math.PI * 2) {
-		    	props.state.model.rotationIncrement = 0
-		    }
+		    props.dispatch({ type: 'ROTATE_RIGHT', state: props.state })
 		}
 
 		const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
