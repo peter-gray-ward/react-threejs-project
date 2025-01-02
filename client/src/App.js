@@ -211,7 +211,11 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          rotateLeft: true
+          rotateLeft: true,
+          speed: {
+            ...state.model.speed,
+            rotate: -SPEED.ROTATE
+          }
         }
       }
     case 'START_ROTATE_RIGHT':
@@ -219,7 +223,11 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          rotateRight: true
+          rotateRight: true,
+          speed: {
+            ...state.model.speed,
+            rotate: SPEED.ROTATE
+          }
         }
       }
     case 'STOP_ROTATE_LEFT':
@@ -243,23 +251,48 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          rotateDown: true
+          rotateDown: true,
+          rotatingDown: true
         }
+      }
+    case 'ROTATE_DOWN':
+      var cameraTheta = action.state.cameraTheta;
+      cameraTheta += 0.05;
+      if (cameraTheta >= Math.PI * 2) {
+        cameraTheta = Math.PI * 2
+      }
+      return {
+        ...state,
+        cameraTheta
       }
     case 'START_ROTATE_UP':
       return {
         ...state,
         model: {
           ...state.model,
-          rotateUp: true
+          rotateUp: true,
+          rotatingUp: true
         }
       }
+    case 'ROTATE_UP':
+      var cameraTheta = action.state.cameraTheta;
+      cameraTheta -= 0.05;
+      if (cameraTheta <= 0) {
+        cameraTheta = 0
+      }
+      return {
+        ...state,
+        cameraTheta
+      }
+      
+      
     case 'STOP_ROTATE_UP':
       return {
         ...state,
         model: {
           ...state.model,
-          rotateUp: true
+          rotateUp: false,
+          rotatingUp: false
         }
       }
     case 'STOP_ROTATE_DOWN':
@@ -267,7 +300,8 @@ function sceneReducer(state, action) {
         ...state,
         model: {
           ...state.model,
-          rotateDown: true
+          rotateDown: false,
+          rotatingDown: false
         }
       }
     case 'START_JUMP':
@@ -399,26 +433,7 @@ function sceneReducer(state, action) {
           return animation !== action.animation
         })
       }
-    case 'CAMERA_ROTATE_UP':
-      var cameraTheta = state.cameraTheta;
-      cameraTheta += 0.05;
-      if (cameraTheta > Math.PI / 1.5) {
-        cameraTheta = Math.PI / 1.5
-      }
-      return {
-        ...state,
-        cameraTheta
-      }
-    case 'CAMERA_ROTATE_DOWN':
-      var cameraTheta = state.cameraTheta;
-      cameraTheta -= 0.05;
-      if (cameraTheta < 0) {
-        cameraTheta = 0
-      }
-      return {
-        ...state,
-        cameraTheta
-      }
+    
     default:
       return state;
   }
@@ -481,16 +496,28 @@ function App() {
         }
       }
       if (key == 'arrowleft') {
-        dispatch({ type: 'START_ROTATE_LEFT' })
+        if (!done.START_ROTATE_LEFT) {
+          done.START_ROTATE_LEFT = true;
+          dispatch({ type: 'START_ROTATE_LEFT' })
+        }
       }
       if (key == 'arrowright') {
-        dispatch({ type: 'START_ROTATE_RIGHT' })
+        if (!done.START_ROTATE_RIGHT) {
+          done.START_ROTATE_RIGHT = true;
+          dispatch({ type: 'START_ROTATE_RIGHT' })
+        }
       }
       if (key == 'arrowup') {
-        dispatch({ type: 'START_ROTATE_UP' })
+        if (!done.START_ROTATE_UP) {
+          done.START_ROTATE_UP = true;
+          dispatch({ type: 'START_ROTATE_UP' })
+        }
       }
       if (key == 'arrowdown') {
-        dispatch({ type: 'START_ROTATE_DOWN' })
+        if (!done.START_ROTATE_DOWN) {
+          done.ROTATE_DOWN = true;
+          dispatch({ type: 'START_ROTATE_DOWN' })
+        }
       }
       if (key.trim() == '') {
         if (!done.START_JUMP) {
@@ -523,16 +550,20 @@ function App() {
         dispatch({ type: 'STOP_STRAFE_RIGHT' })
       }
       if (key == 'arrowleft') {
+        done.START_ROTATE_LEFT = false;
         dispatch({ type: 'STOP_ROTATE_LEFT' })
       }
       if (key == 'arrowright') {
+        done.START_ROTATE_RIGHT = false;
         dispatch({ type: 'STOP_ROTATE_RIGHT' })
       }
       if (key == 'arrowup') {
-        dispatch({ type: 'CAMERA_ROTATE_UP' })
+        done.START_ROTATE_UP = false;
+        dispatch({ type: 'STOP_ROTATE_UP' })
       }
       if (key == 'arrowdown') {
-        dispatch({ type: 'CAMERA_ROTATE_DOWN' })
+        done.START_ROTATE_DOWN = false;
+        dispatch({ type: 'STOP_ROTATE_DOWN' })
       }
       if (key.trim() == '') {
         done.START_JUMP = false;

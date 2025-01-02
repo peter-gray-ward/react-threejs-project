@@ -24,7 +24,7 @@ export const MASS = {
   }
 }
 
-export const cameraRadius = 5.5
+export const cameraRadius = 2.5
 
 export const props = {
   keys: { 
@@ -50,6 +50,7 @@ export const props = {
     lounge: true,
     jump: false,
     jumping: false,
+    rotatingCamera: false,
     animation: 0,
     gravity: SPEED.GRAVITY,
     force: {

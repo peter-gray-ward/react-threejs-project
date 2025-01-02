@@ -179,60 +179,78 @@ function ModelViewer(props) {
 		}
 
 
-	// Get the forward direction of the model
-forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
+		// Get the forward direction of the model
+		forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
 
-// Calculate the quaternion for the model's orientation
-const quaternion = coordsToQuaternion({
-    ...coords(props.state.model.scene),
-    initialVector: forwardDirection,
-    planetCenter: new Vector3(...props.state.planet.position),
-});
+		// Calculate the quaternion for the model's orientation
+		const quaternion = coordsToQuaternion({
+		    ...coords(props.state.model.scene),
+		    initialVector: forwardDirection,
+		    planetCenter: new Vector3(...props.state.planet.position),
+		});
 
-// Calculate the local Y-axis based on the model's quaternion
-const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
+		// Calculate the local Y-axis based on the model's quaternion
+		const localYAxis = new Vector3(0, 1, 0).applyQuaternion(quaternion);
 
-// Handle rotation increments
-if (props.state.model.rotateLeft || props.state.model.rotateRight) {
-    const inc = props.state.model.rotateLeft
-        ? props.state.model.speed.rotate
-        : -props.state.model.speed.rotate;
-    props.state.model.rotationIncrement += inc;
-}
-const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
-quaternion.premultiply(incrementalRotation);
+		// Handle rotation increments
+		if (props.state.model.rotateLeft) {
+		    const inc = props.state.model.speed.rotate
+		    props.state.model.rotationIncrement -= inc;
+		    if (props.state.model.rotationIncrement < 0) {
+		    	props.state.model.rotationIncrement = Math.PI * 2
+		    }
+		}
 
-// Apply the quaternion to the model's scene
-props.state.model.scene.quaternion.copy(quaternion);
+		if (props.state.model.rotateRight) {
+		    const inc = -props.state.model.speed.rotate;
+		    props.state.model.rotationIncrement += inc;
+		    if (props.state.model.rotationIncrement > Math.PI * 2) {
+		    	props.state.model.rotationIncrement = 0
+		    }
+		}
 
-// Calculate the camera's position
-const radius = props.state.cameraRadius; // Distance from the model
-const cameraTheta = props.state.cameraTheta; // Vertical angle
-const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
+		const incrementalRotation = new Quaternion().setFromAxisAngle(localYAxis, props.state.model.rotationIncrement);
+		quaternion.premultiply(incrementalRotation);
 
-// Spherical coordinates for camera adjustment
-const sphericalX = 0//radius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
-const sphericalY = radius * Math.cos(cameraTheta);
-const sphericalZ = 0//radius * Math.sin(cameraTheta) * Math.sin(cameraPhi);
+		// Apply the quaternion to the model's scene
+		props.state.model.scene.quaternion.copy(quaternion);
 
-// Set the camera position behind the model, adjusted by spherical coordinates
-props.camera.position.copy(
-    props.state.model.scene.position.clone()
-        .add(forwardDirection.multiplyScalar(-radius)) // Always stay behind
-        .add(new Vector3(sphericalX, sphericalY, sphericalZ)) // Apply spherical adjustments
-);
-
-// Define the look-at position based on the model's height and TOCENTER
-const lookPosition = props.state.model.scene.position.clone();
-const upDirection = TOCENTER.clone().normalize();
-lookPosition.add(upDirection.multiplyScalar(props.state.model.height / 2));
-
-// Make the camera look at the adjusted position
-props.camera.lookAt(lookPosition);
+		// Calculate the camera's position
+		const radius = props.state.cameraRadius; // Distance from the model
+		const cameraTheta = props.state.cameraTheta; // Vertical angle
+		const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
 
 
-		// // Optionally apply spin180 if needed
-		// props.camera.quaternion.copy(spin180(props.camera.quaternion));
+		if (props.state.model.rotatingUp) {
+			props.dispatch({ type: 'ROTATE_UP', state: props.state })
+		}
+
+		if (props.state.model.rotatingDown) {
+			props.dispatch({ type: 'ROTATE_DOWN', state: props.state })
+		}
+
+		// Spherical coordinates for camera adjustment
+		const sphericalX = 0//radius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
+		const sphericalY = radius * Math.cos(cameraTheta);
+		const sphericalZ = 0//radius * Math.sin(cameraTheta) * Math.sin(cameraPhi);
+
+		// Set the camera position behind the model, adjusted by spherical coordinates
+		props.camera.position.copy(
+		    props.state.model.scene.position.clone()
+		        .add(forwardDirection.multiplyScalar(-radius)) // Always stay behind
+		        .add(new Vector3(sphericalX, sphericalY, sphericalZ)) // Apply spherical adjustments
+		);
+
+		// Define the look-at position based on the model's height and TOCENTER
+		const lookPosition = props.state.model.scene.position.clone();
+		const upDirection = TOCENTER.clone().normalize();
+		lookPosition.add(upDirection.multiplyScalar(props.state.model.height / 2));
+
+		// Make the camera look at the adjusted position
+		props.camera.lookAt(lookPosition);
+
+
+		
 
 	});
 
