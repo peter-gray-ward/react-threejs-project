@@ -2,7 +2,8 @@ import {
 	Vector3,
 	Quaternion,
 	Group,
-	ArrowHelper
+	ArrowHelper,
+	Raycaster
 } from 'three';
 
 
@@ -180,6 +181,24 @@ export function VisualizeQuaternion(quaternion, size = 1, arrowThickness = 0.1) 
     return { quaternion, group }
 }
 
+export function findRayIntersection(m, c, geometry) {
+    const raycaster = new Raycaster();
+    const rayDirection = new Vector3().subVectors(c, m).normalize();
+    raycaster.set(m, rayDirection);
+    const intersects = raycaster.intersectObject(geometry, true);
 
+    if (intersects.length > 0) {
+        return intersects[0].point;
+    }
 
+    return null;
+}
 
+// Helper to check if a point is inside a triangle using barycentric coordinates
+export function isPointInTriangle(p, a, b, c) {
+    const area = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+    const w1 = ((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / area;
+    const w2 = ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / area;
+    const w3 = 1 - w1 - w2;
+    return w1 >= 0 && w2 >= 0 && w3 >= 0;
+}

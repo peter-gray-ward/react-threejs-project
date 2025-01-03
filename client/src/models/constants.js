@@ -60,6 +60,7 @@ export const props = {
     animation: 0,
     change: new Vector3(0,0,0),
     gravity: SPEED.GRAVITY,
+    floorRadius: MASS.planet.radius,
     force: {
       y: SPEED.JUMP,
       x: 0,

@@ -9,17 +9,12 @@ import {
   Sphere
 } from 'three'
 import { 
-	getUpAndBackwardVector,
-	spin180,
 	coordsToQuaternion,
 	coords,
-	coordsToVector3,
-	child,
 	VisualizeQuaternion,
-	pointOnSphereBehindAndUp,
-	pointOnSphere,
-	rotateCameraOffset
+	findRayIntersection
 } from '../util';
+import { floor } from 'three/webgpu';
 
 Array.prototype.contains = function(str) {
 	for (var i = 0; i < this.length; i++) {
@@ -73,6 +68,7 @@ function ModelViewer(props) {
                 break;
             case 'jump':
                 animationIndex = 5;
+				speedFactor = 0.2;
                 break;
             default:
                 return null;
@@ -181,19 +177,24 @@ function ModelViewer(props) {
 		// Dispatch JUMP action to update velocity
 		props.dispatch({ type: 'JUMP', model: props.state.model });
 
-		// Stop jump if the model reaches or falls below the sphere radius
-		if (props.state.model.scene.position.distanceTo(planetCenter) <= sphereRadius) {
-			// Calculate the difference vector from the planet center to the model's position
+		if (props.state.planet.geometry) {
+			const floorRadius = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.geometry);
+			if (floorRadius) {
+				props.state.model.floorRadius = floorRadius.y
+			}
+		}
+
+		const distToCore = props.state.model.scene.position.distanceTo(planetCenter);
+		const onOrBelowSurface = distToCore <= props.state.model.floorRadius;
+		if (onOrBelowSurface) {
 			const difference = props.state.model.scene.position.clone().sub(planetCenter);
+			const adjustment = difference.normalize().multiplyScalar(props.state.model.floorRadius);
 			
-			// Normalize the difference vector and scale it by the sphere radius
-			const adjustment = difference.normalize().multiplyScalar(sphereRadius);
-			
-			// Set the model's position to be exactly at the sphere radius
 			props.state.model.scene.position.copy(planetCenter.clone().add(adjustment));
 			
-			// Dispatch the STOP_JUMP action
-			props.dispatch({ type: 'STOP_JUMP' });
+			if (props.state.model.jumping) {
+				props.dispatch({ type: 'STOP_JUMP' });
+			}
 		}
 
 
@@ -260,10 +261,9 @@ function ModelViewer(props) {
 		props.camera.lookAt(lookPosition);
 
 		const deltaX = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.x)
-		const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
+		// const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
 		const deltaZ = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.z)
 		if (deltaX ||
-			deltaY ||
 			deltaZ
 		) { 
 			props.dispatch({ type: 'MODEL_MOVE', change: currentPosition.sub(props.state.model.scene.position) })

@@ -377,6 +377,7 @@ function sceneReducer(state, action) {
           jump: false,
           jumping: false,
           lounge: true,
+          change: new Vector3(0, 0, 0),
           velocity: {
               ...state.model.velocity,
               y: 0
@@ -432,7 +433,7 @@ function sceneReducer(state, action) {
         interactions: new Set([...state.interactions].filter(interaction => {
           interaction = JSON.parse(interaction);
           var time = new Date().getTime();
-          if (time - interaction.date > 1000) {
+          if (time - interaction.date > 300) {
             return false;
           }
           return JSON.stringify(interaction);
@@ -458,7 +459,14 @@ function sceneReducer(state, action) {
           change: action.change
         }
       }
-    
+    case 'LOAD_GROUND':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          geometry: action.geometry
+        }
+      }
     default:
       return state;
   }
@@ -487,7 +495,6 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
-  console.log(model)
     model.scene.position.set(0, state.planet.radius, 0)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
@@ -685,7 +692,7 @@ function App() {
                   <span className="number">{new Number(coordinates.azimuthalAngle).toFixed(3)}</span>)
               </li> : null
             }
-           {/* <li>
+           <li>
               <i>DISPATCHES</i>
               <ol id="interactions">
                 {
@@ -698,7 +705,7 @@ function App() {
                   })
                 }
               </ol>
-            </li>*/}
+            </li>
 
             <li>
               <i>animations</i>

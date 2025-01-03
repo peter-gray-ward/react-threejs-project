@@ -28,7 +28,7 @@ var RECORD = {
 		categories: 11,
 		sizes: [
 			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
-		].map(n => n * 0.25)
+		].map(n => n * 100.1)
 	},
 	terrain: {
 		categories: 11,
@@ -48,7 +48,8 @@ function Scene(props) {
 		});
 	}, []);
 	camera.near = 0.1;
-	camera.far = 100000
+	camera.far = 1000000
+	camera.updateProjectionMatrix();
 
 	const starsMaterials = useMemo(() => {
 		var materials = []
@@ -71,11 +72,10 @@ function Scene(props) {
 			
 			var positions = []
 			var colors = []
-			var startCount = 1000
-			var minRadius = 100; // Minimum radius
-			var maxRadius = 500; // Maximum radius
+			var startCount = 500
+			var minRadius = 50000; // Minimum radius
+			var maxRadius = 100000; // Maximum radius
 			var userCenter = new Vector3(...props.state.model.scene.position);
-			console.log("processing star collection " + i)
 			for (var j = 0; j < startCount; j++) {
 				const phi = randomInRange(Math.PI, Math.PI * 2, randomStarSeeds[j + j * i]) // Azimuthal angle from 0 to 2π
 				const theta = randomInRange(Math.PI, Math.PI * 2, randomStarSeeds[j + j * i + 1]); // Calculate theta from costheta
@@ -102,14 +102,14 @@ function Scene(props) {
 	}, [props.state.model.change.x,props.state.model.change.y,props.state.model.change.z]);
 
 	useFrame(() => {
-		if (starGroupRef.current) {
+		if (false && starGroupRef.current) {
 			starGroupRef.current.children.forEach((points) => {
 				const geometry = points.geometry;
 				const positionArray = geometry.attributes.position.array;
 	
 				for (let i = 0; i < positionArray.length; i += 3) {
 					positionArray[i] += props.state.model.change.x;   // Update X
-					positionArray[i + 1] += props.state.model.change.y; // Update Y
+					// positionArray[i + 1] += props.state.model.change.y; // Update Y
 					positionArray[i + 2] += props.state.model.change.z; // Update Z
 				}
 	
@@ -136,10 +136,10 @@ function Scene(props) {
 					})
 				}
 			</group>
-			<mesh position={[...props.state.planet.position]} rotation={[Math.PI / 2, 0, 0]}>
+			{/* <mesh position={[...props.state.planet.position]} rotation={[Math.PI / 2, 0, 0]}>
 				<planeGeometry args={[props.state.planet.radius * 2.2, props.state.planet.radius * 2.2, 50, 50]} />
 				<meshBasicMaterial transparent side={DoubleSide} opacity={0.5} color="red" />
-			</mesh>
+			</mesh> */}
 		</>
 	);
 }
