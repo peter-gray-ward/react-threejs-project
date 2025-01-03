@@ -183,15 +183,26 @@ export function VisualizeQuaternion(quaternion, size = 1, arrowThickness = 0.1) 
 
 export function findRayIntersection(m, c, geometry) {
     const raycaster = new Raycaster();
-    const rayDirection = new Vector3().subVectors(c, m).normalize();
-    raycaster.set(m, rayDirection);
-    const intersects = raycaster.intersectObject(geometry, true);
+    const upwardDirection = new Vector3(0, 1, 0); // Upward direction in Y-axis
+    let rayDirection;
 
-    if (intersects.length > 0) {
-        return intersects[0].point;
+    if (c) {
+        rayDirection = new Vector3().subVectors(c, m).normalize();
+    } else {
+        rayDirection = upwardDirection.clone();
     }
 
-    return null;
+    raycaster.set(m, rayDirection);
+	let intersects = raycaster.intersectObject(geometry, true);
+    while (intersects.length === 0) {
+        // Move the origin `m` upward by a small step
+        m.add(upwardDirection.clone().multiplyScalar(0.05));
+
+        raycaster.set(m, rayDirection);
+        intersects = raycaster.intersectObject(geometry, true);
+    }
+
+    return intersects[0].point;
 }
 
 // Helper to check if a point is inside a triangle using barycentric coordinates
