@@ -6,7 +6,8 @@ import {
 	Sphere,
 	Vector3,
 	DoubleSide,
-	PlaneGeometry
+	PlaneGeometry,
+	Float32BufferAttribute
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -41,7 +42,9 @@ function Planet(props) {
 	useEffect(() => {
         // Create the SphereGeometry
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
+		geometry.vertexColors = true;
         const positions = geometry.attributes.position.array; // Get the vertices from the geometry
+		const colors = [];
         const TOCENTER = props.state.model.scene.position.clone().normalize(); // Center vector
 		var amplitude = 100
 
@@ -67,8 +70,11 @@ function Planet(props) {
             positions[x] = vector.x;
             positions[x + 1] = vector.y
             positions[x + 2] = vector.z + noiseValue
+
+			colors.push(Math.random(), Math.random(), Math.random());
         }
 
+		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
         // Mark the position attribute as needing an update
         geometry.attributes.position.needsUpdate = true;
 
@@ -101,8 +107,14 @@ function Planet(props) {
 
 		<mesh ref={surfaceMeshRef} position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
-			<meshStandardMaterial color="royalblue" wireframe opacity={0.75} side={DoubleSide} />
+			<meshStandardMaterial 
+				opacity={0.85} 
+				transparent={true} 
+				side={DoubleSide} 
+				vertexColors={true} // Enable vertex colors
+			/>
 		</mesh>
+
 
 	</group>
 }

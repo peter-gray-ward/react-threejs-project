@@ -348,13 +348,14 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           jump: true,
+          jumping: false,
           velocity: {
             ...state.model.velocity,
             y: SPEED.JUMP
           }
         }
       }
-    case 'JUMP':
+    case 'GRAVITY':
       
       return {
           ...state,
@@ -363,7 +364,7 @@ function sceneReducer(state, action) {
               jumping: true,
               velocity: {
                   ...state.model.velocity,
-                  y: state.model.velocity.y - SPEED.GRAVITY
+                  y: state.model.velocity.y + action.velocity
               }
           }
       };

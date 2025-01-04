@@ -6,8 +6,10 @@ import {
   Box3,
   LoopRepeat,
   Quaternion,
-  Sphere
+  Sphere,
+  MeshBasicMaterial
 } from 'three'
+import { SPEED } from '../models/constants'
 import { 
 	coordsToQuaternion,
 	coords,
@@ -28,6 +30,7 @@ Array.prototype.contains = function(str) {
 function ModelViewer(props) {
 	const [actions, setActions] = useState({});
 
+	const sphereRef = useRef()
 	const mixerRef = useRef(null);
 
     useEffect(() => {
@@ -137,15 +140,7 @@ function ModelViewer(props) {
 	    const newPosition = currentPosition.clone().add(step);
 	    const distanceToTarget = newPosition.distanceTo(targetPosition);
 
-	    if (false && props.state.model.jumping && distanceToTarget < 0.5) {
-	        // Clamp to the target position if within the gravity step
-	        props.state.model.scene.position.copy(targetPosition);
-	        props.dispatch({ type: 'STOP_JUMP' })
-	    } else {
-	        // Move incrementally
-	        props.state.model.scene.position.copy(newPosition);
-	    }
-
+	    props.state.model.scene.position.copy(newPosition);
 
 	    // Handle strafing
 	    var forwardDirection = props.state.model.scene.getWorldDirection(new Vector3()).normalize();
@@ -170,32 +165,43 @@ function ModelViewer(props) {
 
 	    }
 
+
 		// Update position based on velocity and direction
 		var jumpUp = localUp.multiplyScalar(props.state.model.velocity.y);
 		props.state.model.scene.position.add(jumpUp);
 
-		// Dispatch JUMP action to update velocity
-		props.dispatch({ type: 'JUMP', model: props.state.model });
+		let velocity = 0;
 
 		if (props.state.planet.geometry) {
-			const floorRadius = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.geometry);
-			if (floorRadius) {
-				props.state.model.floorRadius = floorRadius.y
+			const floor = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.geometry);
+			if (floor) {
+				props.state.model.floor = floor
+				sphereRef.current.position.set(floor.x, floor.y, floor.z)
 			}
 		}
 
-		const distToCore = props.state.model.scene.position.distanceTo(planetCenter);
-		const onOrBelowSurface = distToCore <= props.state.model.floorRadius;
-		if (onOrBelowSurface) {
-			const difference = props.state.model.scene.position.clone().sub(planetCenter);
-			const adjustment = difference.normalize().multiplyScalar(props.state.model.floorRadius);
+		if (props.state.model.jump) {
+			velocity += SPEED.JUMP;
+			props.state.model.scene.position.y += SPEED.JUMP;
+		}
+
+		if (props.state.model.floor) { // is there gravity
+			const distToCore = props.state.model.scene.position.distanceTo(planetCenter);
+			const aboveTheFloor = +distToCore.toFixed(2) > +props.state.model.floor.y.toFixed(2);
 			
-			props.state.model.scene.position.copy(planetCenter.clone().add(adjustment));
-			
-			if (props.state.model.jumping) {
-				props.dispatch({ type: 'STOP_JUMP' });
+			if (aboveTheFloor) {
+				velocity -= SPEED.GRAVITY;
+			} else {
+				props.state.model.scene.position.copy(props.state.model.floor);
+				if (props.state.model.jump) {
+					props.dispatch({ type: 'STOP_JUMP' });
+				}
+				velocity = 0;
 			}
 		}
+
+		// Dispatch JUMP action to update velocity
+		props.dispatch({ type: 'GRAVITY', model: props.state.model, velocity });
 
 
 		// Get the forward direction of the model
@@ -288,6 +294,15 @@ function ModelViewer(props) {
 		>
 		     <primitive object={q.group} />
 		</group>
+
+		<mesh ref={sphereRef} position={[
+			props.state.model.scene.x,
+			props.state.model.floorRadius,
+			props.state.model.scene.z
+		]}>
+			<sphereGeometry args={[0.25, 10, 10]} />
+			<meshBasicMaterial color="red" />
+		</mesh>
 		{/*<mesh position={[
 			props.state.model.scene.position.x,
 			props.state.model.scene.position.y,

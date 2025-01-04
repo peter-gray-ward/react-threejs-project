@@ -202,6 +202,10 @@ export function findRayIntersection(m, c, geometry) {
         intersects = raycaster.intersectObject(geometry, true);
     }
 
+	intersects[0].point.x = +intersects[0].point.x.toFixed(2);
+	intersects[0].point.y = +intersects[0].point.y.toFixed(2);
+	intersects[0].point.z = +intersects[0].point.z.toFixed(2);
+
     return intersects[0].point;
 }
 
