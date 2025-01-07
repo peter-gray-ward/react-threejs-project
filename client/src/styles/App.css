@@ -14,7 +14,7 @@
 }
 #stats {
   position: absolute;
-  background: black;
+  background: transparent;
   font-family: Charter;
   color: white;
   width: calc(100vw - 1rem);
@@ -27,6 +27,7 @@
   overflow: auto;
   display: flex;
   flex-direction: column;
+  z-index: 2;
 }
 
 #stats div {

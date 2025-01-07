@@ -268,7 +268,7 @@ function ModelViewer(props) {
 
 		const deltaX = Math.abs(props.state.model.scene.position.x - currentPosition.x)
 		// const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
-		const deltaZ = Math.abs(props.state.model.scene.position.x - currentPosition.z)
+		const deltaZ = Math.abs(props.state.model.scene.position.z - currentPosition.z)
 		const changePosition = Math.abs(deltaX + deltaZ > 1);
 		if (changePosition) { 
 			props.dispatch({ type: 'MODEL_MOVE', change: currentPosition.sub(props.state.model.scene.position) })

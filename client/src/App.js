@@ -679,9 +679,9 @@ function App() {
               </section>
             </li>
             <li>camera theta...<span className="number">{state.cameraTheta}</span></li>
-            <li>walking...<span className="boolean">{new String(state.model.walking)}</span></li>
-            <li>strafing...<span className="boolean">{new String(state.model.strafing)}</span></li>
-            <li>jumping...<span className="boolean">{new String(state.model.jumping)}</span></li>
+            <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
+            <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
+            <li>jumping...<span className="boolean">{new String(state.model.jump)}</span></li>
             <li>
               gravity distance {state.planet.distanceTo}
             </li>
