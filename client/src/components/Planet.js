@@ -40,12 +40,11 @@ function Planet(props) {
 	const sphereRef = useRef();
 
 	useEffect(() => {
-        // Create the SphereGeometry
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
-        const positions = geometry.attributes.position.array; // Get the vertices from the geometry
+        const positions = geometry.attributes.position.array;
 		const colors = [];
-        const TOCENTER = props.state.model.scene.position.clone().normalize(); // Center vector
+        const TOCENTER = props.state.model.scene.position.clone().normalize();
 		var amplitude = 100
 
 		const noise = perlinNoise.generatePerlinNoise(50, 50, {
@@ -54,31 +53,26 @@ function Planet(props) {
 		})
 
         for (let x = 0; x < positions.length; x += 3) {
-            // Create a vector for the current vertex
             const vector = new Vector3(positions[x], positions[x + 1], positions[x + 2]);
             const direction = vector.clone().normalize();
-            // const offset = randomInRange(-20, 20);
-            // vector.add(TOCENTER.multiplyScalar(offset));
-			const cols = 50; // Subdivisions along one axis
+			const cols = 50;
 			const xIndex = Math.floor((x / 3) % cols);
 			const yIndex = Math.floor((x / 3) / cols);
 			const noiseValue = noise[yIndex * cols + xIndex] * amplitude
 
 	
-
-            // Update the positions array
             positions[x] = vector.x;
             positions[x + 1] = vector.y
             positions[x + 2] = vector.z + noiseValue
 
-			colors.push(Math.random(), Math.random(), Math.random());
+			colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
         }
 
+        console.log(positions)
+
 		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
-        // Mark the position attribute as needing an update
         geometry.attributes.position.needsUpdate = true;
 
-        // Assign the modified geometry to the mesh
         surfaceMeshRef.current.geometry = geometry;
 
 
@@ -108,7 +102,7 @@ function Planet(props) {
 		<mesh ref={surfaceMeshRef} position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
-				opacity={0.85} 
+				opacity={1} 
 				transparent={true} 
 				side={DoubleSide} 
 				vertexColors={true} // Enable vertex colors

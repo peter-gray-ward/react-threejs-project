@@ -67,7 +67,7 @@ function ModelViewer(props) {
                 break;
             case 'lounge':
                 animationIndex = 1;
-				speedFactor = 0.007;
+				speedFactor = 0.00;
                 break;
             case 'jump':
                 animationIndex = 5;
@@ -168,6 +168,7 @@ function ModelViewer(props) {
 
 		// Update position based on velocity and direction
 		var jumpUp = localUp.multiplyScalar(props.state.model.velocity.y);
+		let aboveTheFloor = false;
 		props.state.model.scene.position.add(jumpUp);
 
 		let velocity = 0;
@@ -176,7 +177,7 @@ function ModelViewer(props) {
 			const floor = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.geometry);
 			if (floor) {
 				props.state.model.floor = floor
-				sphereRef.current.position.set(floor.x, floor.y, floor.z)
+				// sphereRef.current.position.set(floor.x, floor.y, floor.z)
 			}
 		}
 
@@ -187,7 +188,7 @@ function ModelViewer(props) {
 
 		if (props.state.model.floor) { // is there gravity
 			const distToCore = props.state.model.scene.position.distanceTo(planetCenter);
-			const aboveTheFloor = +distToCore.toFixed(2) > +props.state.model.floor.y.toFixed(2);
+			aboveTheFloor = +distToCore.toFixed(2) > +props.state.model.floor.y.toFixed(2);
 			
 			if (aboveTheFloor) {
 				velocity -= SPEED.GRAVITY;
@@ -200,8 +201,7 @@ function ModelViewer(props) {
 			}
 		}
 
-		// Dispatch JUMP action to update velocity
-		props.dispatch({ type: 'GRAVITY', model: props.state.model, velocity });
+		
 
 
 		// Get the forward direction of the model
@@ -266,15 +266,17 @@ function ModelViewer(props) {
 		// Make the camera look at the adjusted position
 		props.camera.lookAt(lookPosition);
 
-		const deltaX = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.x)
+		const deltaX = Math.abs(props.state.model.scene.position.x - currentPosition.x)
 		// const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
-		const deltaZ = Math.round(props.state.model.scene.position.x) !== Math.round(currentPosition.z)
-		if (deltaX ||
-			deltaZ
-		) { 
+		const deltaZ = Math.abs(props.state.model.scene.position.x - currentPosition.z)
+		const changePosition = Math.abs(deltaX + deltaZ > 1);
+		if (changePosition) { 
 			props.dispatch({ type: 'MODEL_MOVE', change: currentPosition.sub(props.state.model.scene.position) })
 		}
 		
+		if (velocity && (aboveTheFloor || changePosition)) {
+			props.dispatch({ type: 'GRAVITY', model: props.state.model, velocity });
+		}
 
 	});
 
@@ -285,7 +287,7 @@ function ModelViewer(props) {
 	return (<>
 		<primitive object={props.state.model.scene} />
 
-		<group
+		{/* <group
 		    position={[
 		        props.state.model.scene.position.x,
 		        props.state.model.scene.position.y,
@@ -302,7 +304,7 @@ function ModelViewer(props) {
 		]}>
 			<sphereGeometry args={[0.25, 10, 10]} />
 			<meshBasicMaterial color="red" />
-		</mesh>
+		</mesh> */}
 		{/*<mesh position={[
 			props.state.model.scene.position.x,
 			props.state.model.scene.position.y,
