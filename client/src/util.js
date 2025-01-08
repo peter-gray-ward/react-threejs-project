@@ -86,16 +86,27 @@ export const child = (scene, name) => {
 }
 
 
-export const pointOnSphere = (center, radius) => {
-	const theta = Math.acos(2 * Math.random() - 1); 
-	const phi = 2 * Math.PI * Math.random(); 
-	const x = radius * Math.sin(theta) * Math.cos(phi); 
-	const y = radius * Math.sin(theta) * Math.sin(phi); 
-	const z = radius * Math.cos(theta);
-	const vector = new Vector3(x, y, z);
-	vector.add(center);
-	return vector;
-}
+export const pointOnSphere = (center, radius, theta, phi, direction) => {
+    const x = radius * Math.cos(theta) * Math.sin(phi); // Horizontal plane
+	const z = radius * Math.sin(theta) * Math.sin(phi); // Horizontal plane
+	const y = radius * Math.cos(theta);                // Vertical position
+
+
+    const point = new Vector3(x, y, z);
+
+    // Step 2: Apply rotation using the direction vector
+    const defaultDirection = new Vector3(0, 1, 0); // Default "up" is y-axis
+    const quaternion = new Quaternion();
+    quaternion.setFromUnitVectors(defaultDirection, direction.clone().normalize()); // Rotate y-axis to match direction
+
+    point.applyQuaternion(quaternion); // Rotate the point by the quaternion
+
+    // Step 3: Translate the point to the sphere's center
+    point.add(center);
+
+    return point;
+};
+
 
 export const pointOnSphereBehindAndUp = (center, radius, forwardDirection, upOffset = 0.1) => {
     // Normalize the forward direction

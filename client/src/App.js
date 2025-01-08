@@ -26,7 +26,8 @@ import {
   child, 
   coordsToVector3,
   coordsToQuaternion,
-  VisualizeQuaternion
+  VisualizeQuaternion,
+  pointOnSphere
 } from './util';
 
 let __dispatch__ = '';
@@ -291,9 +292,8 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      cameraTheta += 0.05;
-      if (cameraTheta >= Math.PI * 2) {
-        cameraTheta = Math.PI * 2
+      if (cameraTheta < 6) {
+        cameraTheta += 0.05;
       }
       return {
         ...state,
@@ -310,9 +310,9 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
-      cameraTheta -= 0.05;
-      if (cameraTheta <= 0) {
-        cameraTheta = 0
+      
+      if (cameraTheta >= 5) {
+        cameraTheta -= 0.05;
       }
       return {
         ...state,
@@ -451,14 +451,6 @@ function sceneReducer(state, action) {
         animations: state.animations.map(animation => {
           return animation !== action.animation
         })
-      }
-    case 'MODEL_MOVE':
-      return {
-        ...state,
-        model: {
-          ...state.model,
-          change: action.change
-        }
       }
     case 'LOAD_GROUND':
       return {

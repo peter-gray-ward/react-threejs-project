@@ -14,7 +14,8 @@ import {
 	coordsToQuaternion,
 	coords,
 	VisualizeQuaternion,
-	findRayIntersection
+	findRayIntersection,
+	pointOnSphere
 } from '../util';
 import { floor } from 'three/webgpu';
 
@@ -246,17 +247,32 @@ function ModelViewer(props) {
 			props.dispatch({ type: 'ROTATE_DOWN', state: props.state })
 		}
 
-		// Spherical coordinates for camera adjustment
-		const sphericalX = 0//radius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
-		const sphericalY = radius * Math.cos(cameraTheta);
-		const sphericalZ = 0//radius * Math.sin(cameraTheta) * Math.sin(cameraPhi);
+		// Compute position on the sphere in the y-up coordinate system
+        const x = props.state.cameraRadius * Math.sin(cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (x-axis)
+        const z = props.state.cameraRadius * Math.sin(cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (z-axis)
+        const y = props.state.cameraRadius * Math.cos(cameraTheta);                // Vertical motion (y-axis)
 
-		// Set the camera position behind the model, adjusted by spherical coordinates
-		props.camera.position.copy(
-		    props.state.model.scene.position.clone()
-		        .add(forwardDirection.multiplyScalar(-radius)) // Always stay behind
-		        .add(new Vector3(sphericalX, sphericalY, sphericalZ)) // Apply spherical adjustments
-		);
+        let point = new Vector3(x, y, z);
+
+        // Get the model's forward direction
+        forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());
+
+        // Rotate the forwardDirection by Math.PI (180 degrees)
+        const rotationQuaternion = new Quaternion();
+        rotationQuaternion.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI); // Rotate around the y-axis
+        forwardDirection.applyQuaternion(rotationQuaternion);
+
+        // Align the point to the rotated forward direction
+        const defaultDirection = new Vector3(0, 0, -1); // Default forward direction (-z axis)
+        const alignmentQuaternion = new Quaternion();
+        alignmentQuaternion.setFromUnitVectors(defaultDirection, forwardDirection.clone().normalize());
+        point.applyQuaternion(alignmentQuaternion);
+
+        // Translate the point to the sphere's center (model's position)
+        const center = props.state.model.scene.position.clone();
+        point.add(center);
+
+		props.camera.position.copy(point);
 
 		// Define the look-at position based on the model's height and TOCENTER
 		const lookPosition = props.state.model.scene.position.clone();
@@ -266,26 +282,54 @@ function ModelViewer(props) {
 		// Make the camera look at the adjusted position
 		props.camera.lookAt(lookPosition);
 
-		const deltaX = Math.abs(props.state.model.scene.position.x - currentPosition.x)
-		// const deltaY = Math.round(props.state.model.scene.position.y) !== Math.round(currentPosition.y)
-		const deltaZ = Math.abs(props.state.model.scene.position.z - currentPosition.z)
-		const changePosition = Math.abs(deltaX + deltaZ > 1);
-		if (changePosition) { 
-			props.dispatch({ type: 'MODEL_MOVE', change: currentPosition.sub(props.state.model.scene.position) })
-		}
 		
-		if (velocity && (aboveTheFloor || changePosition)) {
+		if (velocity && aboveTheFloor) {
 			props.dispatch({ type: 'GRAVITY', model: props.state.model, velocity });
 		}
+
+
+		
 
 	});
 
 	const q = VisualizeQuaternion(props.state.model.scene.quaternion, 1, .3);
 
-	
+	// useEffect(() => {
+	//     if (props.state.model.scene) {
+	//         let theta = 0; // Start angle for vertical motion
+	//         const phi = Math.PI / 2; // Keep phi constant for fixed horizontal direction
+
+	//         const interval = setInterval(() => {
+	            
+
+	//             // Update sphere position
+	//             sphereRef.current.position.set(point.x, point.y, point.z);
+
+	//             // Increment theta for vertical motion
+	//             theta += 0.1; // Adjust speed as needed
+	//             if (theta > Math.PI * 2) {
+	//                 theta = 0; // Reset after a full rotation
+	//             }
+	//         }, 50); // Adjust interval for smoother motion
+
+	//         return () => clearInterval(interval); // Cleanup interval on unmount
+	//     }
+	// }, [props.state.model.scene, props.state.cameraRadius]);
+
+
+
 
 	return (<>
 		<primitive object={props.state.model.scene} />
+
+		<mesh ref={sphereRef} position={[
+			props.state.cameraPoint.x,
+			props.state.cameraPoint.y,
+			props.state.cameraPoint.z
+		]}>
+			<sphereGeometry args={[0.25, 10, 10]} />
+			<meshStandardMaterial color="red" />
+		</mesh> 
 
 		{/* <group
 		    position={[
@@ -297,14 +341,7 @@ function ModelViewer(props) {
 		     <primitive object={q.group} />
 		</group>
 
-		<mesh ref={sphereRef} position={[
-			props.state.model.scene.x,
-			props.state.model.floorRadius,
-			props.state.model.scene.z
-		]}>
-			<sphereGeometry args={[0.25, 10, 10]} />
-			<meshBasicMaterial color="red" />
-		</mesh> */}
+		*/}
 		{/*<mesh position={[
 			props.state.model.scene.position.x,
 			props.state.model.scene.position.y,
