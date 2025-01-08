@@ -90,7 +90,7 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: false,
           walking: false,
-          run: false,
+          run: action.shift,
           lounge: true,
           speed: {
             ...state.model.speed,
@@ -116,6 +116,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: true,
+          run: action.shift,
           speed: {
             ...state.model.speed,
             walk: -SPEED.WALK
@@ -131,6 +132,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: false,
+          run: action.shift,
           lounge: true,
           speed: {
             ...state.model.speed,
@@ -148,6 +150,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           strafe: true,
+          run: action.shift,
           speed: {
             ...state.model.speed,
             strafe:SPEED.STRAFE
@@ -164,7 +167,7 @@ function sceneReducer(state, action) {
           ...state.model,
           strafe: false,
           strafing: false,
-
+          run: action.shift,
           lounge: true,
           speed: {
             ...state.model.speed,
@@ -190,6 +193,7 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           strafe: true,
+          run: action.shift,
           speed: {
             ...state.model.speed,
             strafe: -SPEED.STRAFE
@@ -207,6 +211,7 @@ function sceneReducer(state, action) {
           strafe: false,
           strafing: false,
           lounge: true,
+          run: action.shift,
           speed: {
             ...state.model.speed,
             strafe: 0
@@ -292,8 +297,12 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < 6) {
-        cameraTheta += 0.05;
+      if (cameraTheta < Math.PI * 2) {
+        if (cameraTheta < 5) {
+          cameraTheta += 0.25;
+        } else {
+          cameraTheta += 0.05;
+        }
       }
       return {
         ...state,
@@ -311,8 +320,12 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
       
-      if (cameraTheta >= 5) {
-        cameraTheta -= 0.05;
+      if (cameraTheta > 2) {
+        if (cameraTheta > 5) {
+          cameraTheta -= 0.05;
+        } else {
+          cameraTheta -= 0.25;
+        }
       }
       return {
         ...state,
@@ -677,14 +690,6 @@ function App() {
             <li>
               gravity distance {state.planet.distanceTo}
             </li>
-            { (state.model.scene && state.planet.position) ?
-              <li>
-                <i>(radial distance, polar angle, azimuthal angle)</i><br/>
-                (<span className="number">{new Number(coordinates.radialDistance).toFixed(3)},</span>
-                  <span className="number">{new Number(coordinates.polarAngle).toFixed(3)},</span>
-                  <span className="number">{new Number(coordinates.azimuthalAngle).toFixed(3)}</span>)
-              </li> : null
-            }
            <li>
               <i>DISPATCHES</i>
               <ol id="interactions">

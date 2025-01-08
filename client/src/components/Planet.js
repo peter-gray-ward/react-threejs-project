@@ -73,6 +73,7 @@ function Planet(props) {
 		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
         geometry.attributes.position.needsUpdate = true;
 
+
         surfaceMeshRef.current.geometry = geometry;
 
 
@@ -85,14 +86,14 @@ function Planet(props) {
 	const surfaceMeshRef = useRef();
 
 	return <group>
-		{/* <mesh position={props.state.planet.position}>
+	{/*	<mesh position={props.state.planet.position}>
 			<sphereGeometry args={[
 				props.state.planet.radius,
 				11,
 				props.state.planet.radius * 0.25
 			]} />
 			<meshBasicMaterial wireframe side={DoubleSide} color="royalblue" />
-		</mesh> */}
+		</mesh>*/}
 
 		{/* <mesh ref={sphereRef} position={props.state.planet.position}>
             <sphereGeometry args={[props.state.planet.radius, 11, props.state.planet.radius * 0.25]} />

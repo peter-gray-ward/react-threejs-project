@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Vector3 } from 'three';
 
-function Lighting() {
+function Lighting(props) {
+
+
   return (
     <>
       <ambientLight intensity={0.5} />
-      <directionalLight position={[0, 10, 5]} intensity={1} />
+      <directionalLight position={props.state.sun.position} intensity={1} />
     </>
   );
 }

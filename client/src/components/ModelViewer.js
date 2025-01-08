@@ -234,23 +234,29 @@ function ModelViewer(props) {
 		props.state.model.scene.quaternion.copy(quaternion);
 
 		// Calculate the camera's position
-		const radius = props.state.cameraRadius; // Distance from the model
-		const cameraTheta = props.state.cameraTheta; // Vertical angle
+		let radius = props.state.cameraRadius; // Distance from the model
+		let cameraTheta = props.state.cameraTheta; // Vertical angle
 		const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
 
-
 		if (props.state.model.rotatingUp) {
-			props.dispatch({ type: 'ROTATE_UP', state: props.state })
+		    props.dispatch({ type: 'ROTATE_UP', state: props.state });
 		}
 
 		if (props.state.model.rotatingDown) {
-			props.dispatch({ type: 'ROTATE_DOWN', state: props.state })
+		    props.dispatch({ type: 'ROTATE_DOWN', state: props.state });
 		}
 
+		// Smoothly approach a radius of 1.5 when cameraTheta < 5
+		radius = cameraTheta < 5 
+		    ? 0.5 + (props.state.cameraRadius - 0.5) * (cameraTheta / 5)
+		    : props.state.cameraRadius;
+
+		cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
+
 		// Compute position on the sphere in the y-up coordinate system
-        const x = props.state.cameraRadius * Math.sin(cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (x-axis)
-        const z = props.state.cameraRadius * Math.sin(cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (z-axis)
-        const y = props.state.cameraRadius * Math.cos(cameraTheta);                // Vertical motion (y-axis)
+		const x = radius * Math.sin(cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (x-axis)
+		const z = radius * Math.sin(cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (z-axis)
+		const y = radius * Math.cos(cameraTheta);                      // Vertical motion (y-axis)
 
         let point = new Vector3(x, y, z);
 

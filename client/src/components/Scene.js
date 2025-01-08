@@ -71,6 +71,10 @@ function Scene(props) {
 				size: RECORD.star.sizes[i]
 			}));
 		}
+		materials.push(new PointsMaterial({ 
+			vertexColors: true,
+			size: RECORD.star.sizes[i] * 50
+		}));
 		return materials;
 	}, []);
 	
@@ -93,9 +97,9 @@ function Scene(props) {
 				const theta = randomInRange(0, Math.PI, randomStarSeeds[j + j * i + 1]); // Calculate theta from costheta
 				const radius = minRadius//minRadius + Math.random() * (maxRadius - minRadius); // Random radius between minRadius and maxRadius
 
-				const x = userCenter.x + radius * Math.sin(theta) * Math.cos(phi);
-				const y = userCenter.y + radius * Math.sin(theta) * Math.sin(phi);
-				const z = userCenter.z + radius * Math.cos(theta);
+				const x = radius * Math.sin(theta) * Math.cos(phi);
+				const y = radius * Math.sin(theta) * Math.sin(phi);
+				const z = radius * Math.cos(theta);
 
 				positions.push(x, y, z);
 
@@ -105,10 +109,25 @@ function Scene(props) {
 
 				colors.push(r, g, b);
 			}
+
+
 			starsGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
 			starsGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+
 			_starGeometries.push(starsGeometry);
 		}
+
+		var sunGeometry = new BufferGeometry();
+		var sunPhi = Math.PI / 2;
+		var sunTheta = Math.PI / 2;
+		const sunRadius = 50000;
+		const sunX = sunRadius * Math.sin(sunTheta) * Math.cos(sunPhi);
+		const sunY = sunRadius * Math.sin(sunTheta) * Math.sin(sunPhi);
+		const sunZ = sunRadius * Math.cos(sunTheta);
+		sunGeometry.setAttribute('color', new Float32BufferAttribute([1,1,1], 3));
+		sunGeometry.setAttribute('position', new Float32BufferAttribute([sunX, sunY, sunZ], 3));
+		_starGeometries.push(sunGeometry);
+
 		return _starGeometries;
 	}, []);
 
@@ -156,33 +175,27 @@ function Scene(props) {
 		}
 
 
+
 		return geometries;
 	}, []);
 
 	useFrame(() => {
-		if (false && starGroupRef.current) {
-			starGroupRef.current.children.forEach((points) => {
-				const geometry = points.geometry;
-				const positionArray = geometry.attributes.position.array;
-	
-				for (let i = 0; i < positionArray.length; i += 3) {
-					positionArray[i] += props.state.model.change.x;   // Update X
-					// positionArray[i + 1] += props.state.model.change.y; // Update Y
-					positionArray[i + 2] += props.state.model.change.z; // Update Z
-				}
-	
-				geometry.attributes.position.needsUpdate = true; // Notify Three.js of changes
-			});
-		}
+	    if (starGroupRef.current) {
+	        starGroupRef.current.rotation.x += 0.001; // Rotate around the Y-axis
+	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
+	            starGroupRef.current.rotation.x -= Math.PI * 2;
+	        }
+	    }
 	});
-	
+
+
 	
 	return (
 		<>
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
 			{ props.state.model.dial }
-			<group ref={starGroupRef}>
+			<group ref={starGroupRef} position={[...props.state.model.scene.position]}>
 				{
 
 					starsGeometries.map((starGeometryOfCategory, i) => <points key={i} args={[starGeometryOfCategory, starsMaterials[i]]} />)
