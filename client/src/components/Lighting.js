@@ -6,7 +6,11 @@ function Lighting(props) {
 
   return (
     <>
-      <ambientLight intensity={0.5} />
+      <ambientLight position={[
+        props.state.model.scene.position.x,
+        props.state.model.scene.position.y,
+        props.state.model.scene.position.z
+      ]} intensity={0.85} />
       <directionalLight position={props.state.sun.position} intensity={1} />
     </>
   );

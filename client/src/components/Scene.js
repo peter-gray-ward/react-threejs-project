@@ -8,6 +8,7 @@ import {
 	Vector3,
 	Point,
 	Points,
+	Matrix4,
 	InstancedMesh,
 	BufferGeometry,
 	PointsMaterial,
@@ -22,13 +23,15 @@ import {
 	pointOnSphere,
 	randomInRange
 } from '../util';
+import {
+	starRadius,
+	angularSize
+} from '../models/constants';
 
 var RECORD = {
 	star: {
 		categories: 11,
-		sizes: [
-			0.01, 0.1, 0.2, 1.3, 0.5, 0.7, 0.77, 0.85, 1.23, 1.5, 2, 1
-		].map(n => n * 100.1)
+		sizes: Array.from({ length: 11 }, () => randomInRange(angularSize * starRadius * 0.009, angularSize * starRadius * 1.01))
 	},
 	terrain: {
 		categories: 11,
@@ -37,9 +40,9 @@ var RECORD = {
 		]
 	},
 	sky: {
-		categories: 11,
+		categories: 2,
 		size: 1000,
-		panelCount: 11
+		panelCount: 20000
 	}
 }
 
@@ -47,6 +50,7 @@ function Scene(props) {
 	const { camera, scene } = useThree();
 	const starGroupRef = useRef();
 	const skyGroupRef = useRef();
+	const sunRef = useRef();
 	const randomStarSeeds = useMemo(() => {
 		return Array.from({ length: RECORD.star.categories * RECORD.star.count })
 		.flatMap(n => {
@@ -60,7 +64,7 @@ function Scene(props) {
 		});
 	}, []);
 	camera.near = 0.1;
-	camera.far = 1000000
+	camera.far = starRadius * 2
 	camera.updateProjectionMatrix();
 
 	const starsMaterials = useMemo(() => {
@@ -80,7 +84,6 @@ function Scene(props) {
 	
 	var starsGeometries = useMemo(() => {
 		var _starGeometries = []
-		console.log("randomSeed", randomStarSeeds[0])
 		for (var i = 0; i < RECORD.star.categories; i++) {
 			props.dispatch({ type: 'ADD_SCENE', scene })
 
@@ -88,13 +91,12 @@ function Scene(props) {
 			var positions = []
 			var colors = []
 			var startCount = 500
-			var minRadius = 50000; // Minimum radius
-			var maxRadius = 100000; // Maximum radius
+			var minRadius = starRadius; // Minimum radius
 
 			var userCenter = new Vector3(...props.state.model.scene.position);
 			for (var j = 0; j < startCount; j++) {
-				const phi = randomInRange(0, Math.PI * 2, randomStarSeeds[j + j * i]) // Azimuthal angle from 0 to 2π
-				const theta = randomInRange(0, Math.PI, randomStarSeeds[j + j * i + 1]); // Calculate theta from costheta
+				const phi = randomInRange(0, Math.PI * 2)//, randomStarSeeds[j + j * i]) // Azimuthal angle from 0 to 2π
+				const theta = Math.acos(2 * Math.random() - 1);//, randomStarSeeds[j + j * i + 1]); // Calculate theta from costheta
 				const radius = minRadius//minRadius + Math.random() * (maxRadius - minRadius); // Random radius between minRadius and maxRadius
 
 				const x = radius * Math.sin(theta) * Math.cos(phi);
@@ -120,10 +122,17 @@ function Scene(props) {
 		var sunGeometry = new BufferGeometry();
 		var sunPhi = Math.PI / 2;
 		var sunTheta = Math.PI / 2;
-		const sunRadius = 50000;
+		const sunRadius = starRadius;
 		const sunX = sunRadius * Math.sin(sunTheta) * Math.cos(sunPhi);
 		const sunY = sunRadius * Math.sin(sunTheta) * Math.sin(sunPhi);
 		const sunZ = sunRadius * Math.cos(sunTheta);
+
+		props.dispatch({ type: 'LOAD_SUN', sun: {
+			x: sunX,
+			y: sunY,
+			z: sunZ
+		} });
+
 		sunGeometry.setAttribute('color', new Float32BufferAttribute([1,1,1], 3));
 		sunGeometry.setAttribute('position', new Float32BufferAttribute([sunX, sunY, sunZ], 3));
 		_starGeometries.push(sunGeometry);
@@ -144,47 +153,163 @@ function Scene(props) {
 	}, []);
 
 	var skyGeometries = useMemo(() => {
-		var geometries = [];
+	    var geometries = [];
+	    const radius = props.state.planet.radius;
 
-		for (var i = 0; i < RECORD.sky.categories; i++) {
-			var skyGeometry = new BufferGeometry();
-			var positions = [];
-			var colors = [];
+	    for (var i = 0; i < RECORD.sky.categories; i++) {
+	        var skyGeometry = new BufferGeometry();
+	        var positions = [];
+	        var colors = [];
 
-			for (var j = 0; j < RECORD.sky.panelCount; j++) {
-				const phi = randomInRange(Math.PI, Math.PI * 2, randomSkySeeds[j + j * i]);
-				const theta = randomInRange(Math.PI, Math.PI * 2, randomSkySeeds[j + j * i + 1]);
-				const radius = 50000 - 11;
-				var x = props.state.model.scene.position.x + radius * Math.sin(theta) * Math.cos(phi);
-				const y = props.state.model.scene.position.y + radius * Math.sin(theta) * Math.sin(phi);
-				const z = props.state.model.scene.position.z + radius * Math.cos(theta);
+	        // Define grid resolution
+	        const panelResolution = Math.sqrt(RECORD.sky.panelCount); // Grid size
+	        const phiStep = (Math.PI * 2) / panelResolution; // Azimuthal angle step
+	        const thetaStep = Math.PI / panelResolution; // Polar angle step (half sphere)
 
-				positions.push(x, y, z);
+	        for (var j = 0; j < RECORD.sky.panelCount; j++) {
+	            // Calculate grid indices
+	            const row = Math.floor(j / panelResolution);
+	            const col = j % panelResolution;
 
-				var r = randomInRange(0, .25);
-				var g = randomInRange(0, .85);
-				var b = 1;
+	            // Calculate phi and theta systematically
+	            const phi = col * phiStep; // Horizontal division
+	            const theta = row * thetaStep; // Vertical division
 
-				colors.push(r, g, b);
-			}
+	            // Convert spherical coordinates to Cartesian
+	            var x = props.state.model.scene.position.x + radius * Math.sin(theta) * Math.cos(phi);
+	            const y = props.state.model.scene.position.y + radius * Math.sin(theta) * Math.sin(phi);
+	            const z = props.state.model.scene.position.z + radius * Math.cos(theta);
 
-			skyGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-			skyGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+	            positions.push(x, y, z);
 
-			geometries.push(skyGeometry);
-		}
+	            // Color logic (keep or modify as needed)
+	            var r = col / panelResolution; // Gradient based on column
+	            var g = row / panelResolution; // Gradient based on row
+	            var b = 1;
 
+	            colors.push(r, g, b);
+	        }
 
+	        skyGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+	        skyGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
 
-		return geometries;
+	        geometries.push(skyGeometry);
+	    }
+
+	    return geometries;
 	}, []);
+
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
 	        starGroupRef.current.rotation.x += 0.001; // Rotate around the Y-axis
+	        // 
 	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
-	            starGroupRef.current.rotation.x -= Math.PI * 2;
+	            starGroupRef.current.rotation.x = 0
 	        }
+
+	        // Sun's spherical coordinates
+		    const sunPhi = Math.PI / 2; // Azimuthal angle (constant here)
+		   	const sunTheta = Math.PI / 2// Polar angle (based on rotation)
+		    const sunRadius = 50000; // Radius of the sun
+
+		    // Convert to Cartesian coordinates
+		    const sunX = sunRadius * Math.sin(sunTheta) * Math.cos(sunPhi);
+		    const sunY = sunRadius * Math.sin(sunTheta) * Math.sin(sunPhi);
+		    const sunZ = sunRadius * Math.cos(sunTheta);
+
+		    // Create the sun's position vector
+		    const sunPosition = new Vector3(sunX, sunY, sunZ);
+		    const rotationMatrix = new Matrix4().makeRotationX(starGroupRef.current.rotation.x);
+
+	        // Apply the rotation to the sun's position
+	        sunPosition.sub(new Vector3(0, props.state.planet.radius, 0)); // Translate to the origin
+	        sunPosition.applyMatrix4(rotationMatrix); // Apply rotation
+	        sunPosition.add(new Vector3(0, props.state.planet.radius, 0)); // Translate back to the group's center
+
+		    // Log the updated sun position
+
+	        skyGroupRef.current.children.forEach((skyCategory) => {
+			    if (!skyCategory.geometry || !skyCategory.geometry.attributes.position) return;
+
+			    const positions = skyCategory.geometry.attributes.position.array;
+			    const colors = skyCategory.geometry.attributes.color ? skyCategory.geometry.attributes.color.array : null;
+
+			    let maxDist = -Infinity;
+			    let minDist = Infinity;
+
+			    // First pass: Calculate min and max distances
+			    for (let i = 0; i < positions.length; i += 3) {
+			        const vertex = new Vector3(
+			            positions[i],
+			            positions[i + 1],
+			            positions[i + 2]
+			        );
+			        const distanceToSun = sunPosition.distanceTo(vertex);
+			        maxDist = Math.max(maxDist, distanceToSun);
+			        minDist = Math.min(minDist, distanceToSun);
+			    }
+
+			    // Calculate the step size based on the range
+			   
+
+			    // Define colors for different intervals (customize as needed)
+			   const spectrumColors = [
+				    [0.8, 0.8, 1],  // Noon (light blue)
+				    [0.6, 0.6, 0.8], // Afternoon (fading blue)
+				    [0.4, 0.4, 0.6], // Sunset
+				    [0.2, 0.2, 0.4], // Twilight
+				    [0.1, 0.1, 0.2], // Early night
+				    [0, 0, 0.1],     // Midnight (very dark blue)
+				    [0, 0, 0]        // Deep night (black)
+				].reverse();
+
+
+			    // Normalize distance and map to spectrumColors
+				for (let i = 0; i < positions.length; i += 3) {
+				    const vertex = new Vector3(
+				        positions[i],
+				        positions[i + 1],
+				        positions[i + 2]
+				    );
+				    const distanceToSun = sunPosition.distanceTo(vertex);
+
+				    // Normalize distance to a range [0, 1]
+				    const normalizedDistance = (distanceToSun - minDist) / (maxDist - minDist);
+
+				    // Calculate the index in the spectrumColors array
+				    const spectrumIndex = Math.min(
+				        Math.floor(normalizedDistance * (spectrumColors.length - 1)),
+				        spectrumColors.length - 1
+				    );
+
+				    // Get the corresponding color
+				    const color = spectrumColors[0];
+
+				    // Assign the calculated color
+				    if (colors) {
+				        colors[i] = color[0];     // Red
+				        colors[i + 1] = color[1]; // Green
+				        colors[i + 2] = color[2]; // Blue
+				    }
+				}
+
+
+			    // Update the geometry colors if modified
+			    if (colors) {
+			    	skyCategory.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+			        skyCategory.geometry.attributes.color.needsUpdate = true;
+			    }
+
+			    
+			});
+
+
+			// props.dispatch({ type: 'LOAD_SUN', sun: {
+			// 	x: sunX,
+			// 	y: sunY,
+			// 	z: sunZ
+			// } });
 	    }
 	});
 
@@ -198,16 +323,30 @@ function Scene(props) {
 			<group ref={starGroupRef} position={[...props.state.model.scene.position]}>
 				{
 
-					starsGeometries.map((starGeometryOfCategory, i) => <points key={i} args={[starGeometryOfCategory, starsMaterials[i]]} />)
+					starsGeometries.map((starGeometryOfCategory, i) => {
+						if (i == starsGeometries.length - 1) {
+							if (!sunRef.current) {
+								var sunPoints = <points ref={sunRef} name="sun" key={i} args={[starGeometryOfCategory, starsMaterials[i]]}/>;
+								sunRef.current = sunPoints;
+								return sunPoints;
+							}
+						}
+						return <points key={i} args={[starGeometryOfCategory, starsMaterials[i]]}/>
+					}) 
 				}
 			</group>
 
-		{/*	<group ref={skyGroupRef}>
-				{
+				{/*		<mesh position={[...props.state.model.scene.position]}>
+							<sphereGeometry args={[50000, 20, 20]} />
+							<meshBasicMaterial color="lightblue" side={DoubleSide} />
+						</mesh>
+			*/}
+			<group ref={skyGroupRef}>
+		{/*		{
 
 					skyGeometries.map((skyGeometryOfCategory, i) => <points key={i} args={[skyGeometryOfCategory, skyMaterials[i]]} />)
-				}
-			</group>*/}
+				}*/}
+			</group>
 			
 			{/* <mesh position={[...props.state.planet.position]} rotation={[Math.PI / 2, 0, 0]}>
 				<planeGeometry args={[props.state.planet.radius * 2.2, props.state.planet.radius * 2.2, 50, 50]} />

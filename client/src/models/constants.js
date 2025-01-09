@@ -29,7 +29,10 @@ export const MASS = {
   }
 }
 
-export const cameraRadius = 2.5
+export const starRadius = 131636736;
+export const angularSize = 0.00345;
+// export const cameraRadius = starRadius * 2;//100000.5
+export const cameraRadius = 3.5
 
 export const props = {
   keys: { 
@@ -92,8 +95,8 @@ export const props = {
   sun: {
     radius: MASS.sun.radius,
     position: [
-      0,
       MASS.planet.radius + 50000,
+      0,
       0
     ]
   },

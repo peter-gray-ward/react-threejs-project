@@ -297,12 +297,8 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < Math.PI * 2) {
-        if (cameraTheta < 5) {
-          cameraTheta += 0.25;
-        } else {
-          cameraTheta += 0.05;
-        }
+      if (cameraTheta < Math.PI * 2 - 0.25) {
+        cameraTheta += 0.25;
       }
       return {
         ...state,
@@ -320,8 +316,8 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
       
-      if (cameraTheta > 2) {
-        if (cameraTheta > 5) {
+      if (cameraTheta > 0) {
+        if (cameraTheta > Math.PI * 1.9) {
           cameraTheta -= 0.05;
         } else {
           cameraTheta -= 0.25;
@@ -473,9 +469,18 @@ function sceneReducer(state, action) {
           geometry: action.geometry
         }
       }
+    case 'LOAD_SUN':
+      return {
+        ...state,
+        sun: {
+          ...state.sun,
+          ...action.sun
+        }
+      };
     default:
       return state;
   }
+
 }
 
 

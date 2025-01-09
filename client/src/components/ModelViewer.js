@@ -283,7 +283,7 @@ function ModelViewer(props) {
 		// Define the look-at position based on the model's height and TOCENTER
 		const lookPosition = props.state.model.scene.position.clone();
 		const upDirection = TOCENTER.clone().normalize();
-		lookPosition.add(upDirection.multiplyScalar(props.state.model.height / 2));
+		lookPosition.add(upDirection.multiplyScalar(props.state.model.height * .75));
 
 		// Make the camera look at the adjusted position
 		props.camera.lookAt(lookPosition);
