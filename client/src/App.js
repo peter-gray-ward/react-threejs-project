@@ -466,7 +466,8 @@ function sceneReducer(state, action) {
         ...state,
         planet: {
           ...state.planet,
-          geometry: action.geometry
+          surfaceGeometry: action.surfaceGeometry,
+          planetGeometry: action.planetGeometry
         }
       }
     case 'LOAD_SUN':
@@ -506,7 +507,7 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
-    model.scene.position.set(0, state.planet.radius, 0)
+    model.scene.position.set(0, state.planet.radius + 100, 0)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 

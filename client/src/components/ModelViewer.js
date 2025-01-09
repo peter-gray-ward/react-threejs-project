@@ -30,7 +30,7 @@ Array.prototype.contains = function(str) {
 
 function ModelViewer(props) {
 	const [actions, setActions] = useState({});
-
+	const [floorDistances, setFloorDistances] = useState({})
 	const sphereRef = useRef()
 	const mixerRef = useRef(null);
 
@@ -174,11 +174,28 @@ function ModelViewer(props) {
 
 		let velocity = 0;
 
-		if (props.state.planet.geometry) {
-			const floor = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.geometry);
+		if (props.state.planet.surfaceGeometry) {
+			const floor = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.surfaceGeometry);
 			if (floor) {
-				props.state.model.floor = floor
+				var floorDistance = +floor.distanceTo(props.state.model.scene.position).toFixed(1);
+				if (!floorDistances[floorDistance]) {
+					floorDistances[floorDistance] = 0
+				}
+				floorDistances[floorDistance]++
+				setFloorDistances(floorDistances)
+				console.log(floorDistances)
+				// if (floorDistance > 2) {
+				// 	props.state.model.floor = new Vector3(0, 0, 0);
+				// } else {
+					props.state.model.floor = floor
+				// }
+				
 				// sphereRef.current.position.set(floor.x, floor.y, floor.z)
+			} else {
+				floor = findRayIntersection(props.state.model.scene.position.clone(),
+					planetCenter,
+					props.state.planet.sphereRef
+				);
 			}
 		}
 
