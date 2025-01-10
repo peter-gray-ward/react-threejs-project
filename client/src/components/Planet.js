@@ -3,6 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
+	BoxGeometry,
+	MeshBasicMaterial,
+	Mesh,
 	Sphere,
 	Vector3,
 	DoubleSide,
@@ -41,6 +44,7 @@ function Planet(props) {
 	const sphereRef = useRef();
 
 	useEffect(() => {
+		try {
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
         const positions = geometry.attributes.position.array;
@@ -60,11 +64,11 @@ function Planet(props) {
 			const xIndex = Math.floor((x / 3) % cols);
 			const yIndex = Math.floor((x / 3) / cols);
 			const noiseValue = noise[yIndex * cols + xIndex] * amplitude
-
 	
             positions[x] = vector.x;
             positions[x + 1] = vector.y
             positions[x + 2] = vector.z + noiseValue
+
 
 			colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
         }
@@ -75,7 +79,7 @@ function Planet(props) {
         geometry.attributes.position.needsUpdate = true;
 
 
-        surfaceMeshRef.current.geometry = geometry;
+        surfaceRef.current.geometry = geometry;
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
         const planetOceanPositions = oceanGeometry.attributes.position.array;
@@ -89,15 +93,46 @@ function Planet(props) {
 
         sphereRef.current.geometry = oceanGeometry;
 
-		props.dispatch({ type: 'LOAD_GROUND',
-			surfaceGeometry: surfaceMeshRef.current,
+		props.dispatch({ 
+			type: 'LOAD_GROUND',
+			surfaceGeometry: surfaceRef.current,
 			planetGeometry: sphereRef.current
 		})
-
+		} catch (err) {
+			debugger
+		}
     }, []); // Add dependencies if needed
 
+    const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
+
+    useFrame(() => {
+        if (sphereRef.current && surfaceRef.current && !props.state.planet.oceansFilled) {
+            const sphere = sphereRef.current;
+            const surface = surfaceRef.current;
+
+            // Get lakes
+            const lakes = new Set();
+            const lands = new Set();
+            
+
+            for (var x = 0; x < surface.geometry.attributes.position.array.length; x += 3) {
+            	var v = new Vector3(surface.geometry.attributes.position.array[x], surface.geometry.attributes.position.array[x + 1], surface.geometry.attributes.position.array[x + 2]);
+            	if (v.distanceTo(planetCenter) < props.state.planet.radius) {
+            		lakes.add(v);
+            	} else {
+            		lands.add(v);
+            	}
+            }
+
+            console.log("FILL_OCEAN", lakes, lands, surface.geometry.attributes.position.array.length / 3);
+
+            // Mark oceans as filled
+            props.dispatch({ type: 'FILL_OCEAN', lakes });
+        }
+    });
+
 	const sphereColor = useMemo(() => 'white', []);
-	const surfaceMeshRef = useRef();
+	const surfaceRef = useRef();
 
 	return <group>
 	{/*	<mesh position={props.state.planet.position}>
@@ -119,7 +154,7 @@ function Planet(props) {
             />
         </mesh>
 
-		<mesh ref={surfaceMeshRef} position={[0, props.state.planet.radius + 88, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={surfaceRef} position={[0, props.state.planet.radius + 50, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1} 

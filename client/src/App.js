@@ -153,7 +153,7 @@ function sceneReducer(state, action) {
           run: action.shift,
           speed: {
             ...state.model.speed,
-            strafe:SPEED.STRAFE
+            strafe: SPEED.STRAFE * (done.shift ? 1.5 : 1)
           }
         }
       }
@@ -196,7 +196,7 @@ function sceneReducer(state, action) {
           run: action.shift,
           speed: {
             ...state.model.speed,
-            strafe: -SPEED.STRAFE
+            strafe: -SPEED.STRAFE * (done.shift ? 1.5 : 1)
           }
         }
       }
@@ -246,7 +246,7 @@ function sceneReducer(state, action) {
       var rotationIncrement = action.state.model.rotationIncrement;
       rotationIncrement += 0.1;
       if (rotationIncrement > Math.PI * 2) {
-        rotationIncrement = 0;
+        rotationIncrement = rotationIncrement - Math.PI * 2;
       }
       return {
         ...state,
@@ -259,7 +259,7 @@ function sceneReducer(state, action) {
       var rotationIncrement = action.state.model.rotationIncrement;
       rotationIncrement -= 0.1;
       if (rotationIncrement < 0) {
-        rotationIncrement = Math.PI * 2
+        rotationIncrement = Math.PI * 2 + rotationIncrement
       }
       return {
         ...state,
@@ -358,19 +358,19 @@ function sceneReducer(state, action) {
           ...state.model,
           jump: true,
           jumping: false,
+          falling: false,
           velocity: {
             ...state.model.velocity,
             y: SPEED.JUMP
           }
         }
       }
-    case 'GRAVITY':
-      
+    case 'GRAVITY':     
       return {
           ...state,
           model: {
               ...state.model,
-              jumping: true,
+              falling: true,
               velocity: {
                   ...state.model.velocity,
                   y: state.model.velocity.y + action.velocity
@@ -394,6 +394,10 @@ function sceneReducer(state, action) {
           }
         }
       };
+    case 'STOP_FALLING':
+      return {
+        ...state
+      }
     case 'START_PLANET':
       return {
         ...state,
@@ -478,6 +482,14 @@ function sceneReducer(state, action) {
           ...action.sun
         }
       };
+    case 'FILL_OCEAN':
+      return {
+        ...state,
+        planet: {
+          ...state.planet,
+          oceansFilled: true
+        }
+      }
     default:
       return state;
   }

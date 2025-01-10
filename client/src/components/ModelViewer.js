@@ -17,7 +17,6 @@ import {
 	findRayIntersection,
 	pointOnSphere
 } from '../util';
-import { floor } from 'three/webgpu';
 
 Array.prototype.contains = function(str) {
 	for (var i = 0; i < this.length; i++) {
@@ -175,27 +174,22 @@ function ModelViewer(props) {
 		let velocity = 0;
 
 		if (props.state.planet.surfaceGeometry) {
-			const floor = findRayIntersection(props.state.model.scene.position.clone(), planetCenter, props.state.planet.surfaceGeometry);
-			if (floor) {
-				var floorDistance = +floor.distanceTo(props.state.model.scene.position).toFixed(1);
-				if (!floorDistances[floorDistance]) {
-					floorDistances[floorDistance] = 0
-				}
-				floorDistances[floorDistance]++
-				setFloorDistances(floorDistances)
-				console.log(floorDistances)
-				// if (floorDistance > 2) {
-				// 	props.state.model.floor = new Vector3(0, 0, 0);
-				// } else {
-					props.state.model.floor = floor
-				// }
-				
-				// sphereRef.current.position.set(floor.x, floor.y, floor.z)
-			} else {
-				floor = findRayIntersection(props.state.model.scene.position.clone(),
-					planetCenter,
-					props.state.planet.sphereRef
-				);
+			const surfaceFloor = findRayIntersection(
+				props.state.model.scene.position.clone(), 
+				planetCenter, 
+				props.state.planet.surfaceGeometry
+			);
+			const oceanFloor = findRayIntersection(
+				props.state.model.scene.position.clone(),
+				planetCenter,
+				props.state.planet.planetGeometry
+			);
+			if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
+				props.state.model.floor = surfaceFloor
+				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model.floor })
+			}
+			if (oceanFloor) {
+
 			}
 		}
 
@@ -204,9 +198,10 @@ function ModelViewer(props) {
 			props.state.model.scene.position.y += SPEED.JUMP;
 		}
 
+
 		if (props.state.model.floor) { // is there gravity
 			const distToCore = props.state.model.scene.position.distanceTo(planetCenter);
-			aboveTheFloor = +distToCore.toFixed(2) > +props.state.model.floor.y.toFixed(2);
+			aboveTheFloor = +distToCore.toFixed(8) > +props.state.model.floor.y.toFixed(8);
 			
 			if (aboveTheFloor) {
 				velocity -= SPEED.GRAVITY;

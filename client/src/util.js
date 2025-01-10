@@ -192,33 +192,51 @@ export function VisualizeQuaternion(quaternion, size = 1, arrowThickness = 0.1) 
     return { quaternion, group }
 }
 
-export function findRayIntersection(m, c, geometry) {
+export function findRayIntersection(model, objectCenter, objectMesh) {
+    
+    const stepDirection = new Vector3(0, 1, 0);
+    const rayDirection = new Vector3().subVectors(objectCenter, model).normalize();
     const raycaster = new Raycaster();
-    const upwardDirection = new Vector3(0, 1, 0); // Upward direction in Y-axis
-    let rayDirection;
 
-    if (c) {
-        rayDirection = new Vector3().subVectors(c, m).normalize();
-    } else {
-        rayDirection = upwardDirection.clone();
-    }
+    raycaster.set(model, rayDirection);
 
-    raycaster.set(m, rayDirection);
-	let intersects = raycaster.intersectObject(geometry, true);
+    let intersects = raycaster.intersectObject(objectMesh, true);
+    let modelUp = model.clone()
+    let modelDown = model.clone()
+
+    var i = 0;
     while (intersects.length === 0) {
-        // Move the origin `m` upward by a small step
-        m.add(upwardDirection.clone().multiplyScalar(0.05));
+        // Move the ray origin slightly along the step direction
+        modelUp.add(rayDirection.negate().clone().multiplyScalar(0.05));
 
-        raycaster.set(m, rayDirection);
-        intersects = raycaster.intersectObject(geometry, true);
+        raycaster.set(modelUp, rayDirection);
+        var upIntersects = raycaster.intersectObject(objectMesh, true);
+        raycaster.set(modelDown, rayDirection.negate());
+        var downIntersects = raycaster.intersectObject(objectMesh, true);
+
+        if (downIntersects.length) {
+        	intersects = downIntersects;
+        } else if (upIntersects.length) {
+        	intersects = upIntersects;
+        }
+
+        if (i++ > 1000) {
+        	return null;
+        }
     }
 
-	intersects[0].point.x = +intersects[0].point.x.toFixed(2);
-	intersects[0].point.y = +intersects[0].point.y.toFixed(2);
-	intersects[0].point.z = +intersects[0].point.z.toFixed(2);
+    if (!intersects || !intersects.length) {
+        return null; // No intersection found
+    }
+
+    // // Reduce floating-point drift in the intersection point
+    // intersects[0].point.x = +intersects[0].point.x.toFixed(8);
+    // intersects[0].point.y = +intersects[0].point.y.toFixed(8);
+    // intersects[0].point.z = +intersects[0].point.z.toFixed(8);
 
     return intersects[0].point;
 }
+
 
 // Helper to check if a point is inside a triangle using barycentric coordinates
 export function isPointInTriangle(p, a, b, c) {
