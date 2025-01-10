@@ -30,17 +30,15 @@ function Planet(props) {
 	var { scene } = useThree();
 	useEffect(() => {
 		function engageInteractions(a) {
-			if (Math.floor(a) % 2 == 0) {
-				if (props.state.model.scene && props.state.planet) {
-					const modelBoundingBox = new Box3().setFromObject(props.state.model.scene); // Calculate the bounding box
-					const modelBoundingSphere = new Sphere(); // Create a sphere object
-					const planet = new Sphere(new Vector3(0, -props.state.planet.radius, 0), props.state.planet.radius);
+			if (props.state.model.scene && props.state.planet) {
+				const modelBoundingBox = new Box3().setFromObject(props.state.model.scene); // Calculate the bounding box
+				const modelBoundingSphere = new Sphere(); // Create a sphere object
+				const planet = new Sphere(new Vector3(0, -props.state.planet.radius, 0), props.state.planet.radius);
 
 
-					const distance = props.state.model.scene.position.distanceTo(planet.center) // Calculate distance to the planet
+				const distance = props.state.model.scene.position.distanceTo(planet.center) // Calculate distance to the planet
 
-					props.dispatch({ type: 'ENGAGE_INTERACTIONS', distanceTo: distance });
-				}
+				props.dispatch({ type: 'ENGAGE_INTERACTIONS', distanceTo: distance });
 			}
 			window.requestAnimationFrame(engageInteractions);
 		}
@@ -186,6 +184,7 @@ function Planet(props) {
 			    var lakes = Array.from(props.state.planet.lakes);
 			    var center = new Vector3(0, props.state.planet.radius + 35, 0); // Center of rotation
 
+
 			    for (var i = 0; i < lakes.length; i++) {
 
 			        if (!lakeNodes[i]) {
@@ -193,21 +192,26 @@ function Planet(props) {
 
 
 			            // Calculate initial position of the node
-			            var waterColumnHeight = Math.abs(seaLevel.y - lakes[i].z)
+			            var waterColumnHeight = Math.abs(seaLevel.y - lakes[i].z) / 8
 			            var position = new Vector3(lakes[i].x, lakes[i].y - waterColumnHeight, lakes[i].z).add(center);
 
 			            // Create a new mesh for the lake
 			            var node = new Mesh(true ? new CylinderGeometry(
 		            		16,
 		            		16,
-			            	randomInRange(0.1, 0.2)
+			            	waterColumnHeight
 			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshStandardMaterial({
 			                opacity: 0.7,
 			                transparent: true,
-			                map: waterNormalsTexture
+			                vertexColors: true
 			            }));
 
-			            
+			            var watercolors = []
+			            for (var k = 0; k < node.geometry.attributes.position.array.length; k += 3) {
+			            	watercolors.push(0, randomInRange(0.2, .7), 1)
+			            }
+			            node.geometry.setAttribute('color', new Float32BufferAttribute(watercolors, 3));
+			            node.geometry.needsUpdate = true;
 
 			            // Define the angle of rotation (e.g., 45 degrees for demonstration)
 			            var angle = Math.PI / 2; // Rotate by 45 degrees
@@ -221,26 +225,35 @@ function Planet(props) {
 
 			            // Set the rotated position
 			            node.position.copy(position);
-			            node.position.y -= waterColumnHeight
 			            node.children = [];
 
 			            
-			            for (var j = 0; j < 3; j++) {
-			            	var sphereRadius = randomInRange(1, 12)
-			            	var sphereYOffset = randomInRange(sphereRadius, waterColumnHeight)
-			            	var sphereY = node.position.y - sphereYOffset
-			            	var sphere = new Mesh(new SphereGeometry(sphereRadius, 5, 5),new MeshStandardMaterial({
-			            		color: 'royalblue',
-			            		opacity: 0.5,
-			            		transparent: true
-			            	}));
-			            	sphere.radius = sphereRadius
-			            	sphere.y = sphereY
-			            	sphere.yOffset = sphereYOffset
-			            	sphere.position.set(position.x, sphereY, position.z);
-			            	scene.add(sphere);
-			            	node.children.push(sphere)
-			            }
+			            // for (var j = 0; j < 3; j++) {
+			            // 	var sphereRadius = randomInRange(1, 12)
+			            // 	var sphereYOffset = randomInRange(sphereRadius, waterColumnHeight * 2)
+			            // 	var sphereY = node.position.y - sphereYOffset
+			            // 	var sphere = new Mesh(new CylinderGeometry(
+			            // 		randomInRange(1, 16),
+			            // 		randomInRange(1, 16),
+				        //     	randomInRange(waterColumnHeight / 2, waterColumnHeight)
+				        //     ), new MeshStandardMaterial({
+				        //         opacity: 0.7,
+				        //         transparent: true,
+				        //         map: waterNormalsTexture
+				        //     }))
+			            // 	sphere.radius = sphereRadius
+			            // 	sphere.y = sphereY
+			            // 	sphere.yOffset = sphereYOffset
+			            // 	sphere.position.set(position.x, sphereY, position.z);
+
+			            // 	for (var x = 0; x < sphere.geometry.attributes.position.array.length; x += 3) {
+			            // 		sphere.geometry.attributes.position.array[x] += randomInRange(-1, 1)
+			            // 		sphere.geometry.attributes.position.array[x + 1] += randomInRange(-1, 1)
+			            // 		sphere.geometry.attributes.position.array[x + 2] += randomInRange(-1, 1)
+			            // 	}
+			            // 	scene.add(sphere);
+			            // 	node.children.push(sphere)
+			            // }
 
 			            // Add node to the scene
 			            scene.add(node);

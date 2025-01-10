@@ -31,7 +31,7 @@ import {
 } from './util';
 
 let __dispatch__ = '';
-let hidden = ['ENGAGE_INTERACTIONS']
+let hidden = []
 Array.prototype.contains = function(str) {
   for (var i = 0 ;i < this.length; i++) {
     if (this[i] == str) {

@@ -186,23 +186,25 @@ function ModelViewer(props) {
 				planetCenter, 
 				props.state.planet.surfaceGeometry
 			);
-			if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
+			if (surfaceFloor && surfaceFloor.distanceTo(props.state.model.scene.position) < 3) {
 				props.state.model.floor = surfaceFloor
 				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+			} else {
+				props.state.planet.lakeNodes.forEach(lakeNode => {
+					const lakeNodeBox = new Box3().setFromObject(lakeNode)
+					if (lakeNodeBox.intersectsBox(userPosition)) {
+						props.state.model.floor = new Vector3(
+							props.state.model.scene.position.x,
+							lakeNode.position.y + Math.abs(lakeNodeBox.max.y - lakeNodeBox.min.y) / 2,
+							props.state.model.scene.position.z
+						);
+						props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+						foundIntersection = true
+					}
+				});
 			}
 
-			props.state.planet.lakeNodes.forEach(lakeNode => {
-				const lakeNodeBox = new Box3().setFromObject(lakeNode)
-				if (lakeNodeBox.intersectsBox(userPosition)) {
-					props.state.model.floor = new Vector3(
-						props.state.model.scene.position.x,
-						lakeNode.position.y + Math.abs(lakeNodeBox.max.y - lakeNodeBox.min.y) / 2,
-						props.state.model.scene.position.z
-					);
-					props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
-					foundIntersection = true
-				}
-			});
+			
 			// props.state.planet.lakeNodes.forEach(lakeNode => {
 			// 	// var xdiff = lakeNode.position.x - props.state.model.scene.position.x
 			// 	// var ydiff = lakeNode.position.x - props.state.model.scene.position.y
