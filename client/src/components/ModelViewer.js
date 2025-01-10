@@ -186,10 +186,12 @@ function ModelViewer(props) {
 				planetCenter, 
 				props.state.planet.surfaceGeometry
 			);
-			if (surfaceFloor && surfaceFloor.distanceTo(props.state.model.scene.position) < 3) {
+			if (surfaceFloor && surfaceFloor.distanceTo(props.state.model.scene.position) < 11) {
 				props.state.model.floor = surfaceFloor
 				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
-			} else {
+			} 
+
+			if (props.state.planet.lakeNodes) {
 				props.state.planet.lakeNodes.forEach(lakeNode => {
 					const lakeNodeBox = new Box3().setFromObject(lakeNode)
 					if (lakeNodeBox.intersectsBox(userPosition)) {

@@ -192,8 +192,8 @@ function Planet(props) {
 
 
 			            // Calculate initial position of the node
-			            var waterColumnHeight = Math.abs(seaLevel.y - lakes[i].z) / 8
-			            var position = new Vector3(lakes[i].x, lakes[i].y - waterColumnHeight, lakes[i].z).add(center);
+			            var waterColumnHeight = Math.log(Math.abs(seaLevel.y - lakes[i].z), 10)
+			            const position = new Vector3(lakes[i].x, lakes[i].y, lakes[i].z).add(center);
 
 			            // Create a new mesh for the lake
 			            var node = new Mesh(true ? new CylinderGeometry(
