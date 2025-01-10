@@ -503,7 +503,8 @@ function sceneReducer(state, action) {
         planet: {
           ...state.planet,
           oceansFilled: true,
-          lakes: action.lakes,
+          lakes: action.lakes ? action.lakes : state.planet.lakes,
+          lakeNodes: action.lakeNodes ? action.lakeNodes : state.planet.lakeNodes,
           lands: action.lands,
         }
       }

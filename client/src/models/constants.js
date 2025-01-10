@@ -92,7 +92,8 @@ export const props = {
     radius: MASS.planet.radius,
     position: MASS.planet.position,
     distanceTo: undefined,
-    vertices: []
+    vertices: [],
+    lakeNodes: []
   },
   sun: {
     radius: MASS.sun.radius,

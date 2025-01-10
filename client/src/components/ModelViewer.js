@@ -160,8 +160,7 @@ function ModelViewer(props) {
 	        props.state.model.scene.position.add(forwardDirection);
 	        
 	        props.dispatch({ type: "WALK" })
-	    } else
-	    if (props.state.model.walk) {
+	    } else if (props.state.model.walk) {
 	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
@@ -180,22 +179,38 @@ function ModelViewer(props) {
 		let velocity = 0;
 
 		if (props.state.planet.surfaceGeometry) {
-			const surfaceFloor = findRayIntersection(
-				props.state.model.scene.position.clone(), 
-				planetCenter, 
-				props.state.planet.surfaceGeometry
-			);
-			const oceanFloor = findRayIntersection(
-				props.state.model.scene.position.clone(),
-				planetCenter,
-				props.state.planet.planetGeometry
-			);
-			if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
-				props.state.model.floor = surfaceFloor
-				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model.floor })
-			}
-			if (oceanFloor) {
-
+			let foundIntersection = false
+			const userPosition = new Box3().setFromObject(props.state.model.scene)
+			props.state.planet.lakeNodes.forEach(lakeNode => {
+				if (new Box3().setFromObject(lakeNode).intersectsBox(userPosition)) {
+					props.state.model.floor = new Vector3(
+						props.state.model.scene.position.x,
+						lakeNode.position.y,
+						props.state.model.scene.position.z
+					);
+					props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+					foundIntersection = true
+				}
+			});
+			// props.state.planet.lakeNodes.forEach(lakeNode => {
+			// 	// var xdiff = lakeNode.position.x - props.state.model.scene.position.x
+			// 	// var ydiff = lakeNode.position.x - props.state.model.scene.position.y
+			// 	// var zdiff = lakeNode.position.x - props.state.model.scene.position.z
+			// 	// if (Math.abs(xdiff + zdiff) < 9.5 && ydiff < 1) {
+	        		
+			// 	// }
+			// });
+			if (!foundIntersection) {
+				const userPosition = new Box3().setFromObject(props.state.model.scene)
+				const surfaceFloor = findRayIntersection(
+					props.state.model.scene.position.clone(), 
+					planetCenter, 
+					props.state.planet.surfaceGeometry
+				);
+				if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
+					props.state.model.floor = surfaceFloor
+					props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+				}
 			}
 		}
 

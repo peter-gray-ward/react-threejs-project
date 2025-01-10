@@ -89,7 +89,7 @@ function Planet(props) {
         const planetOceanPositions = oceanGeometry.attributes.position.array;
         const planetOceanColors = [];
         for (var x = 0; x < planetOceanPositions.length; x += 3) {
-        	planetOceanColors.push(0, randomInRange(0, 0.5), randomInRange(0.9, 1));
+        	planetOceanColors.push(1, 1, 1);
         }
 
 
@@ -195,7 +195,7 @@ function Planet(props) {
 		            		19,
 			            	0.1
 			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshBasicMaterial({
-			                opacity: 0.75,
+			                opacity: 0.7,
 			                transparent: true,
 			                color: 'royalblue',
 			                map: waterNormalsTexture
@@ -223,7 +223,7 @@ function Planet(props) {
 			            node.rotation.needsUpdate = true;
 
 			            // Add node to the scene
-			            // scene.add(node);
+			            scene.add(node);
 
 			            lakeNodes[i] = node
 			        } else if (lakeNodes[i]) {
@@ -231,12 +231,15 @@ function Planet(props) {
 			        	// lakeNodes[i].rotation.needsUpdate = true
 			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i]
 			        	lakeNodes[i].position.needsUpdate = true;
+			        	
+				        	
+			        	props.dispatch({ type: 'FILL_OCEAN', lakeNodes });
 			        }
 			    }
 
 			    if (added) {
 			    	setLakeNodes(lakeNodes)
-			        props.dispatch({ type: 'FILL_OCEAN', lakes: new Set(lakes) });
+			        props.dispatch({ type: 'FILL_OCEAN', lakes: new Set(lakes), lakeNodes });
 			    }
 			}
 
@@ -260,11 +263,10 @@ function Planet(props) {
 		<mesh ref={sphereRef} position={offSceneSpherePosition}>
             <sphereGeometry args={[props.state.planet.radius, 11, 100]} />
             <meshBasicMaterial 
-            	opacity={0.45}
+            	opacity={0}
             	transparent={true}
             	side={DoubleSide}
-            	color={"royalblue"}
-            	// vertexColors={true}
+            	vertexColors={true}
             />
         </mesh>
 
