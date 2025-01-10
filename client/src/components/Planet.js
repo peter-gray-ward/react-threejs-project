@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber'
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useFrame, useThree } from '@react-three/fiber'
 import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
@@ -12,7 +12,9 @@ import {
 	PlaneGeometry,
 	Float32BufferAttribute,
 	SphereGeometry,
-	TextureLoader
+	TextureLoader,
+	Color,
+	MeshStandardMaterial
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -23,6 +25,7 @@ var bi = new Date().getTime();
 
 function Planet(props) {
 	var i = new Date().getTime();
+	var { scene } = useThree();
 	useEffect(() => {
 		function engageInteractions(a) {
 			if (Math.floor(a) % 2 == 0) {
@@ -105,6 +108,7 @@ function Planet(props) {
     }, []); // Add dependencies if needed
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
+    const seaLevel = useMemo(() => new Vector3(0, props.state.planet.radius + 11, 0));
 
     useFrame(() => {
         if (sphereRef.current && surfaceRef.current && !props.state.planet.oceansFilled) {
@@ -117,11 +121,14 @@ function Planet(props) {
             
 
             for (var x = 0; x < surface.geometry.attributes.position.array.length; x += 3) {
-            	var v = new Vector3(surface.geometry.attributes.position.array[x], surface.geometry.attributes.position.array[x + 1], surface.geometry.attributes.position.array[x + 2]);
-            	if (v.distanceTo(planetCenter) < props.state.planet.radius) {
+            	var v = new Vector3(
+            		surface.geometry.attributes.position.array[x], 
+            		surface.geometry.attributes.position.array[x + 1], 
+            		surface.geometry.attributes.position.array[x + 2]
+            	);
+            	v = v.add(new Vector3(0, 0, props.state.planet.radius));
+            	if (v.z > seaLevel.y + 35) {
             		lakes.add(v);
-            	} else {
-            		lands.add(v);
             	}
             }
 
@@ -129,20 +136,30 @@ function Planet(props) {
 
             // Mark oceans as filled
             props.dispatch({ type: 'FILL_OCEAN', lakes });
+        } else if (props.state.planet.lakes) {
+
         }
     });
 
 	const sphereColor = useMemo(() => 'white', []);
 	const surfaceRef = useRef();
+	const [lakeNodes, setLakeNodes] = useState([]);
+	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"))
+	const [addedWaterTexture, setAddedWaterTexture] = useState(false);
 
 	useFrame(({ clock }) => {
         if (sphereRef.current) {
+        	if (!addedWaterTexture) {
+        		// sphereRef.current.material.map = waterNormalsTexture;
+        		setAddedWaterTexture(true)
+        	}
             const time = clock.getElapsedTime();
             const geometry = sphereRef.current.geometry;
             const positionAttribute = geometry.attributes.position;
 
             const waveAmplitude = 0.5; // Amplitude of the sine wave
             const waveFrequency = 1; // Frequency of the sine wave
+            var transforms = []
 
             for (let i = 0; i < positionAttribute.count; i++) {
                 const x = positionAttribute.getX(i);
@@ -156,11 +173,79 @@ function Planet(props) {
                 // Apply sine wave animation to the y-coordinate
                 const waveOffset = Math.sin(waveFrequency * (x + time)) * waveAmplitude;
                 positionAttribute.setY(i, y + waveOffset);
+                transforms.push(waveOffset)
             }
 
             positionAttribute.needsUpdate = true; // Notify Three.js of changes
+
+
+            if (props.state.planet.lakes) {
+			    var added = false;
+			    var lakes = Array.from(props.state.planet.lakes);
+			    var center = new Vector3(0, props.state.planet.radius + 35, 0); // Center of rotation
+
+			    for (var i = 0; i < lakes.length; i++) {
+
+			        if (!lakeNodes[i]) {
+			            added = true;
+
+			            // Create a new mesh for the lake
+			            var node = new Mesh(true ? new BoxGeometry(
+		            		19,
+		            		19,
+			            	0.1
+			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshBasicMaterial({
+			                opacity: 0.75,
+			                transparent: true,
+			                color: 'royalblue',
+			                map: waterNormalsTexture
+			            }));
+
+			            // Calculate initial position of the node
+			            var position = new Vector3(lakes[i].x, lakes[i].y, lakes[i].z).add(center);
+
+			            // Define the angle of rotation (e.g., 45 degrees for demonstration)
+			            var angle = Math.PI / 2; // Rotate by 45 degrees
+			            var axis = new Vector3(1, 0, 0); // Rotate around Y-axis
+
+			            // Rotate position around the center
+			            position.sub(center); // Translate to origin
+			            position.applyAxisAngle(axis, angle); // Apply rotation
+			            position.add(center); // Translate back
+			            position.add(new Vector3(0, props.state.planet.radius, 0))
+
+			            // Set the rotated position
+			            node.position.copy(position);
+
+			            // Optionally adjust rotation of the node itself
+			            node.rotation.x = Math.PI / 2;
+			            
+			            node.rotation.needsUpdate = true;
+
+			            // Add node to the scene
+			            // scene.add(node);
+
+			            lakeNodes[i] = node
+			        } else if (lakeNodes[i]) {
+			        	// lakeNodes[i].rotation.z = randomInRange(0, Math.PI * 2);
+			        	// lakeNodes[i].rotation.needsUpdate = true
+			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i]
+			        	lakeNodes[i].position.needsUpdate = true;
+			        }
+			    }
+
+			    if (added) {
+			    	setLakeNodes(lakeNodes)
+			        props.dispatch({ type: 'FILL_OCEAN', lakes: new Set(lakes) });
+			    }
+			}
+
         }
     })
+
+    const offSceneSpherePosition = useMemo(() => {
+    	return [0, 0, 0];
+    }, []);
 
 	return <group>
 	{/*	<mesh position={props.state.planet.position}>
@@ -172,23 +257,22 @@ function Planet(props) {
 			<meshBasicMaterial wireframe side={DoubleSide} color="royalblue" />
 		</mesh>*/}
 
-		<mesh ref={sphereRef} position={props.state.planet.position}>
+		<mesh ref={sphereRef} position={offSceneSpherePosition}>
             <sphereGeometry args={[props.state.planet.radius, 11, 100]} />
             <meshBasicMaterial 
-            	opacity={0.5}
+            	opacity={0.45}
             	transparent={true}
             	side={DoubleSide}
-            	// map={new TextureLoader().load("/waternormals.jpg")}
-            	color={"lightblue"}
-            	vertexColors={true}
+            	color={"royalblue"}
+            	// vertexColors={true}
             />
         </mesh>
 
-		<mesh ref={surfaceRef} position={[0, props.state.planet.radius + 50, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={surfaceRef} position={[0, props.state.planet.radius + 45, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1} 
-				transparent={true} 
+				transparent={false} 
 				side={DoubleSide} 
 				vertexColors={true} // Enable vertex colors
 			/>
