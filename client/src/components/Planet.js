@@ -11,7 +11,8 @@ import {
 	DoubleSide,
 	PlaneGeometry,
 	Float32BufferAttribute,
-	SphereGeometry
+	SphereGeometry,
+	TextureLoader
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -134,6 +135,33 @@ function Planet(props) {
 	const sphereColor = useMemo(() => 'white', []);
 	const surfaceRef = useRef();
 
+	useFrame(({ clock }) => {
+        if (sphereRef.current) {
+            const time = clock.getElapsedTime();
+            const geometry = sphereRef.current.geometry;
+            const positionAttribute = geometry.attributes.position;
+
+            const waveAmplitude = 0.5; // Amplitude of the sine wave
+            const waveFrequency = 1; // Frequency of the sine wave
+
+            for (let i = 0; i < positionAttribute.count; i++) {
+                const x = positionAttribute.getX(i);
+                const z = positionAttribute.getZ(i);
+                const y = positionAttribute.getY(i);
+
+                if (y > props.state.planet.radius) {
+                	continue;
+                }
+
+                // Apply sine wave animation to the y-coordinate
+                const waveOffset = Math.sin(waveFrequency * (x + time)) * waveAmplitude;
+                positionAttribute.setY(i, y + waveOffset);
+            }
+
+            positionAttribute.needsUpdate = true; // Notify Three.js of changes
+        }
+    })
+
 	return <group>
 	{/*	<mesh position={props.state.planet.position}>
 			<sphereGeometry args={[
@@ -150,6 +178,8 @@ function Planet(props) {
             	opacity={0.5}
             	transparent={true}
             	side={DoubleSide}
+            	// map={new TextureLoader().load("/waternormals.jpg")}
+            	color={"lightblue"}
             	vertexColors={true}
             />
         </mesh>
