@@ -62,8 +62,9 @@ function sceneReducer(state, action) {
           ...state.model
         }
       }
+    
     case 'START_WALK':
-      return { 
+      var result = { 
         ...state,
         animations: [
           ...state.animations,
@@ -73,13 +74,15 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: !action.shift,
           walking: false,
-          run: action.shift,
-          speed: {
-            ...state.model.speed,
-            walk: SPEED.WALK
-          }
+          run: action.shift
         }
       }
+      if (action.shift) {
+        result.model.speed.run = SPEED.WALK * 1.95
+      } else {
+        result.model.speed.walk = SPEED.WALK
+      }
+      return result
     case 'STOP_WALK':
       return { 
         ...state,
@@ -90,7 +93,7 @@ function sceneReducer(state, action) {
           ...state.model,
           walk: false,
           walking: false,
-          run: action.shift,
+          run: false,
           lounge: true,
           speed: {
             ...state.model.speed,
@@ -107,7 +110,7 @@ function sceneReducer(state, action) {
         }
       }
     case 'START_WALK_BACK':
-      return { 
+      var result = { 
         ...state,
         animations: [
           ...state.animations,
@@ -115,16 +118,23 @@ function sceneReducer(state, action) {
         ],
         model: {
           ...state.model,
-          walk: true,
+          walking: false,
+          walk: !action.shift,
           run: action.shift,
           speed: {
             ...state.model.speed,
-            walk: -SPEED.WALK
+            walk: state.model.run ? -SPEED.WALK * 1.5 : -SPEED.WALK
           }
         }
       }
+      if (action.shift) {
+        result.model.speed.run = -SPEED.WALK * 1.95
+      } else {
+        result.model.speed.walk = -SPEED.WALK
+      }
+      return result
     case 'STOP_WALK_BACK':
-      return { 
+      var result = { 
         ...state,
         animations: state.animations.filter((animation)=>{
           return animation !== 'walk';
@@ -132,16 +142,19 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           walk: false,
-          run: action.shift,
-          lounge: true,
+          run: false,
+          walking: false,
           speed: {
             ...state.model.speed,
             walk: 0
           }
         }
       }
+
+      return result
+      
     case 'START_STRAFE_RIGHT':
-      return { 
+      var result = { 
         ...state,
         animations: [
           ...state.animations,
@@ -150,13 +163,15 @@ function sceneReducer(state, action) {
         model: {
           ...state.model,
           strafe: true,
-          run: action.shift,
-          speed: {
-            ...state.model.speed,
-            strafe: SPEED.STRAFE * (done.shift ? 1.5 : 1)
-          }
+          run: action.shift
         }
       }
+      if (action.shift) {
+        result.model.speed.strafe = SPEED.STRAFE * 1.95
+      } else {
+        result.model.speed.strafe = SPEED.STRAFE
+      }
+      return result
     case 'STOP_STRAFE_RIGHT':
       return { 
         ...state,
@@ -536,19 +551,19 @@ function App() {
       if (key == 's') {
         if (!done.START_WALK_BACK) {
           done.START_WALK_BACK = true;
-          dispatch({ type: 'START_WALK_BACK' });
+          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT });
         }
       }
       if (key == 'a') {
         if (!done.START_STRAFE_LEFT) {
           done.START_STRAFE_LEFT = true;
-          dispatch({ type: 'START_STRAFE_LEFT' });
+          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT });
         }
       }
       if (key == 'd') {
         if (!done.START_STRAFE_RIGHT) {
           done.START_STRAFE_RIGHT = true;
-          dispatch({ type: 'START_STRAFE_RIGHT' });
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT });
         }
       }
       if (key == 'arrowleft') {
@@ -588,6 +603,15 @@ function App() {
         done.SHIFT = true;
         if (done.START_WALK) {
           dispatch({ type: 'START_WALK', shift: done.SHIFT })
+        }
+        if (done.START_WALK_BACK) {
+          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT })
+        }
+        if (done.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT })
+        }
+        if (done.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT })
         }
       }
     };
@@ -633,8 +657,17 @@ function App() {
       }
       if (key == 'shift') {
         done.SHIFT = false;
-        if (done.START_WALK) {
+        if (done.START_WALK) { // if walking
           dispatch({ type: 'START_WALK', shift: done.SHIFT })
+        }
+        if (done.START_WALK_BACK) { // if walking back
+          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT })
+        }
+        if (done.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT })
+        }
+        if (done.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT })
         }
       }
     };
@@ -701,6 +734,9 @@ function App() {
 
               </section>
             </li>
+            <li>walk speed...<span className="number">{state.model.speed.walk}</span></li>
+            <li>run <span className="boolean">{new String(state.model.run)}</span> speed...<span className="number">{state.model.speed.run}</span></li>
+            <li>strafe <span className="boolean">{new String(state.model.strafe)}</span> speed...<span className="number">{state.model.speed.strafe}</span></li>
             <li>camera theta...<span className="number">{state.cameraTheta}</span></li>
             <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
             <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>

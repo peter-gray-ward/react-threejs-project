@@ -57,7 +57,7 @@ export const props = {
     walking: false,
     strafe: false,
     strafing: false,
-    lounge: false,
+    lounge: true,
     lounging: false,
     jump: false,
     jumping: false,

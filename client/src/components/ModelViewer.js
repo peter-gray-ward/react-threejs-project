@@ -155,15 +155,21 @@ function ModelViewer(props) {
 		}
 
 	    // Handle walking
-	    if (props.state.model.walk || props.state.model.run) {
-	        forwardDirection.multiplyScalar(props.state.model.walk ? props.state.model.speed.walk
-				: props.state.model.speed.run
-			);
+	    if (props.state.model.run) {
+	    	forwardDirection.multiplyScalar(props.state.model.speed.run);
+	        props.state.model.scene.position.add(forwardDirection);
+	        
+	        props.dispatch({ type: "WALK" })
+	    } else
+	    if (props.state.model.walk) {
+	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
 	        props.dispatch({ type: "WALK" })
 
 	    }
+
+	    
 
 
 		// Update position based on velocity and direction
