@@ -14,7 +14,9 @@ import {
 	SphereGeometry,
 	TextureLoader,
 	Color,
-	MeshStandardMaterial
+	MeshStandardMaterial,
+	CylinderGeometry,
+	Group
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -189,20 +191,23 @@ function Planet(props) {
 			        if (!lakeNodes[i]) {
 			            added = true;
 
+
+			            // Calculate initial position of the node
+			            var waterColumnHeight = Math.abs(seaLevel.y - lakes[i].z)
+			            var position = new Vector3(lakes[i].x, lakes[i].y - waterColumnHeight, lakes[i].z).add(center);
+
 			            // Create a new mesh for the lake
-			            var node = new Mesh(true ? new BoxGeometry(
-		            		19,
-		            		19,
-			            	0.1
-			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshBasicMaterial({
+			            var node = new Mesh(true ? new CylinderGeometry(
+		            		16,
+		            		16,
+			            	randomInRange(0.1, 0.2)
+			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshStandardMaterial({
 			                opacity: 0.7,
 			                transparent: true,
-			                color: 'royalblue',
 			                map: waterNormalsTexture
 			            }));
 
-			            // Calculate initial position of the node
-			            var position = new Vector3(lakes[i].x, lakes[i].y, lakes[i].z).add(center);
+			            
 
 			            // Define the angle of rotation (e.g., 45 degrees for demonstration)
 			            var angle = Math.PI / 2; // Rotate by 45 degrees
@@ -216,22 +221,42 @@ function Planet(props) {
 
 			            // Set the rotated position
 			            node.position.copy(position);
+			            node.position.y -= waterColumnHeight
+			            node.children = [];
 
-			            // Optionally adjust rotation of the node itself
-			            node.rotation.x = Math.PI / 2;
 			            
-			            node.rotation.needsUpdate = true;
+			            for (var j = 0; j < 3; j++) {
+			            	var sphereRadius = randomInRange(1, 12)
+			            	var sphereYOffset = randomInRange(sphereRadius, waterColumnHeight)
+			            	var sphereY = node.position.y - sphereYOffset
+			            	var sphere = new Mesh(new SphereGeometry(sphereRadius, 5, 5),new MeshStandardMaterial({
+			            		color: 'royalblue',
+			            		opacity: 0.5,
+			            		transparent: true
+			            	}));
+			            	sphere.radius = sphereRadius
+			            	sphere.y = sphereY
+			            	sphere.yOffset = sphereYOffset
+			            	sphere.position.set(position.x, sphereY, position.z);
+			            	scene.add(sphere);
+			            	node.children.push(sphere)
+			            }
 
 			            // Add node to the scene
 			            scene.add(node);
 
+			            // group.add(node)
+
 			            lakeNodes[i] = node
 			        } else if (lakeNodes[i]) {
-			        	// lakeNodes[i].rotation.z = randomInRange(0, Math.PI * 2);
+			        	// lakeNodes[i].rotation.x = randomInRange(0, Math.PI * 2);
 			        	// lakeNodes[i].rotation.needsUpdate = true
 			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i]
 			        	lakeNodes[i].position.needsUpdate = true;
-			        	
+			        	lakeNodes[i].children.forEach(child => {
+			        		child.position.y = props.state.planet.radius + transforms[i] - child.yOffset
+			        		child.position.needsUpdate = true;
+			        	})
 				        	
 			        	props.dispatch({ type: 'FILL_OCEAN', lakeNodes });
 			        }
@@ -247,7 +272,7 @@ function Planet(props) {
     })
 
     const offSceneSpherePosition = useMemo(() => {
-    	return [0, 0, 0];
+    	return [0, -1000000, 0];
     }, []);
 
 	return <group>

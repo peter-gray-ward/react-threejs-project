@@ -179,13 +179,24 @@ function ModelViewer(props) {
 		let velocity = 0;
 
 		if (props.state.planet.surfaceGeometry) {
-			let foundIntersection = false
+			let foundIntersection = true
 			const userPosition = new Box3().setFromObject(props.state.model.scene)
+			const surfaceFloor = findRayIntersection(
+				props.state.model.scene.position.clone(), 
+				planetCenter, 
+				props.state.planet.surfaceGeometry
+			);
+			if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
+				props.state.model.floor = surfaceFloor
+				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+			}
+
 			props.state.planet.lakeNodes.forEach(lakeNode => {
-				if (new Box3().setFromObject(lakeNode).intersectsBox(userPosition)) {
+				const lakeNodeBox = new Box3().setFromObject(lakeNode)
+				if (lakeNodeBox.intersectsBox(userPosition)) {
 					props.state.model.floor = new Vector3(
 						props.state.model.scene.position.x,
-						lakeNode.position.y,
+						lakeNode.position.y + Math.abs(lakeNodeBox.max.y - lakeNodeBox.min.y) / 2,
 						props.state.model.scene.position.z
 					);
 					props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
@@ -200,18 +211,7 @@ function ModelViewer(props) {
 	        		
 			// 	// }
 			// });
-			if (!foundIntersection) {
-				const userPosition = new Box3().setFromObject(props.state.model.scene)
-				const surfaceFloor = findRayIntersection(
-					props.state.model.scene.position.clone(), 
-					planetCenter, 
-					props.state.planet.surfaceGeometry
-				);
-				if (surfaceFloor/* && surfaceFloor.distanceTo(props.state.model.scene.position) < 10*/) {
-					props.state.model.floor = surfaceFloor
-					props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
-				}
-			}
+				
 		}
 
 		if (props.state.model.jump) {
