@@ -151,6 +151,8 @@ function Planet(props) {
         if (sphereRef.current) {
         	if (!addedWaterTexture) {
         		// sphereRef.current.material.map = waterNormalsTexture;
+        		surfaceRef.current.material.castShadow = true;
+        		surfaceRef.current.material.receiveShadow = true;
         		setAddedWaterTexture(true)
         	}
             const time = clock.getElapsedTime();
@@ -264,7 +266,7 @@ function Planet(props) {
 			        } else if (lakeNodes[i]) {
 			        	// lakeNodes[i].rotation.x = randomInRange(0, Math.PI * 2);
 			        	// lakeNodes[i].rotation.needsUpdate = true
-			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i]
+			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i] - 5
 			        	lakeNodes[i].position.needsUpdate = true;
 			        	lakeNodes[i].children.forEach(child => {
 			        		child.position.y = props.state.planet.radius + transforms[i] - child.yOffset
@@ -313,8 +315,8 @@ function Planet(props) {
 			<meshStandardMaterial 
 				opacity={1} 
 				transparent={false} 
-				side={DoubleSide} 
-				vertexColors={true} // Enable vertex colors
+				side={DoubleSide}
+				vertexColors={true}
 			/>
 		</mesh>
 

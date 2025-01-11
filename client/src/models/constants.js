@@ -17,7 +17,7 @@ export const SPEED = {
 
 export const MASS = {
   sun: {
-    radius: 3000
+    radius: 120
   },
   planet: {
     radius: 100000,
@@ -31,7 +31,7 @@ export const MASS = {
 
 export const starRadius = 131636736;
 export const angularSize = 0.00345;
-// export const cameraRadius = starRadius * 2;//100000.5
+// export const cameraRadius = starRadius * 2
 export const cameraRadius = 3.5
 
 export const props = {
@@ -45,12 +45,17 @@ export const props = {
     after_weathertop: `The hills now began to shut them in...Trees with old and twisted 
       roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.`
   },
+  x: 0,
   cameraTheta: Math.PI * 1.7,
   cameraPhi: Math.PI / 2,
   cameraRadius,
+  starRadius,
+  sunPosition: [0,0,0],
+  starBuffer: [],
   cameraPoint: new Vector3(0,0,0),
   interaction: new Date().getTime(),
   animations: [],
+  centerStage: new Vector3(0, MASS.planet.radius, 0),
   model: {
     floor: new Vector3(0,0,0),
     walk: false,

@@ -27,7 +27,8 @@ import {
   coordsToVector3,
   coordsToQuaternion,
   VisualizeQuaternion,
-  pointOnSphere
+  pointOnSphere,
+  findRayIntersection
 } from './util';
 
 let __dispatch__ = '';
@@ -508,6 +509,21 @@ function sceneReducer(state, action) {
           lands: action.lands,
         }
       }
+    case 'LOAD_THE_STARS':
+      return {
+        ...state,
+        starBuffer: action.starBuffer
+      }
+    case 'LOAD_THE_SUN':
+      return {
+        ...state,
+        sunPosition: action.sunPosition
+      }
+    case 'SCENE_ROTATION':
+      return {
+        ...state,
+        x: action.x
+      }
     default:
       return state;
   }
@@ -734,6 +750,23 @@ function App() {
                 <span className="number">{new Number(q.quaternion.y).toFixed(2)},</span> 
                 <span className="number">{new Number(q.quaternion.z).toFixed(2)}</span>
 
+                <br />
+                <i><h2>{state.model.floor.type} floor</h2></i>
+                <span className="number"><big>{new Number(state.model.floor.x).toFixed(2)}</big>
+                  ,<big>{new Number(state.model.floor.y).toFixed(2)}</big>
+                  <big>{new Number(state.model.floor.z).toFixed(2)}</big></span>
+
+                <i><h2>Surface Distance</h2></i>
+                <span className="number"><big>{state.model.intersectsSurface}</big></span>
+
+                <br />
+                <i><h2>Sun:</h2></i>
+                <span className="number">{new Number(state.sunPosition[0]).toFixed(2)},</span> 
+                <span className="number">{new Number(state.sunPosition[1]).toFixed(2)},</span> 
+                <span className="number">{new Number(state.sunPosition[2]).toFixed(2)}</span>
+
+                <span className="number">{new Number(state.x).toFixed(2)}</span>
+                <br />
 
               </section>
             </li>

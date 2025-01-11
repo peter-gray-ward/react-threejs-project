@@ -192,43 +192,48 @@ export function VisualizeQuaternion(quaternion, size = 1, arrowThickness = 0.1) 
     return { quaternion, group }
 }
 
-export function findRayIntersection(model, objectCenter, objectMesh) {
+export function findRayIntersection(modelPosition, objectCenter, objectMesh) {
     
     const stepDirection = new Vector3(0, 1, 0);
-    const rayDirection = new Vector3().subVectors(objectCenter, model).normalize();
+    const rayDirection = new Vector3().subVectors(objectCenter, modelPosition).normalize();
     const raycaster = new Raycaster();
 
-    raycaster.set(model, rayDirection);
+    raycaster.set(modelPosition, rayDirection);
 
     let intersects = raycaster.intersectObject(objectMesh, true);
-    let modelUp = model.clone()
-    let modelDown = model.clone()
+    let modelPositionUp = modelPosition.clone()
+    let modelPositionDown = modelPosition.clone()
 
-    var i = 0;
-    while (intersects.length === 0) {
-        // Move the ray origin slightly along the step direction
-        modelUp.add(rayDirection.negate().clone().multiplyScalar(0.05));
+    try {
+         var i = 0;
+        while (intersects.length === 0) {
+            // Move the ray origin slightly along the step direction
+            modelPositionUp.add(rayDirection.negate().clone().multiplyScalar(0.05));
 
-        raycaster.set(modelUp, rayDirection);
-        var upIntersects = raycaster.intersectObject(objectMesh, true);
-        raycaster.set(modelDown, rayDirection.negate());
-        var downIntersects = raycaster.intersectObject(objectMesh, true);
+            raycaster.set(modelPositionUp, rayDirection);
+            var upIntersects = raycaster.intersectObject(objectMesh, true);
+            raycaster.set(modelPositionDown, rayDirection.negate());
+            var downIntersects = raycaster.intersectObject(objectMesh, true);
 
-        if (downIntersects.length) {
-        	intersects = downIntersects;
-        } else if (upIntersects.length) {
-        	intersects = upIntersects;
+            if (downIntersects.length) {
+                intersects = downIntersects;
+            } else if (upIntersects.length) {
+                intersects = upIntersects;
+            }
+
+            if (i++ > 1000) {
+                return null;
+            }
         }
 
-        if (i++ > 1000) {
-        	return null;
+        if (!intersects || !intersects.length) {
+            return null; // No intersection found
         }
-    }
 
-    if (!intersects || !intersects.length) {
-        return null; // No intersection found
+    } catch (err) {
+        console.error(err)
+        debugger
     }
-
     // // Reduce floating-point drift in the intersection point
     // intersects[0].point.x = +intersects[0].point.x.toFixed(8);
     // intersects[0].point.y = +intersects[0].point.y.toFixed(8);
