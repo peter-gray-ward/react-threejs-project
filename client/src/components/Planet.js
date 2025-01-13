@@ -61,23 +61,33 @@ function Planet(props) {
 			amplitude
 		})
 
+		var lakes = new Set()
+
         for (let x = 0; x < positions.length; x += 3) {
             const vector = new Vector3(positions[x], positions[x + 1], positions[x + 2]);
             const direction = vector.clone().normalize();
 			const cols = 50;
 			const xIndex = Math.floor((x / 3) % cols);
-			const yIndex = Math.floor((x / 3) / cols);
-			const noiseValue = noise[yIndex * cols + xIndex] * amplitude
+			const zIndex = Math.floor((x / 3) / cols) + 2;
+			const noiseValue = noise[zIndex * cols + xIndex] * amplitude
+			const noiseOffset = noiseValue > 50 ? noiseValue - 50 : -(50 - noiseValue)
 	
             positions[x] = vector.x;
             positions[x + 1] = vector.y
-            positions[x + 2] = vector.z + noiseValue
+            positions[x + 2] = noiseOffset
+
+            if (noiseOffset > 0) {
+            	var lake = new Vector3(positions[x], positions[x + 2] + props.state.planet.radius, positions[x + 1]);
+            	lake.height = Math.abs(noiseOffset);
+            	lakes.add(lake)
+            }
 
 
 			colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
         }
 
-        console.log(positions)
+
+        props.dispatch({ type: 'FILL_OCEAN', lakes });
 
 		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
         geometry.attributes.position.needsUpdate = true;
@@ -108,39 +118,7 @@ function Planet(props) {
     }, []); // Add dependencies if needed
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
-    const seaLevel = useMemo(() => new Vector3(0, props.state.planet.radius + 11, 0));
-
-    useFrame(() => {
-        if (sphereRef.current && surfaceRef.current && !props.state.planet.oceansFilled) {
-            const sphere = sphereRef.current;
-            const surface = surfaceRef.current;
-
-            // Get lakes
-            const lakes = new Set();
-            const lands = new Set();
-            
-
-            for (var x = 0; x < surface.geometry.attributes.position.array.length; x += 3) {
-            	var v = new Vector3(
-            		surface.geometry.attributes.position.array[x], 
-            		surface.geometry.attributes.position.array[x + 1], 
-            		surface.geometry.attributes.position.array[x + 2]
-            	);
-            	v = v.add(new Vector3(0, 0, props.state.planet.radius));
-            	if (v.z > seaLevel.y + 35) {
-            		lakes.add(v);
-            	}
-            }
-
-            console.log("FILL_OCEAN", lakes, lands, surface.geometry.attributes.position.array.length / 3);
-
-            // Mark oceans as filled
-            props.dispatch({ type: 'FILL_OCEAN', lakes });
-        } else if (props.state.planet.lakes) {
-
-        }
-    });
-
+    const seaLevel = useMemo(() => new Vector3(0, props.state.planet.radius, 0));
 	const sphereColor = useMemo(() => 'white', []);
 	const surfaceRef = useRef();
 	const [lakeNodes, setLakeNodes] = useState([]);
@@ -184,7 +162,7 @@ function Planet(props) {
             if (props.state.planet.lakes) {
 			    var added = false;
 			    var lakes = Array.from(props.state.planet.lakes);
-			    var center = new Vector3(0, props.state.planet.radius + 35, 0); // Center of rotation
+			    var center = new Vector3(0, props.state.planet.radius, 0); // Center of rotation
 
 
 			    for (var i = 0; i < lakes.length; i++) {
@@ -194,15 +172,16 @@ function Planet(props) {
 
 
 			            // Calculate initial position of the node
-			            var waterColumnHeight = Math.log(Math.abs(seaLevel.y - lakes[i].z), 10)
-			            const position = new Vector3(lakes[i].x, lakes[i].y, lakes[i].z).add(center);
+			            var waterColumnHeight = lakes[i].height
+			            const position = new Vector3(lakes[i].x, lakes[i].z - waterColumnHeight, lakes[i].y)
 
 			            // Create a new mesh for the lake
-			            var node = new Mesh(true ? new CylinderGeometry(
-		            		16,
-		            		16,
-			            	waterColumnHeight
-			            ) : new SphereGeometry(randomInRange(3, 8), 10, 10), new MeshStandardMaterial({
+			            var node = new Mesh(new CylinderGeometry(
+		            		20,
+		            		10,
+			            	waterColumnHeight,
+			            	9
+			            ), new MeshStandardMaterial({
 			                opacity: 0.7,
 			                transparent: true,
 			                vertexColors: true
@@ -216,16 +195,23 @@ function Planet(props) {
 			            node.geometry.needsUpdate = true;
 
 			            // Define the angle of rotation (e.g., 45 degrees for demonstration)
-			            var angle = Math.PI / 2; // Rotate by 45 degrees
-			            var axis = new Vector3(1, 0, 0); // Rotate around Y-axis
+			            // var angle = Math.PI / 2; // Rotate by 45 degrees
+			            // var axis = new Vector3(1, 0, 0); // Rotate around Y-axis
 
-			            // Rotate position around the center
-			            position.sub(center); // Translate to origin
-			            position.applyAxisAngle(axis, angle); // Apply rotation
-			            position.add(center); // Translate back
-			            position.add(new Vector3(0, props.state.planet.radius, 0))
+			            // // Rotate position around the center
+			            // position.sub(center); // Translate to origin
+			            // position.applyAxisAngle(axis, angle); // Apply rotation
+			            // position.add(center); // Translate back
+			            // position.add(new Vector3(0, props.state.planet.radius, 0))
 
 			            // Set the rotated position
+			            // var y = position.y;
+			            // position.y = position.z;
+			            // position.z = y;
+			            var z = position.z;
+			            position.z = position.y;
+			            position.y = seaLevel.y - waterColumnHeight / 2
+			            console.log('cylinder', position)
 			            node.position.copy(position);
 			            node.children = [];
 
@@ -265,11 +251,11 @@ function Planet(props) {
 			            lakeNodes[i] = node
 			        } else if (lakeNodes[i]) {
 			        	// lakeNodes[i].rotation.x = randomInRange(0, Math.PI * 2);
-			        	// lakeNodes[i].rotation.needsUpdate = true
-			        	lakeNodes[i].position.y = props.state.planet.radius + transforms[i] - 5
+			        	lakeNodes[i].rotation.needsUpdate = true
+			        	lakeNodes[i].position.y += transforms[i] * 0.02
 			        	lakeNodes[i].position.needsUpdate = true;
 			        	lakeNodes[i].children.forEach(child => {
-			        		child.position.y = props.state.planet.radius + transforms[i] - child.yOffset
+			        		// child.position.y = props.state.planet.radius + transforms[i] - child.yOffset
 			        		child.position.needsUpdate = true;
 			        	})
 				        	
@@ -310,13 +296,14 @@ function Planet(props) {
             />
         </mesh>
 
-		<mesh ref={surfaceRef} position={[0, props.state.planet.radius + 45, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={surfaceRef} position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1} 
 				transparent={false} 
 				side={DoubleSide}
 				vertexColors={true}
+            	
 			/>
 		</mesh>
 
