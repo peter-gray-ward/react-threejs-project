@@ -230,9 +230,13 @@ function ModelViewer(props) {
 				
 		}
 
-		if (props.state.model.jump) {
+		if (props.state.model.jump && !props.state.model.jumping) {
 			velocity += SPEED.JUMP;
 			props.state.model.scene.position.y += SPEED.JUMP;
+			props.dispatch({ type: 'MODEL_LOADED', model: { 
+				...props.state.model,
+				jumping: true 
+			}});
 		}
 
 

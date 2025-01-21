@@ -16,19 +16,30 @@ import {
 	Color,
 	MeshStandardMaterial,
 	CylinderGeometry,
-	Group
+	BufferGeometry,
+	Group,
+	VSMShadowMap,
+	RepeatWrapping,
+	PCFSoftShadowMap
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
+	filterSteepGeometry,
 	randomInRange
 } from '../util';
 
-var bi = new Date().getTime();
-
+	  
 function Planet(props) {
 	var i = new Date().getTime();
-	var { scene } = useThree();
+	var fiber = useThree();
+	const cliffTexture = useMemo(() => () => new TextureLoader().load("/cliff.jpg", texture => {
+		texture.wrapS = RepeatWrapping
+	    texture.wrapT = RepeatWrapping
+	    texture.repeat.set(2, 1)
+	}), []);
 	useEffect(() => {
+		fiber.gl.shadowMap.enabled = true;
+        fiber.gl.shadowMap.type = PCFSoftShadowMap;
 		function engageInteractions(a) {
 			if (props.state.model.scene && props.state.planet) {
 				const modelBoundingBox = new Box3().setFromObject(props.state.model.scene); // Calculate the bounding box
@@ -46,9 +57,12 @@ function Planet(props) {
 	}, []);
 	
 	const sphereRef = useRef();
+	const cliffsRef = useRef();
+	const grassesRef = useRef();
 
 	useEffect(() => {
-		try {
+		const rows = 50;
+		const cols = 50;
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
         const positions = geometry.attributes.position.array;
@@ -59,7 +73,10 @@ function Planet(props) {
 		const noise = perlinNoise.generatePerlinNoise(50, 50, {
 			persistence: .005,
 			amplitude
-		})
+		});
+
+		const indices = [];
+
 
         for (let x = 0; x < positions.length; x += 3) {
             const vector = new Vector3(positions[x], positions[x + 1], positions[x + 2]);
@@ -74,6 +91,16 @@ function Planet(props) {
             positions[x + 1] = vector.y
             positions[x + 2] = noiseOffset
 
+			if (xIndex < cols - 1 && zIndex < rows - 1) {
+				const topLeft = zIndex * (cols + 1) + xIndex;
+				const topRight = topLeft + 1;
+				const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
+				const bottomRight = bottomLeft + 1;
+
+				// Create two triangles for the quad
+				indices.push(topLeft, bottomLeft, topRight); // Triangle 1
+				indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
+			}
 
 
 			colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
@@ -86,6 +113,38 @@ function Planet(props) {
 
 
         surfaceRef.current.geometry = geometry;
+
+
+        cliffsRef.current.geometry = filterSteepGeometry(geometry, .65, 'gray');
+        cliffsRef.current.geometry.computeBoundingBox();
+
+        var cliffColors = [];
+        const cliffUvs = [];
+        for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
+        	// cliffsRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
+        	// cliffsRef.current.geometry.attributes.position.array[x + 1] += 0.25
+        	// cliffsRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
+        	cliffColors.push(141 / 255, 148 / 255, 144 / 255);
+        	cliffUvs.push(
+        		(cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
+        		(cliffsRef.current.geometry.attributes.position.array[x + 2] - cliffsRef.current.geometry.boundingBox.min.z) / cliffsRef.current.geometry.boundingBox.max.z
+        	);
+        }
+        // cliffsRef.current.geometry.setAttribute('color', new Float32BufferAttribute(cliffColors, 3))
+        cliffsRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(cliffUvs, 2));
+        cliffsRef.current.material.map = cliffTexture()
+        cliffsRef.current.geometry.attributes.position.needsUpdate = true
+
+        // grassesRef.current.geometry = filterSteepGeometry(geometry, .89, 'lawngreen');
+        // var grassesColors = [];
+        // for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
+        // 	grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
+        // 	grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
+        // 	grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
+        // 	grassesColors.push(randomInRange(3, 7) / 255, randomInRange(210, 252) / 255, randomInRange(29, 100) / 255);
+        // }
+        // grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
+        // grassesRef.current.geometry.attributes.position.needsUpdate = true
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
         const planetOceanPositions = oceanGeometry.attributes.position.array;
@@ -103,10 +162,7 @@ function Planet(props) {
 			type: 'LOAD_GROUND',
 			surfaceGeometry: surfaceRef.current,
 			planetGeometry: sphereRef.current
-		})
-		} catch (err) {
-			debugger
-		}
+		});
     }, []); // Add dependencies if needed
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
@@ -119,10 +175,10 @@ function Planet(props) {
 
 
     const offSceneSpherePosition = useMemo(() => {
-    	return [0, 0, 0];
+    	return [0, -99999999, 0];
     }, []);
 
-	return <group>
+	return <>
 	{/*	<mesh position={props.state.planet.position}>
 			<sphereGeometry args={[
 				props.state.planet.radius,
@@ -142,19 +198,31 @@ function Planet(props) {
             />
         </mesh>
 
-		<mesh ref={surfaceRef} position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
-				opacity={1} 
-				transparent={false} 
+				opacity={1}
+				wireframe
+				transparent={true}
 				side={DoubleSide}
 				vertexColors={true}
             	
 			/>
 		</mesh>
 
+		<mesh ref={cliffsRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+			<planeGeometry args={[200, 200, 200, 200]} />
+			<meshStandardMaterial 
+				opacity={1}
+				side={DoubleSide}
+				vertexColors={false}
+			/>
+		</mesh>
 
-	</group>
+		
+
+
+	</>
 }
 
 export default Planet;

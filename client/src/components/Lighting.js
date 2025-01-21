@@ -1,66 +1,48 @@
 import React, { useRef, useMemo, useEffect } from 'react';
-import { Vector3, Color, Object3D } from 'three';
+import { Vector3, Color, Object3D, DoubleSide } from 'three';
+import { starRadius } from '../models/constants';
 
 function Sunlight({ state }) {
-  const directionalLightRef = useRef();
-  const targetRef = useRef(new Object3D());
-
-  useEffect(() => {
-    if (directionalLightRef.current && targetRef.current) {
-      // Update the target position to match `centerStage`
-      targetRef.current.position.set(state.centerStage.x, state.centerStage.y, state.centerStage.z);
-      directionalLightRef.current.target = targetRef.current;
-
-      // Update the target's position in the scene
-      directionalLightRef.current.target.updateMatrixWorld();
-
-      directionalLightRef.current.shadow.mapSize.width = 1024;
-      directionalLightRef.current.shadow.mapSize.height = 1024;
-
-      // Configure the shadow camera for the directional light (this affects shadow casting area)
-      directionalLightRef.current.shadow.camera.near = 0.005;
-      directionalLightRef.current.shadow.camera.far = 9900;
-      directionalLightRef.current.shadow.camera.left = -100;
-      directionalLightRef.current.shadow.camera.right = 100;
-      directionalLightRef.current.shadow.camera.top = 100;
-      directionalLightRef.current.shadow.camera.bottom = -100;
-    }
-  }, [state.centerStage]); // Runs when `centerStage` changes
-
-  const sunIsLow = state.x > Math.PI;
+  const sunRef = useRef();
+  const targetRef = useRef(() => new Object3D()); // Ensure it's created once
+  const sphereGeometryArgs = useMemo(() => [starRadius / 80, 100, 100], []);
+  const isNight = state.x > Math.PI / 2 && state.x < Math.PI * 1.5;
 
   return (
     <>
-      {/* Directional Light directed toward the target */}
       <directionalLight
-        ref={directionalLightRef}
         position={state.sunPosition}
-        intensity={2}
+        castShadow
+        receiveShadow
+        // shadow-bias={-0.0001}
+        shadow-mapSize-width={starRadius}
+        shadow-mapSize-height={starRadius}
+        shadow-camera-near={0.001}
+        shadow-camera-far={starRadius * 200}
+        shadow-camera-left={-500}
+        shadow-camera-right={500}
+        shadow-camera-top={500}
+        shadow-camera-bottom={-500}
+        target={state.planet.surfaceGeometry}
+        intensity={isNight ? 0 : 3}
       />
-      <primitive object={targetRef.current} />
-      
-      {/* Ambient Light */}
+      <mesh ref={sunRef} position={state.sunPosition}>
+        <sphereGeometry args={sphereGeometryArgs} />
+        <meshBasicMaterial color={0xffffff} side={DoubleSide} />
+      </mesh>
       <ambientLight
-        position={new Vector3(state.centerStage.x, state.centerStage.y + 100, state.centerStage.z)}
-        color={0xfcfcfc}
-        intensity={1}
-      />
-      
-      {/* Point Light representing the Sun */}
-      <pointLight
-        key="The Sun"
-        position={state.sunPosition}
-        intensity={sunIsLow ? 0 : 3}
+        position={[0, state.planet.radius + 100, 0]}
         color={0xffffff}
+        intensity={isNight ? 0.9 : 0.15}
       />
     </>
   );
 }
 
-function Lighting(props) {
+function Lighting({ state }) {
   return (
     <>
-      <Sunlight state={props.state} />
+      <Sunlight state={state} />
     </>
   );
 }

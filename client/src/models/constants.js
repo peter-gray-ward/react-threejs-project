@@ -3,14 +3,14 @@ import {
 } from 'three';
 
 export const SPEED = {
-  GRAVITY: 0.075, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
-  WALK: .15,      // Average human walking speed ~2.5 meters per second
-  RUN: 3.8,
+  GRAVITY: 0.175, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
+  WALK: .15 * 1,      // Average human walking speed ~2.5 meters per second
+  RUN: 3.8 * 3,
   STRAFE: .1,    // Strafing is typically slower than walking forward
   CAMERA: {
     SIN: 0.5,    // Reduced sinusoidal camera effect for subtle motion
   },
-  JUMP: 0.1,        // Realistic jump height considering gravity (parabolic arc ~1.25 meters with these values)
+  JUMP: 0.5,        // Realistic jump height considering gravity (parabolic arc ~1.25 meters with these values)
   ROTATE: 0.05    // Reduced rotation speed for smoother turning (~2.86 degrees per frame at 60fps)
 };
 
@@ -29,7 +29,7 @@ export const MASS = {
   }
 }
 
-export const starRadius = 131636736;
+export const starRadius = 131636//736;
 export const angularSize = 0.00345;
 // export const cameraRadius = starRadius * 2
 export const cameraRadius = 3.5

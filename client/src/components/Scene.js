@@ -189,7 +189,7 @@ function Scene(props) {
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
-	        starGroupRef.current.rotation.x += 0.001; // Rotate around the Y-axis
+	        starGroupRef.current.rotation.x += 0.000; // Rotate around the Y-axis
 	        // 
 	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
 	            starGroupRef.current.rotation.x = 0
@@ -333,19 +333,8 @@ function Scene(props) {
 		<>
 			<ModelViewer camera={camera} {...props} />
 			<Planet {...props} />
-			<group ref={sunRef} position={props.state.sunPosition}>
 
-				<mesh>
-		            <sphereGeometry args={[RECORD.star.sizes[3] * 35, 11, 100]} />
-		            <meshBasicMaterial
-		            	color={0xffffff}
-		            	side={DoubleSide}
-		            />
-		        </mesh>
-
-
-			</group>
-			{ props.state.model.dial }
+			{/*{ props.state.model.dial }*/}
 			<group ref={starGroupRef} position={[...props.state.model.scene.position]}>
 				{
 

@@ -9,7 +9,8 @@ import {
   Vector3,
   Sphere,
   Quaternion,
-  Color
+  Color,
+  Mesh
 } from 'three';
 import { 
   useLoader, 
@@ -314,7 +315,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
       if (cameraTheta < Math.PI * 2 - 0.25) {
-        cameraTheta += 0.25;
+        cameraTheta += 0.13;
       }
       return {
         ...state,
@@ -334,9 +335,9 @@ function sceneReducer(state, action) {
       
       if (cameraTheta > 0) {
         if (cameraTheta > Math.PI * 1.9) {
-          cameraTheta -= 0.05;
+          cameraTheta -= 0.033;
         } else {
-          cameraTheta -= 0.25;
+          cameraTheta -= 0.15;
         }
       }
       return {
@@ -364,6 +365,7 @@ function sceneReducer(state, action) {
         }
       }
     case 'START_JUMP':
+      
       return {
         ...state,
         animations: [
@@ -553,7 +555,16 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
-    model.scene.position.set(0, state.planet.radius + 100, 0)
+    model.scene.position.set(0, state.planet.radius + 20, 0)
+    model.scene.castShadow = true;
+    model.scene.receiveShadow = true;
+    model.scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 

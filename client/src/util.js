@@ -3,7 +3,10 @@ import {
 	Quaternion,
 	Group,
 	ArrowHelper,
-	Raycaster
+	Raycaster,
+    Float32BufferAttribute,
+    BufferGeometry,
+    Color
 } from 'three';
 
 
@@ -26,14 +29,85 @@ export const coords = object => {
 	}
 }
 
-// export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle }) => { 
-// 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
-// 	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
-// 	const z = radialDistance * Math.cos(polarAngle); 
-// 	var vector = new Vector3(x, y, z);
-// 	vector.add(planetCenter);
-// 	return vector;
-// }
+const colorFunction = (vertex) => {
+  const height = vertex.y; // Use height (Y-axis) for coloring
+  return new Color().setHSL(0.3, 1.0, height > 0 ? 0.6 : 0.2); // Greenish tones
+}
+
+export const filterSteepGeometry = (geometry, steepnessThreshold) => {
+  const upDirection = new Vector3(0, 0, 1);
+  const positions = geometry.attributes.position.array; // Vertex positions
+  const indices = geometry.index.array; // Indices (triangles)
+  const newPositions = [];
+  const newIndices = [];
+  const newColors = [];
+  const vertexMap = new Map(); // Map to track old-to-new vertex index mapping
+
+  const up = upDirection.clone().normalize(); // Normalize the up direction
+
+  // Helper: Compute the steepness of a triangle
+  const computeSteepness = (a, b, c) => {
+    const v1 = new Vector3().fromArray(a);
+    const v2 = new Vector3().fromArray(b);
+    const v3 = new Vector3().fromArray(c);
+
+    // Compute two edges of the triangle
+    const edge1 = new Vector3().subVectors(v2, v1);
+    const edge2 = new Vector3().subVectors(v3, v1);
+
+    // Compute the face normal
+    const normal = new Vector3().crossVectors(edge1, edge2).normalize();
+
+    // Calculate the steepness by comparing the normal to the up vector
+    return Math.abs(normal.dot(up)); // Values near 1 are flat; values near 0 are steep
+  };
+
+  // Process each triangle
+  for (let i = 0; i < indices.length; i += 3) {
+    const aIndex = indices[i];
+    const bIndex = indices[i + 1];
+    const cIndex = indices[i + 2];
+
+    const a = positions.slice(aIndex * 3, aIndex * 3 + 3);
+    const b = positions.slice(bIndex * 3, bIndex * 3 + 3);
+    const c = positions.slice(cIndex * 3, cIndex * 3 + 3);
+
+    const steepness = computeSteepness(a, b, c);
+
+    // Include the triangle if it is steep
+    if (steepness < steepnessThreshold) {
+      // Add vertices and reindex
+      const newA = vertexMap.has(aIndex) ? vertexMap.get(aIndex) : addVertex(aIndex, a);
+      const newB = vertexMap.has(bIndex) ? vertexMap.get(bIndex) : addVertex(bIndex, b);
+      const newC = vertexMap.has(cIndex) ? vertexMap.get(cIndex) : addVertex(cIndex, c);
+
+      newIndices.push(newA, newB, newC);
+    }
+  }
+
+  // Helper: Add a vertex, track its mapping, and assign a color
+  function addVertex(oldIndex, vertex) {
+    const newIndex = newPositions.length / 3;
+    newPositions.push(...vertex);
+
+    // Compute color using the provided colorFunction
+    const color = colorFunction(new Vector3().fromArray(vertex));
+    newColors.push(color.r, color.g, color.b);
+
+    vertexMap.set(oldIndex, newIndex);
+    return newIndex;
+  }
+
+  // Create a new geometry
+  const newGeometry = new BufferGeometry();
+  newGeometry.setAttribute('position', new Float32BufferAttribute(newPositions, 3));
+  newGeometry.setAttribute('color', new Float32BufferAttribute(newColors, 3)); // Add colors
+  newGeometry.setIndex(newIndices);
+  newGeometry.computeVertexNormals(); // Recalculate normals
+
+  return newGeometry;
+}
+
 export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, originalDirection, planetCenter }) => { // Step 1: Convert spherical to Cartesian coordinates 
 	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
 	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
