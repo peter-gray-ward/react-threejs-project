@@ -35,13 +35,19 @@ const colorFunction = (vertex) => {
 }
 
 export const filterSteepGeometry = (geometry, steepnessThreshold) => {
+  var result = {
+    steep: undefined,
+    other: undefined
+  };
   const upDirection = new Vector3(0, 0, 1);
   const positions = geometry.attributes.position.array; // Vertex positions
   const indices = geometry.index.array; // Indices (triangles)
+  const otherIndices = [];
   const newPositions = [];
   const newIndices = [];
-  const newColors = [];
+  const otherPositions = [];
   const vertexMap = new Map(); // Map to track old-to-new vertex index mapping
+  const otherVertexMap = new Map();
 
   const up = upDirection.clone().normalize(); // Normalize the up direction
 
@@ -82,6 +88,11 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
       const newC = vertexMap.has(cIndex) ? vertexMap.get(cIndex) : addVertex(cIndex, c);
 
       newIndices.push(newA, newB, newC);
+    } else {
+      const newA = otherVertexMap.has(aIndex) ? otherVertexMap.get(aIndex) : addOtherVertex(aIndex, a);
+      const newB = otherVertexMap.has(bIndex) ? otherVertexMap.get(bIndex) : addOtherVertex(bIndex, b);
+      const newC = otherVertexMap.has(cIndex) ? otherVertexMap.get(cIndex) : addOtherVertex(cIndex, c);
+      otherIndices.push(newA, newB, newC);
     }
   }
 
@@ -90,22 +101,33 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
     const newIndex = newPositions.length / 3;
     newPositions.push(...vertex);
 
-    // Compute color using the provided colorFunction
-    const color = colorFunction(new Vector3().fromArray(vertex));
-    newColors.push(color.r, color.g, color.b);
-
     vertexMap.set(oldIndex, newIndex);
+    return newIndex;
+  }
+
+  function addOtherVertex(oldIndex, vertex) {
+    const newIndex = otherPositions.length / 3;
+    otherPositions.push(...vertex);
+
+    otherVertexMap.set(oldIndex, newIndex);
     return newIndex;
   }
 
   // Create a new geometry
   const newGeometry = new BufferGeometry();
   newGeometry.setAttribute('position', new Float32BufferAttribute(newPositions, 3));
-  newGeometry.setAttribute('color', new Float32BufferAttribute(newColors, 3)); // Add colors
   newGeometry.setIndex(newIndices);
   newGeometry.computeVertexNormals(); // Recalculate normals
 
-  return newGeometry;
+  const otherGeometry = new BufferGeometry();
+  otherGeometry.setAttribute('position', new Float32BufferAttribute(otherPositions, 3));
+  otherGeometry.setIndex(otherIndices);
+  otherGeometry.computeVertexNormals(); // Recalculate normals
+
+  return {
+    steep: newGeometry,
+    other: otherGeometry
+  };
 }
 
 export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, originalDirection, planetCenter }) => { // Step 1: Convert spherical to Cartesian coordinates 

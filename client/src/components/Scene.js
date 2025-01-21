@@ -189,7 +189,7 @@ function Scene(props) {
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
-	        starGroupRef.current.rotation.x += 0.000; // Rotate around the Y-axis
+	        starGroupRef.current.rotation.x += 0.001; // Rotate around the Y-axis
 	        // 
 	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
 	            starGroupRef.current.rotation.x = 0

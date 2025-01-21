@@ -114,8 +114,8 @@ function Planet(props) {
 
         surfaceRef.current.geometry = geometry;
 
-
-        cliffsRef.current.geometry = filterSteepGeometry(geometry, .65, 'gray');
+        var geometries = filterSteepGeometry(geometry, .65, 'gray');
+        cliffsRef.current.geometry = geometries.steep;
         cliffsRef.current.geometry.computeBoundingBox();
 
         var cliffColors = [];
@@ -135,16 +135,16 @@ function Planet(props) {
         cliffsRef.current.material.map = cliffTexture()
         cliffsRef.current.geometry.attributes.position.needsUpdate = true
 
-        // grassesRef.current.geometry = filterSteepGeometry(geometry, .89, 'lawngreen');
-        // var grassesColors = [];
-        // for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
-        // 	grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
-        // 	grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
-        // 	grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
-        // 	grassesColors.push(randomInRange(3, 7) / 255, randomInRange(210, 252) / 255, randomInRange(29, 100) / 255);
-        // }
-        // grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
-        // grassesRef.current.geometry.attributes.position.needsUpdate = true
+        grassesRef.current.geometry = geometries.other
+        var grassesColors = [];
+        for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
+        	grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
+        	grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
+        	grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
+        	grassesColors.push(randomInRange(3, 7) / 255, randomInRange(210, 252) / 255, randomInRange(29, 100) / 255);
+        }
+        grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
+        grassesRef.current.geometry.attributes.position.needsUpdate = true
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
         const planetOceanPositions = oceanGeometry.attributes.position.array;
@@ -216,6 +216,15 @@ function Planet(props) {
 				opacity={1}
 				side={DoubleSide}
 				vertexColors={false}
+			/>
+		</mesh>
+
+		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+			<planeGeometry args={[200, 200, 200, 200]} />
+			<meshStandardMaterial 
+				opacity={1}
+				side={DoubleSide}
+				vertexColors={true}
 			/>
 		</mesh>
 
