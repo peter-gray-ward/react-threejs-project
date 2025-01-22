@@ -20,7 +20,9 @@ import {
 	Group,
 	VSMShadowMap,
 	RepeatWrapping,
-	PCFSoftShadowMap
+	PCFSoftShadowMap,
+	ArrowHelper,
+	Quaternion
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -120,6 +122,7 @@ function Planet(props) {
 
         var cliffColors = [];
         const cliffUvs = [];
+        var foundHobbitHole = false;
         for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
         	// cliffsRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
         	// cliffsRef.current.geometry.attributes.position.array[x + 1] += 0.25
@@ -129,6 +132,89 @@ function Planet(props) {
         		(cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
         		(cliffsRef.current.geometry.attributes.position.array[x + 2] - cliffsRef.current.geometry.boundingBox.min.z) / cliffsRef.current.geometry.boundingBox.max.z
         	);
+
+
+        	/*
+        	const hobbitHoleCondition = Math.abs((x / cliffsRef.current.children[0].geometry.attributes.position.array.length % 0.1) - 0.1).toFixed(2) == '0.01';
+        	if (hobbitHoleCondition) {
+			    const v0 = new Vector3(
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 1],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 2]
+			    );
+			    const v1 = new Vector3(
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 3],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 4],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 5]
+			    );
+			    const v2 = new Vector3(
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 6],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 7],
+			        cliffsRef.current.children[0].geometry.attributes.position.array[x + 8]
+			    );
+
+			    var lowestPoint = v0;
+			    if (v1.z < lowestPoint.z) {
+			    	lowestPoint = v1;
+			    }
+			    if (v2.z < lowestPoint.z) {
+			    	lowestPoint = v2;
+			    }
+
+			    [v0, v1, v2].forEach(v => {
+			    	var m = new Mesh(new SphereGeometry(1, 20, 20),
+			    		new MeshBasicMaterial({ color: 0xff0000 }));
+			    	m.position.copy(v);
+			    	cliffsRef.current.add(m);
+			    })
+
+
+			    // Compute two vectors
+			    const edge1 = new Vector3().subVectors(v1, v0);
+			    const edge2 = new Vector3().subVectors(v2, v0);
+
+			    // Compute the normal using cross product
+			    const normal = new Vector3().crossVectors(edge1, edge2).normalize();
+
+			    // Render the normal vector using a line
+			    const normalLine = new ArrowHelper(
+			        normal, // Direction of the arrow
+			        lowestPoint,     // Starting point
+			        5,      // Length of the arrow
+			        0xff0000 // Color of the arrow (red)
+			    );
+			    cliffsRef.current.add(normalLine);
+
+			    // Create a door and orient it to face along the normal
+			    var door = new Mesh(
+			        new CylinderGeometry(2, 2, 0.15, 20),
+			        new MeshBasicMaterial({
+			            map: new TextureLoader().load(Math.random() < 0.5 ? "/door-yellow.png" : "/door-green.png"),
+			        })
+			    );
+
+			    door.position.copy(lowestPoint);
+			    
+
+			    // Align the door's orientation to face the normal
+			    const up = new Vector3(0, 1, 0); // Default up vector
+			    const rotationQuaternion = new Quaternion().setFromUnitVectors(up, normal);
+			    door.quaternion.copy(rotationQuaternion);
+
+			    cliffsRef.current.add(door);
+
+			    if (!foundHobbitHole) {
+			    	props.state.model.scene.position.set(
+			    		door.position.x,
+			    		door.position.z + seaLevel.y,
+			    		door.position.y
+			    	);
+			    	props.state.model.scene.position.y += 10;
+			    	foundHobbitHole = true;
+			    }
+			}
+			*/
+
         }
         // cliffsRef.current.geometry.setAttribute('color', new Float32BufferAttribute(cliffColors, 3))
         cliffsRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(cliffUvs, 2));

@@ -133,8 +133,13 @@ function ModelViewer(props) {
 		// if (!currentPosition.equals(targetPosition)) {
 	    const stepDirection = targetPosition.clone().sub(currentPosition).normalize();
 	    const step = stepDirection.multiplyScalar(
-	    	props.state.model.jumping ? Math.abs(gravity) * props.state.model.velocity.y : 0
+	    	props.state.model.jump ? Math.abs(gravity) * props.state.model.velocity.y : 0
 	    );
+
+	    if (props.state.model.jump) {
+	    	props.state.model.jump = false;
+	    	props.dispatch({ type: 'MODEL_LOADED', model: props.state.model })
+	    }
 
 	    // Update the position by the step or clamp to the target position
 	    const newPosition = currentPosition.clone().add(step);
@@ -210,6 +215,9 @@ function ModelViewer(props) {
 				props.state.model.floor = surfaceFloor
 				props.state.model.floor.type = 'surface'
 				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+				if (props.state.animations.contains("jump")) {
+					props.dispatch({ type: 'STOP_JUMP '});
+				}
 			} 
 
 			if (waterFloor) {
@@ -248,7 +256,7 @@ function ModelViewer(props) {
 				velocity -= SPEED.GRAVITY;
 			} else {
 				props.state.model.scene.position.copy(props.state.model.floor);
-				if (props.state.model.jump) {
+				if (props.state.animations.contains("jump")) {
 					props.dispatch({ type: 'STOP_JUMP' });
 				}
 				velocity = 0;

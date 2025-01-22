@@ -683,7 +683,7 @@ function App() {
       }
       if (key.trim() == '') {
         done.START_JUMP = false;
-        dispatch({ type: 'STOP_JUMP' })
+        // dispatch({ type: 'STOP_JUMP' })
       }
       if (key == 'shift') {
         done.SHIFT = false;
