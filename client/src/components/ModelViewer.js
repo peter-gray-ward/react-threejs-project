@@ -133,7 +133,9 @@ function ModelViewer(props) {
 		// if (!currentPosition.equals(targetPosition)) {
 	    const stepDirection = targetPosition.clone().sub(currentPosition).normalize();
 	    const step = stepDirection.multiplyScalar(
-	    	props.state.model.jump ? Math.abs(gravity) * props.state.model.velocity.y : 0
+	    	props.state.model.jump || props.state.model.jumping
+	    	 ? Math.abs(gravity) * props.state.model.velocity.y 
+	    	 : 0
 	    );
 
 	    if (props.state.model.jump) {

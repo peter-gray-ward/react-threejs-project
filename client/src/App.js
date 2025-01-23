@@ -368,10 +368,10 @@ function sceneReducer(state, action) {
       
       return {
         ...state,
-        animations: [
+        animations: Array.from(new Set([
           ...state.animations,
           'jump'
-        ],
+        ])),
         model: {
           ...state.model,
           jump: true,
@@ -621,10 +621,10 @@ function App() {
         }
       }
       if (key.trim() == '') {
-        if (!done.START_JUMP) {
-          done.START_JUMP = true;
+        // if (!done.START_JUMP) {
+        //   done.START_JUMP = true;
           dispatch({ type: 'START_JUMP' })
-        }
+        // }
       }
       if (key == 'enter') {
         dispatch({ type: 'MODEL_LOADED', model })
@@ -633,14 +633,11 @@ function App() {
         done.SHIFT = true;
         if (done.START_WALK) {
           dispatch({ type: 'START_WALK', shift: done.SHIFT })
-        }
-        if (done.START_WALK_BACK) {
+        } else if (done.START_WALK_BACK) {
           dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT })
-        }
-        if (done.START_STRAFE_LEFT) {
+        } else if (done.START_STRAFE_LEFT) {
           dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT })
-        }
-        if (done.START_STRAFE_RIGHT) {
+        } else if (done.START_STRAFE_RIGHT) {
           dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT })
         }
       }
