@@ -258,9 +258,9 @@ function ModelViewer(props) {
 				velocity -= SPEED.GRAVITY;
 			} else {
 				props.state.model.scene.position.copy(props.state.model.floor);
-				if (props.state.animations.contains("jump")) {
-					props.dispatch({ type: 'STOP_JUMP' });
-				}
+				// if (props.state.animations.contains("jump")) {
+				// 	props.dispatch({ type: 'STOP_JUMP' });
+				// }
 				velocity = 0;
 			}
 		}
