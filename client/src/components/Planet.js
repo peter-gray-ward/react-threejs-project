@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree, InstancedMesh } from '@react-three/fiber'
 import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
@@ -22,13 +22,16 @@ import {
 	RepeatWrapping,
 	PCFSoftShadowMap,
 	ArrowHelper,
-	Quaternion
+	Quaternion,
+	TubeGeometry,
+	Matrix4
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
 	filterSteepGeometry,
 	randomInRange
 } from '../util';
+import Flowers from './Flowers';
 
 	  
 function Planet(props) {
@@ -61,6 +64,7 @@ function Planet(props) {
 	const sphereRef = useRef();
 	const cliffsRef = useRef();
 	const grassesRef = useRef();
+	const flowersRef = useRef();
 
 	useEffect(() => {
 		const rows = 50;
@@ -222,12 +226,38 @@ function Planet(props) {
         cliffsRef.current.geometry.attributes.position.needsUpdate = true
 
         grassesRef.current.geometry = geometries.other
+
         var grassesColors = [];
         for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
         	grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
         	grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
         	grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
-        	grassesColors.push(randomInRange(3, 7) / 255, randomInRange(210, 252) / 255, randomInRange(29, 100) / 255);
+
+        	const r = randomInRange(3, 7) / 255
+        	const g = randomInRange(210, 252) / 255
+        	const b = randomInRange(29, 100) / 255
+        	grassesColors.push(r, g, b);
+
+			// Check condition for flower placement
+			if (g > 0.862 && b < 0.3) {
+				console.log('flower', x);
+
+				// Calculate flower position
+				const flowerPosition = new Vector3(
+				  grassesRef.current.geometry.attributes.position.array[x],
+				  grassesRef.current.geometry.attributes.position.array[x + 2],
+				  grassesRef.current.geometry.attributes.position.array[x + 1]
+				);
+
+				// Set flower matrix in instancedMesh
+				if (flowersRef.current) {
+				  const matrix = new Matrix4();
+				  matrix.setPosition(flowerPosition);
+				  const instanceId = flowersRef.current.count || 0; // Count instances
+				  flowersRef.current.setMatrixAt(instanceId, matrix);
+				  flowersRef.current.count = instanceId + 1; // Increment instance count
+				}
+			}
         }
         grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
         grassesRef.current.geometry.attributes.position.needsUpdate = true
@@ -314,7 +344,12 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		
+		<Flowers ref={flowersRef} 
+			{...props}
+			receiveShadow 
+			position={[0, props.state.planet.radius, 0]} 
+			rotation={[Math.PI / 2, 0, 0]}>	
+		</Flowers>	
 
 
 	</>

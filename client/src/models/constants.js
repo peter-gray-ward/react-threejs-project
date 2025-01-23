@@ -1,6 +1,25 @@
 import {
-  Vector3
+  Vector3,
+  Curve
 } from 'three';
+
+export class CustomSinCurve extends Curve {
+
+  constructor( scale = 1 ) {
+    super();
+    this.scale = scale;
+  }
+
+  getPoint( t, optionalTarget = new Vector3() ) {
+
+    const tx = t * 3 - 1.5;
+    const ty = Math.sin( 2 * Math.PI * t );
+    const tz = 0;
+
+    return optionalTarget.set( tx, ty, tz ).multiplyScalar( this.scale );
+  }
+}
+
 
 export const SPEED = {
   GRAVITY: 0.055, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)

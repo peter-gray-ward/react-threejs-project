@@ -11,9 +11,11 @@ import {
 	Matrix4,
 	InstancedMesh,
 	BufferGeometry,
+	SphereGeometry,
 	PointsMaterial,
 	Color,
 	BufferAttribute,
+	Object3D,
 	MeshBasicMaterial,
 	Float32BufferAttribute,
 	Group,
@@ -51,6 +53,8 @@ function Scene(props) {
 	const starGroupRef = useRef();
 	const skyGroupRef = useRef();
 	const sunRef = useRef();
+	const cloudsRef = useRef();
+	const cloudsRefWire = useRef();
 	const randomStarSeeds = useMemo(() => {
 		scene.background = new Color(0, 0, 0);
 		return Array.from({ length: RECORD.star.categories * RECORD.star.count })
@@ -127,65 +131,6 @@ function Scene(props) {
 		return _starGeometries;
 	}, []);
 
-	var skyMaterials = useMemo(() => {
-		var materials = [];
-		for (var i = 0; i < RECORD.sky.categories; i++) {
-			materials.push(new PointsMaterial({
-				vertexColors: true,
-				size: randomInRange(RECORD.sky.size, RECORD.sky.size * 11)
-			}));
-
-		}
-		return materials;
-	}, []);
-
-	var skyGeometries = useMemo(() => {
-	    var geometries = [];
-	    const radius = props.state.planet.radius;
-
-	    for (var i = 0; i < RECORD.sky.categories; i++) {
-	        var skyGeometry = new BufferGeometry();
-	        var positions = [];
-	        var colors = [];
-
-	        // Define grid resolution
-	        const panelResolution = Math.sqrt(RECORD.sky.panelCount); // Grid size
-	        const phiStep = (Math.PI * 2) / panelResolution; // Azimuthal angle step
-	        const thetaStep = Math.PI / panelResolution; // Polar angle step (half sphere)
-
-	        for (var j = 0; j < RECORD.sky.panelCount; j++) {
-	            // Calculate grid indices
-	            const row = Math.floor(j / panelResolution);
-	            const col = j % panelResolution;
-
-	            // Calculate phi and theta systematically
-	            const phi = col * phiStep; // Horizontal division
-	            const theta = row * thetaStep; // Vertical division
-
-	            // Convert spherical coordinates to Cartesian
-	            var x = props.state.model.scene.position.x + radius * Math.sin(theta) * Math.cos(phi);
-	            const y = props.state.model.scene.position.y + radius * Math.sin(theta) * Math.sin(phi);
-	            const z = props.state.model.scene.position.z + radius * Math.cos(theta);
-
-	            positions.push(x, y, z);
-
-	            // Color logic (keep or modify as needed)
-	            var r = col / panelResolution; // Gradient based on column
-	            var g = row / panelResolution; // Gradient based on row
-	            var b = 1;
-
-	            colors.push(r, g, b);
-	        }
-
-	        skyGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-	        skyGeometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-
-	        geometries.push(skyGeometry);
-	    }
-
-	    return geometries;
-	}, []);
-
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
@@ -237,95 +182,87 @@ function Scene(props) {
         	sunRef.current.position.copy(sunPosition)
         }
 
-	    // Log the updated sun position
-
-        skyGroupRef.current.children.forEach((skyCategory) => {
-		    if (!skyCategory.geometry || !skyCategory.geometry.attributes.position) return;
-
-		    const positions = skyCategory.geometry.attributes.position.array;
-		    const colors = skyCategory.geometry.attributes.color ? skyCategory.geometry.attributes.color.array : null;
-
-		    let maxDist = -Infinity;
-		    let minDist = Infinity;
-
-		    // First pass: Calculate min and max distances
-		    for (let i = 0; i < positions.length; i += 3) {
-		        const vertex = new Vector3(
-		            positions[i],
-		            positions[i + 1],
-		            positions[i + 2]
-		        );
-		        const distanceToSun = sunPosition.distanceTo(vertex);
-		        maxDist = Math.max(maxDist, distanceToSun);
-		        minDist = Math.min(minDist, distanceToSun);
-		    }
-
-		    // Calculate the step size based on the range
-		   
-
-		    // Define colors for different intervals (customize as needed)
-		   const spectrumColors = [
-			    [0.8, 0.8, 1],  // Noon (light blue)
-			    [0.6, 0.6, 0.8], // Afternoon (fading blue)
-			    [0.4, 0.4, 0.6], // Sunset
-			    [0.2, 0.2, 0.4], // Twilight
-			    [0.1, 0.1, 0.2], // Early night
-			    [0, 0, 0.1],     // Midnight (very dark blue)
-			    [0, 0, 0]        // Deep night (black)
-			].reverse();
-
-
-		    // Normalize distance and map to spectrumColors
-			for (let i = 0; i < positions.length; i += 3) {
-			    const vertex = new Vector3(
-			        positions[i],
-			        positions[i + 1],
-			        positions[i + 2]
-			    );
-			    const distanceToSun = sunPosition.distanceTo(vertex);
-
-			    // Normalize distance to a range [0, 1]
-			    const normalizedDistance = (distanceToSun - minDist) / (maxDist - minDist);
-
-			    // Calculate the index in the spectrumColors array
-			    const spectrumIndex = Math.min(
-			        Math.floor(normalizedDistance * (spectrumColors.length - 1)),
-			        spectrumColors.length - 1
-			    );
-
-			    // Get the corresponding color
-			    const color = spectrumColors[0];
-
-			    // Assign the calculated color
-			    if (colors) {
-			        colors[i] = color[0];     // Red
-			        colors[i + 1] = color[1]; // Green
-			        colors[i + 2] = color[2]; // Blue
-			    }
-			}
-
-
-		    // Update the geometry colors if modified
-		    if (colors) {
-		    	skyCategory.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-		        skyCategory.geometry.attributes.color.needsUpdate = true;
-		    }
-
-		    
-		});
-
-
-		// props.dispatch({ type: 'LOAD_SUN', sun: {
-		// 	x: sunX,
-		// 	y: sunY,
-		// 	z: sunZ
-		// } });
 
 		props.state.sunPosition = [sunX, sunY, sunZ]
 
 		props.dispatch({ type: 'LOAD_THE_SUN', sunPosition: [sunPosition.x,sunPosition.y,sunPosition.z] })
 	    
 	});
+
+	useEffect(() => {
+	  if (cloudsRef.current) {
+	    const count = 3000; // Total number of points
+	    const clusterCount = 100; // Number of cloud clusters
+	    const pointsPerCluster = Math.floor(count / clusterCount);
+	    const radius = props.state.planet.radius;
+	    const positions = []; // Center positions of clusters
+	    const scales = []; // Scale for cloud deformation
+
+	    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+	    // Generate cluster centers
+	    for (let i = 0; i < clusterCount; i++) {
+	      const x = randomInRange(-100000, 100000);
+	      const y = randomInRange(radius + 1000, radius + 3000); // Clouds above the surface
+	      const z = randomInRange(-100000, 100000);
+	      positions.push({ center: [x, y, z], points: [] }); // Each cluster has a center and points
+	    }
+
+	    // Assign points to clusters with vertical flattening
+	    positions.forEach((cluster) => {
+	      const { center } = cluster;
+	      for (let i = 0; i < pointsPerCluster; i++) {
+	        const x = randomInRange(center[0] - randomInRange(0, 5000), center[0] + randomInRange(0, 5000)); // Cluster radius
+	        const z = randomInRange(center[2] - randomInRange(0, 5000), center[2] + randomInRange(0, 5000));
+	        const y =
+	          center[1] +
+	          randomInRange(0, 3000) + // Upward trending
+	          Math.abs(randomInRange(-100, 100)); // Flatten at bottom
+
+	        cluster.points.push([x, y, z]);
+	        scales.push(randomInRange(.5, 1000)); // Vary scale for each point
+	      }
+	    });
+
+	    // Create geometry for points
+	    const geometry = new SphereGeometry(1, 8, 8); // Base geometry
+	    const positionAttribute = geometry.attributes.position;
+
+	    // Apply random noise to vertices to make them billowy
+	    for (let i = 0; i < positionAttribute.count; i++) {
+	      const vertex = new Vector3().fromBufferAttribute(positionAttribute, i);
+
+	      vertex.x += randomInRange(-0.5, 0.5); // Add randomness
+	      vertex.y += randomInRange(-0.5, 0.5);
+	      vertex.z += randomInRange(-0.5, 0.5);
+
+	      positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+	    }
+	    positionAttribute.needsUpdate = true;
+
+	    // Apply transformations to each instance
+	    const cloud = new Object3D();
+	    let index = 0;
+
+	    positions.forEach((cluster) => {
+	      cluster.points.forEach((point) => {
+	        cloud.position.set(...point);
+	        const scale = scales[index];
+	        cloud.scale.set(scale * 2, scale, scale * 2);
+	        cloud.rotation.set(randomInRange(0,0),randomInRange(0, Math.PI * 2),randomInRange(0, 0))
+	        cloud.updateMatrix();
+	        var cloudWire = cloud.clone();
+	        cloudWire.position.y -= 100;
+	        cloudsRef.current.setMatrixAt(index, cloud.matrix);
+	        cloudsRefWire.current.setMatrixAt(index, cloudWire.matrix);
+	        index++;
+	      });
+	    });
+
+	    cloudsRef.current.instanceMatrix.needsUpdate = true;
+	    cloudsRefWire.current.instanceMatrix.needsUpdate = true;
+	  }
+	}, []);
 
 
 	
@@ -344,12 +281,16 @@ function Scene(props) {
 					}) 
 				}
 			</group>
-			<group ref={skyGroupRef}>
-		{/*		{
 
-					skyGeometries.map((skyGeometryOfCategory, i) => <points key={i} args={[skyGeometryOfCategory, skyMaterials[i]]} />)
-				}*/}
-			</group>
+			<instancedMesh ref={cloudsRef} args={[null, null, 3000]}>
+				<sphereGeometry args={[1.2, 9, 9]} /> {/* Sphere for each point */}
+      			<meshBasicMaterial color="white" />
+			</instancedMesh>
+
+			<instancedMesh ref={cloudsRefWire} args={[null, null, 3000]}>
+				<sphereGeometry args={[1.2, 9, 9]} /> {/* Sphere for each point */}
+      			<meshBasicMaterial color="black" wireframe transparent opacity={0.1} />
+			</instancedMesh>
 			
 		</>
 	);

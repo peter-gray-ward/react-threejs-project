@@ -555,7 +555,7 @@ function App() {
         ]} />
         <meshBasicMaterial transparent opacity={0.5} color="blue" />
       </mesh>
-    model.scene.position.set(0, state.planet.radius + 20, 0)
+    model.scene.position.set(20, state.planet.radius + 20, 0)
     model.scene.castShadow = true;
     model.scene.receiveShadow = true;
     model.scene.traverse((child) => {
