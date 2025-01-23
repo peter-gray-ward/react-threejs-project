@@ -344,12 +344,12 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		<Flowers ref={flowersRef} 
+		{/*<Flowers ref={flowersRef} 
 			{...props}
 			receiveShadow 
 			position={[0, props.state.planet.radius, 0]} 
 			rotation={[Math.PI / 2, 0, 0]}>	
-		</Flowers>	
+		</Flowers>	*/}
 
 
 	</>

@@ -48,7 +48,7 @@ export const MASS = {
   }
 }
 
-export const starRadius = 131636//736;
+export const starRadius = 1000000//736;
 export const angularSize = 0.00345;
 // export const cameraRadius = starRadius * 2
 export const cameraRadius = 3.5

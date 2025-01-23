@@ -183,7 +183,7 @@ function Scene(props) {
         }
 
 
-		props.state.sunPosition = [sunX, sunY, sunZ]
+		props.state.sunPosition = [sunPosition.x, sunPosition.y, sunPosition.z]
 
 		props.dispatch({ type: 'LOAD_THE_SUN', sunPosition: [sunPosition.x,sunPosition.y,sunPosition.z] })
 	    
@@ -216,7 +216,7 @@ function Scene(props) {
 	        const z = randomInRange(center[2] - randomInRange(0, 5000), center[2] + randomInRange(0, 5000));
 	        const y =
 	          center[1] +
-	          randomInRange(0, 3000) + // Upward trending
+	          randomInRange(100, 3000) + // Upward trending
 	          Math.abs(randomInRange(-100, 100)); // Flatten at bottom
 
 	        cluster.points.push([x, y, z]);
@@ -249,10 +249,10 @@ function Scene(props) {
 	        cloud.position.set(...point);
 	        const scale = scales[index];
 	        cloud.scale.set(scale * 2, scale, scale * 2);
-	        cloud.rotation.set(randomInRange(0,0),randomInRange(0, Math.PI * 2),randomInRange(0, 0))
+	        // cloud.rotation.set(randomInRange(0,0),randomInRange(0, Math.PI * 2),randomInRange(0, 0))
 	        cloud.updateMatrix();
 	        var cloudWire = cloud.clone();
-	        cloudWire.position.y -= 100;
+	        // cloudWire.position.y -= 100;
 	        cloudsRef.current.setMatrixAt(index, cloud.matrix);
 	        cloudsRefWire.current.setMatrixAt(index, cloudWire.matrix);
 	        index++;
@@ -263,6 +263,29 @@ function Scene(props) {
 	    cloudsRefWire.current.instanceMatrix.needsUpdate = true;
 	  }
 	}, []);
+
+	useFrame(() => {
+		if (cloudsRef.current) {
+			const cloud = new Object3D();
+			const windDirection = new Vector3(0.1, 0, 0.05);
+			for (var i = 0; i < 3000; i++) {
+				// Get the current matrix of the instance
+				cloudsRef.current.getMatrixAt(i, cloud.matrix);
+
+				cloud.matrix.elements[12] += randomInRange(1, 11)
+				if (cloud.matrix.elements[12] > 100000) {
+					cloud.matrix.elements[12] = -100000
+				}
+
+				// // Update the instance's matrix in the instanced mesh
+				cloudsRef.current.setMatrixAt(i, cloud.matrix);
+				cloudsRefWire.current.setMatrixAt(i, cloud.matrix);
+
+				cloudsRef.current.instanceMatrix.needsUpdate = true
+				cloudsRefWire.current.instanceMatrix.needsUpdate = true
+			}
+		}
+	})
 
 
 	
