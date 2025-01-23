@@ -30,6 +30,11 @@
   z-index: 2;
 }
 
+#stats pre {
+  width: 10%;
+  height: 12%;
+}
+
 #stats div {
   width: 100%;
   margin: 0;

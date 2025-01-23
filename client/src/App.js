@@ -33,7 +33,9 @@ import {
 } from './util';
 
 let __dispatch__ = '';
+
 let hidden = []
+
 Array.prototype.contains = function(str) {
   for (var i = 0 ;i < this.length; i++) {
     if (this[i] == str) {
@@ -42,6 +44,28 @@ Array.prototype.contains = function(str) {
   }
   return false
 }
+
+Array.prototype.removeLast = function(str) {
+  var removalIndex = -1;
+  for (var i = this.length - 1; i > -1; --i) {
+    if (this[i] == str) {
+      removalIndex = i;
+      break;
+    }
+  }
+  if (removalIndex > -1) {
+    this.splice(removalIndex, 1);
+  }
+}
+
+var keyed = {
+  'START_WALK': false,
+  'START_WALK_BACK': false
+}
+
+var keys = [];
+
+
 function sceneReducer(state, action) {
   __dispatch__ = action.type;
   if (!hidden.contains(__dispatch__)) {
@@ -93,7 +117,7 @@ function sceneReducer(state, action) {
         }),
         model: {
           ...state.model,
-          walk: false,
+          walk: keyed.START_WALK,
           walking: false,
           run: false,
           lounge: true,
@@ -103,6 +127,7 @@ function sceneReducer(state, action) {
           }
         }
       }
+    
     case 'WALK':
       return {
         ...state,
@@ -111,6 +136,7 @@ function sceneReducer(state, action) {
           walking: true
         }
       }
+    
     case 'START_WALK_BACK':
       var result = { 
         ...state,
@@ -213,7 +239,7 @@ function sceneReducer(state, action) {
           run: action.shift,
           speed: {
             ...state.model.speed,
-            strafe: -SPEED.STRAFE * (done.shift ? 1.5 : 1)
+            strafe: -SPEED.STRAFE * (keyed.shift ? 1.5 : 1)
           }
         }
       }
@@ -533,16 +559,16 @@ function sceneReducer(state, action) {
 }
 
 
-var done = {
-  'START_WALK': false,
-  'START_WALK_BACK': false
-}
+
 
 
 function App() {
 
   const [ state, dispatch ] = useReducer(sceneReducer, props);
   const model = useLoader(GLTFLoader, '/Xbot.glb');
+  const [appKeys, setAppKeys] = useState();
+
+
 
   useEffect(() => {
     
@@ -573,56 +599,60 @@ function App() {
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
       if (key == 'w') {
-        if (!done.START_WALK) {
-          done.START_WALK = true;
-          dispatch({ type: 'START_WALK', shift: done.SHIFT });
+        if (!keyed.START_WALK) {
+          keys.push('walk')
+          keyed.START_WALK = true;
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
         }
       }
       if (key == 's') {
-        if (!done.START_WALK_BACK) {
-          done.START_WALK_BACK = true;
-          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT });
+        if (!keyed.START_WALK_BACK) {
+          keyed.START_WALK_BACK = true;
+          keys.push('walk')
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
       if (key == 'a') {
-        if (!done.START_STRAFE_LEFT) {
-          done.START_STRAFE_LEFT = true;
-          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT });
+        if (!keyed.START_STRAFE_LEFT) {
+          keyed.START_STRAFE_LEFT = true;
+          keys.push('strafe')
+          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
         }
       }
       if (key == 'd') {
-        if (!done.START_STRAFE_RIGHT) {
-          done.START_STRAFE_RIGHT = true;
-          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT });
+        if (!keyed.START_STRAFE_RIGHT) {
+          keyed.START_STRAFE_RIGHT = true;
+          keys.push('strafe')
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
         }
       }
       if (key == 'arrowleft') {
-        if (!done.START_ROTATE_LEFT) {
-          done.START_ROTATE_LEFT = true;
+        if (!keyed.START_ROTATE_LEFT) {
+          keyed.START_ROTATE_LEFT = true;
           dispatch({ type: 'START_ROTATE_LEFT' })
         }
       }
       if (key == 'arrowright') {
-        if (!done.START_ROTATE_RIGHT) {
-          done.START_ROTATE_RIGHT = true;
+        if (!keyed.START_ROTATE_RIGHT) {
+          keyed.START_ROTATE_RIGHT = true;
           dispatch({ type: 'START_ROTATE_RIGHT' })
         }
       }
       if (key == 'arrowup') {
-        if (!done.START_ROTATE_UP) {
-          done.START_ROTATE_UP = true;
+        if (!keyed.START_ROTATE_UP) {
+          keyed.START_ROTATE_UP = true;
           dispatch({ type: 'START_ROTATE_UP' })
         }
       }
       if (key == 'arrowdown') {
-        if (!done.START_ROTATE_DOWN) {
-          done.ROTATE_DOWN = true;
+        if (!keyed.START_ROTATE_DOWN) {
+          keyed.ROTATE_DOWN = true;
           dispatch({ type: 'START_ROTATE_DOWN' })
         }
       }
       if (key.trim() == '') {
-        // if (!done.START_JUMP) {
-        //   done.START_JUMP = true;
+        // if (!keyed.START_JUMP) {
+        //   keyed.START_JUMP = true;
           dispatch({ type: 'START_JUMP' })
         // }
       }
@@ -630,15 +660,15 @@ function App() {
         dispatch({ type: 'MODEL_LOADED', model })
       }
       if (key == 'shift') {
-        done.SHIFT = true;
-        if (done.START_WALK) {
-          dispatch({ type: 'START_WALK', shift: done.SHIFT })
-        } else if (done.START_WALK_BACK) {
-          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT })
-        } else if (done.START_STRAFE_LEFT) {
-          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT })
-        } else if (done.START_STRAFE_RIGHT) {
-          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT })
+        keyed.SHIFT = true;
+        if (keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT })
+        } else if (keyed.START_WALK_BACK) {
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT })
+        } else if (keyed.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT })
+        } else if (keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT })
         }
       }
     };
@@ -647,54 +677,118 @@ function App() {
       const key = e.key.toLowerCase();
 
       if (key == 'w') {
-        done.START_WALK = false;
+        keyed.START_WALK = false;
+        keys.removeLast('walk')
         dispatch({ type: 'STOP_WALK' })
+        if (keys.contains('walk')) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
+        if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_RIGHT' })
+        }
+        if (keys.contains('walk') && keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
       }
       if (key == 's') {
-        done.START_WALK_BACK = false;
+        keyed.START_WALK_BACK = false;
+        keys.removeLast('walk')
         dispatch({ type: 'STOP_WALK_BACK' })
+        if (keys.contains('walk') && keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
+        if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_RIGHT' })
+        }
+        if (keys.contains('walk') && keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
       }
       if (key == 'a') {
-        done.START_STRAFE_LEFT = false;
-        dispatch({ type: 'STOP_STRAFE_LEFT' })
+        keyed.START_STRAFE_LEFT = false;
+        keys.removeLast('strafe' && keyed.START_STRAFE_LEFT)
+        if (keys.contains('strafe') && keyed.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_LEFT' })
+        }
+        if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_RIGHT' })
+        }
+        if (keys.contains('walk') && keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
       }
       if (key == 'd') {
-        done.START_STRAFE_RIGHT = false;
-        dispatch({ type: 'STOP_STRAFE_RIGHT' })
+        keyed.START_STRAFE_RIGHT = false;
+        keys.removeLast('strafe')
+
+        if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_RIGHT' })
+        }
+        if (keys.contains('strafe') && keyed.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_STRAFE_LEFT' })
+        }
+        if (keys.contains('walk') && keyed.START_WALK) {
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
+        } else {
+           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
+       
       }
       if (key == 'arrowleft') {
-        done.START_ROTATE_LEFT = false;
+        keyed.START_ROTATE_LEFT = false;
         dispatch({ type: 'STOP_ROTATE_LEFT' })
       }
       if (key == 'arrowright') {
-        done.START_ROTATE_RIGHT = false;
+        keyed.START_ROTATE_RIGHT = false;
         dispatch({ type: 'STOP_ROTATE_RIGHT' })
       }
       if (key == 'arrowup') {
-        done.START_ROTATE_UP = false;
+        keyed.START_ROTATE_UP = false;
         dispatch({ type: 'STOP_ROTATE_UP' })
       }
       if (key == 'arrowdown') {
-        done.START_ROTATE_DOWN = false;
+        keyed.START_ROTATE_DOWN = false;
         dispatch({ type: 'STOP_ROTATE_DOWN' })
       }
       if (key.trim() == '') {
-        done.START_JUMP = false;
+        keyed.START_JUMP = false;
         // dispatch({ type: 'STOP_JUMP' })
       }
       if (key == 'shift') {
-        done.SHIFT = false;
-        if (done.START_WALK) { // if walking
-          dispatch({ type: 'START_WALK', shift: done.SHIFT })
+        keyed.SHIFT = false;
+        if (keyed.START_WALK) { // if walking
+          dispatch({ type: 'START_WALK', shift: keyed.SHIFT })
         }
-        if (done.START_WALK_BACK) { // if walking back
-          dispatch({ type: 'START_WALK_BACK', shift: done.SHIFT })
+        if (keyed.START_WALK_BACK) { // if walking back
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT })
         }
-        if (done.START_STRAFE_RIGHT) {
-          dispatch({ type: 'START_STRAFE_RIGHT', shift: done.SHIFT })
+        if (keyed.START_STRAFE_RIGHT) {
+          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT })
         }
-        if (done.START_STRAFE_LEFT) {
-          dispatch({ type: 'START_STRAFE_LEFT', shift: done.SHIFT })
+        if (keyed.START_STRAFE_LEFT) {
+          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT })
         }
       }
     };
@@ -709,7 +803,7 @@ function App() {
   }
 
   useEffect(addEvents, []);
-  useEffect(() => {}, [done, state.interactions])
+  useEffect(() => {}, [keyed, state.interactions])
 
   if (!state.model.scene) {
     return <div className="App"></div>
@@ -720,8 +814,32 @@ function App() {
 
   const q = VisualizeQuaternion(state.model.scene.quaternion, 1, .3);
 
+  var eventCollection = true
+
 
   return (
+
+    eventCollection ?
+    <div className="App">
+      <div id="stats">
+        <pre>walk:<div className="boolean">{new String(state.model.walk)}</div>
+        walking:<div className="boolean">{new String(state.model.walking)}</div>
+        strafe:<div className="boolean">{new String(state.model.strafe)}</div>
+        strafing:<div className="boolean">{new String(state.model.strafing)}</div></pre>
+        <section>
+          <ol>
+            {
+              keys.map(k => <li>{k}</li>)
+            }
+          </ol>
+        </section>
+      </div>
+      <CanvasContainer 
+        state={state}
+        keys={keys}
+        dispatch={dispatch} />
+    </div>
+    :
     <div className="App">
       <div id="stats">
         <div>
@@ -821,6 +939,7 @@ function App() {
         state={state}
         dispatch={dispatch} />
     </div>
+    
   );
 }
 

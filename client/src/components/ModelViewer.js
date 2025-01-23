@@ -155,7 +155,7 @@ function ModelViewer(props) {
 		const localRight = new Vector3().crossVectors(localUp, forwardDirection).normalize();
 
 
-		if (props.state.model.strafe) {
+		if (props.state.model.strafe || props.keys.contains('strafe')) {
 		    localRight.multiplyScalar(props.state.model.speed.strafe);
 		    props.state.model.scene.position.add(localRight.negate());
 		    props.dispatch({ type: "STRAFE" })
@@ -163,11 +163,11 @@ function ModelViewer(props) {
 
 	    // Handle walking
 	    if (props.state.model.run) {
-	    	forwardDirection.multiplyScalar(props.state.model.speed.run);
+	    	forwardDirection.multiplyScalar(props.state.odel.speed.run);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
 	        props.dispatch({ type: "WALK" })
-	    } else if (props.state.model.walk) {
+	    } else if (props.keys.contains('walk')) {
 	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
