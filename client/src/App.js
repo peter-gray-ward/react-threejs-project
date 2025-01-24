@@ -92,10 +92,10 @@ function sceneReducer(state, action) {
     case 'START_WALK':
       var result = { 
         ...state,
-        animations: [
+        animations: Array.from(new Set([
           ...state.animations,
           'walk'
-        ],
+        ])),
         model: {
           ...state.model,
           walk: !action.shift,
@@ -140,10 +140,10 @@ function sceneReducer(state, action) {
     case 'START_WALK_BACK':
       var result = { 
         ...state,
-        animations: [
+        animations: Array.from(new Set([
           ...state.animations,
           'walk'
-        ],
+        ])),
         model: {
           ...state.model,
           walking: false,
@@ -184,10 +184,10 @@ function sceneReducer(state, action) {
     case 'START_STRAFE_RIGHT':
       var result = { 
         ...state,
-        animations: [
+        animations: Array.from(new Set([
           ...state.animations,
           'strafe'
-        ],
+        ])),
         model: {
           ...state.model,
           strafe: true,
@@ -208,7 +208,7 @@ function sceneReducer(state, action) {
         }),
         model: {
           ...state.model,
-          strafe: false,
+          strafe: keyed.START_STRAFE_LEFT || keyed.START_STRAFE_RIGHT,
           strafing: false,
           run: action.shift,
           lounge: true,
@@ -229,10 +229,10 @@ function sceneReducer(state, action) {
     case 'START_STRAFE_LEFT':
       return { 
         ...state,
-        animations: [
+        animations: Array.from(new Set([
           ...state.animations,
           'strafe'
-        ],
+        ])),
         model: {
           ...state.model,
           strafe: true,
@@ -251,7 +251,7 @@ function sceneReducer(state, action) {
         }),
         model: {
           ...state.model,
-          strafe: false,
+          strafe: keyed.START_STRAFE_LEFT || keyed.START_STRAFE_RIGHT,
           strafing: false,
           lounge: true,
           run: action.shift,
@@ -680,79 +680,62 @@ function App() {
         keyed.START_WALK = false;
         keys.removeLast('walk')
         dispatch({ type: 'STOP_WALK' })
+
         if (keys.contains('walk')) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
-        }
+        } 
         if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
           dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_RIGHT' })
         }
-        if (keys.contains('walk') && keyed.START_WALK) {
-          dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        if (keys.contains('walk') && keyed.START_WALK_BACK) {
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
       if (key == 's') {
         keyed.START_WALK_BACK = false;
         keys.removeLast('walk')
         dispatch({ type: 'STOP_WALK_BACK' })
+
+
         if (keys.contains('walk') && keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
         }
         if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
           dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_RIGHT' })
         }
         if (keys.contains('walk') && keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
         }
       }
       if (key == 'a') {
         keyed.START_STRAFE_LEFT = false;
-        keys.removeLast('strafe' && keyed.START_STRAFE_LEFT)
-        if (keys.contains('strafe') && keyed.START_STRAFE_LEFT) {
-          dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_LEFT' })
-        }
+        keys.removeLast('strafe')
+        dispatch({ type: 'STOP_STRAFE_LEFT' })
+        
         if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
           dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_RIGHT' })
         }
         if (keys.contains('walk') && keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
+        }
+        if (keys.contains('walk') && keyed.START_WALK_BACK) {
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
       if (key == 'd') {
         keyed.START_STRAFE_RIGHT = false;
         keys.removeLast('strafe')
 
-        if (keys.contains('strafe') && keyed.START_STRAFE_RIGHT) {
-          dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_RIGHT' })
-        }
+        dispatch({ type: 'STOP_STRAFE_RIGHT' });
+
         if (keys.contains('strafe') && keyed.START_STRAFE_LEFT) {
           dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_STRAFE_LEFT' })
+        }
+        if (keys.contains('strafe') && keyed.START_WALK_BACK) {
+          dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
         if (keys.contains('walk') && keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        } else {
-           dispatch({ type: 'STOP_WALK', shift: keyed.SHIFT });
         }
        
       }
