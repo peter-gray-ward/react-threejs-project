@@ -163,7 +163,7 @@ function ModelViewer(props) {
 
 	    // Handle walking
 	    if (props.state.model.run) {
-	    	forwardDirection.multiplyScalar(props.state.odel.speed.run);
+	    	forwardDirection.multiplyScalar(props.state.model.speed.run);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
 	        props.dispatch({ type: "WALK" })

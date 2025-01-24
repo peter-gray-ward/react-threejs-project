@@ -134,7 +134,7 @@ function Scene(props) {
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
-	        starGroupRef.current.rotation.x += 0.001; // Rotate around the Y-axis
+	        starGroupRef.current.rotation.x += 0.0001; // Rotate around the Y-axis
 	        // 
 	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
 	            starGroupRef.current.rotation.x = 0
@@ -189,80 +189,176 @@ function Scene(props) {
 	    
 	});
 
+	// useEffect(() => {
+	//   if (cloudsRef.current) {
+	//     const count = 3000; // Total number of points
+	//     const clusterCount = 100; // Number of cloud clusters
+	//     const pointsPerCluster = Math.floor(count / clusterCount);
+	//     const radius = props.state.planet.radius;
+	//     var Cloud_Clusters = []; // Center Cloud_Clusters of clusters
+
+	//     // Generate cluster centers
+	//     for (let i = 0; i < clusterCount; i++) {
+	//       const x = randomInRange(-100000, 100000);
+	//       const y = randomInRange(radius + 1000, radius + 5000); // Clouds above the surface
+	//       const z = randomInRange(-100000, 100000);
+	      
+	//       Cloud_Clusters.push({ 
+	// 		center: [x, y, z], 
+	// 		points: [], 
+	// 		colors: [], 
+	// 		uvs: [], 
+	// 		scales: [] 
+	// 	  }); // Each cluster has a center, points, colors, uvs, scales
+	//     }
+
+
+	//     // Assign points to clusters with vertical flattening
+	//     Cloud_Clusters.forEach((cluster, clusterIndex) => {
+	//       const { center } = cluster;
+	//       for (let i = 0; i < pointsPerCluster; i++) {
+	//         const x = randomInRange(center[0] - randomInRange(0, 5000), center[0] + randomInRange(0, 5000)); // Cluster radius
+	//         const z = randomInRange(center[2] - randomInRange(0, 5000), center[2] + randomInRange(0, 5000));
+	//         const y =
+	//           center[1] +
+	//           randomInRange(100, 3000) + // Upward trending
+	//           Math.abs(randomInRange(-100, 100)); // Flatten at bottom
+	//         const scale = randomInRange(.5, 1000)
+
+	//         cluster.scales.push([scale, scale, scale]);
+	//         cluster.points.push([x, y, z]);
+	//         cluster.colors.push([1, 0, 0]);
+	//         cluster.uvs.push(
+	//         	[Math.random(),
+	//         	Math.random()]
+	//         )
+	     
+	//       	const cloudPointIndex = Cloud_Clusters.slice(0, clusterIndex).length + i;
+	//         cloudsRef.current.setColorAt(cloudPointIndex, new Color(0.09994, 0.09995, 0.9996));
+	//       }
+	//     });
+
+	//     // Create geometry for points
+	//     const geometry = new SphereGeometry(1, 8, 8); // Base geometry
+	//     const positionAttribute = geometry.attributes.position;
+
+	//     // Apply random noise to vertices to make them billowy
+	//     for (let i = 0; i < positionAttribute.count; i++) {
+	//       const vertex = new Vector3().fromBufferAttribute(positionAttribute, i);
+
+	//       vertex.x += randomInRange(-0.5, 0.5); // Add randomness
+	//       vertex.y += randomInRange(-0.5, 0.5);
+	//       vertex.z += randomInRange(-0.5, 0.5);
+
+	//       positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+	//     }
+	//     positionAttribute.needsUpdate = true;
+
+	//     // Apply transformations to each instance
+	//     const cloud = new Object3D();
+	//     let index = 0;
+
+	//     Cloud_Clusters = Cloud_Clusters.forEach((cluster) => {
+	//       cluster.points.forEach((point, pointIndex) => {
+	//         cloud.position.set(point[0], point[1], point[2]);
+	//         const scale = cluster.scales[pointIndex];
+	//         cloud.geometry.setColorAt(?, new Color(randomInRange(.9,1),randomInRange(.9,1),randomInRange(.9,1)))
+	//         cloud.scale.set(scale[0], scale[1], scale[1]);
+	//         const uv = cluster.uvs[pointIndex];
+	//         cloud.uv.set(uv[0], uv[1], uv[2])
+	//         cloud.updateMatrix();
+	//         var cloudWire = cloud.clone();
+	//         cloudsRef.current.setMatrixAt(index, cloud.matrix);
+	//         cloudsRefWire.current.setMatrixAt(index, cloudWire.matrix);
+	//         index++;
+	//       });
+	//       return Cloud_Clusters;
+	//     });
+
+	//     cloudsRef.current.instanceMatrix.needsUpdate = true;
+	//     cloudsRefWire.current.instanceMatrix.needsUpdate = true;
+	//   }
+	// }, []);
 	useEffect(() => {
 	  if (cloudsRef.current) {
 	    const count = 3000; // Total number of points
-	    const clusterCount = 100; // Number of cloud clusters
+	    const clusterCount = 100; // Number of clusters
 	    const pointsPerCluster = Math.floor(count / clusterCount);
 	    const radius = props.state.planet.radius;
-	    const positions = []; // Center positions of clusters
-	    const scales = []; // Scale for cloud deformation
-
-	    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+	    var Cloud_Clusters = []; // Cloud clusters
 
 	    // Generate cluster centers
 	    for (let i = 0; i < clusterCount; i++) {
 	      const x = randomInRange(-100000, 100000);
-	      const y = randomInRange(radius + 1000, radius + 3000); // Clouds above the surface
+	      const y = randomInRange(radius + 1000, radius + 5000); // Above the surface
 	      const z = randomInRange(-100000, 100000);
-	      positions.push({ center: [x, y, z], points: [] }); // Each cluster has a center and points
+
+	      Cloud_Clusters.push({
+	        center: [x, y, z],
+	        points: [],
+	        scales: [],
+	        colors: [],
+	        uvs: []
+	      });
 	    }
 
-	    // Assign points to clusters with vertical flattening
-	    positions.forEach((cluster) => {
+	    var uvs = []
+	    var colors = []
+
+	    // Generate points for each cluster
+	    Cloud_Clusters.forEach((cluster) => {
 	      const { center } = cluster;
 	      for (let i = 0; i < pointsPerCluster; i++) {
-	        const x = randomInRange(center[0] - randomInRange(0, 5000), center[0] + randomInRange(0, 5000)); // Cluster radius
-	        const z = randomInRange(center[2] - randomInRange(0, 5000), center[2] + randomInRange(0, 5000));
-	        const y =
-	          center[1] +
-	          randomInRange(100, 3000) + // Upward trending
-	          Math.abs(randomInRange(-100, 100)); // Flatten at bottom
+	        const x = randomInRange(center[0] - 5000, center[0] + 5000);
+	        const z = randomInRange(center[2] - 5000, center[2] + 5000);
+	        const y = center[1] + randomInRange(100, 3000); // Vertical offset
+	        const scale = randomInRange(100, 1900); // Scale variation
+	        const color = [Math.random(), Math.random(), Math.random()]; // Random color
 
 	        cluster.points.push([x, y, z]);
-	        scales.push(randomInRange(.5, 1000)); // Vary scale for each point
+
+	        uvs.push(Math.random(), Math.random());
+	        colors.push(color[0], color[1])
 	      }
 	    });
 
-	    // Create geometry for points
-	    const geometry = new SphereGeometry(1, 8, 8); // Base geometry
-	    const positionAttribute = geometry.attributes.position;
+	    const tempObject = new Object3D();
+	    const tempColor = new Color();
 
-	    // Apply random noise to vertices to make them billowy
-	    for (let i = 0; i < positionAttribute.count; i++) {
-	      const vertex = new Vector3().fromBufferAttribute(positionAttribute, i);
-
-	      vertex.x += randomInRange(-0.5, 0.5); // Add randomness
-	      vertex.y += randomInRange(-0.5, 0.5);
-	      vertex.z += randomInRange(-0.5, 0.5);
-
-	      positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
-	    }
-	    positionAttribute.needsUpdate = true;
-
-	    // Apply transformations to each instance
-	    const cloud = new Object3D();
 	    let index = 0;
 
-	    positions.forEach((cluster) => {
-	      cluster.points.forEach((point) => {
-	        cloud.position.set(...point);
-	        const scale = scales[index];
-	        cloud.scale.set(scale * 2, scale, scale * 2);
-	        // cloud.rotation.set(randomInRange(0,0),randomInRange(0, Math.PI * 2),randomInRange(0, 0))
-	        cloud.updateMatrix();
-	        var cloudWire = cloud.clone();
-	        // cloudWire.position.y -= 100;
-	        cloudsRef.current.setMatrixAt(index, cloud.matrix);
-	        cloudsRefWire.current.setMatrixAt(index, cloudWire.matrix);
+
+	    Cloud_Clusters.forEach((cluster) => {
+	      cluster.points.forEach((point, pointIndex) => {
+	        const [x, y, z] = point;
+	        const scale = randomInRange(100, 3000)
+	        tempObject.position.set(x, y, z);
+	        tempObject.scale.set(scale, scale, scale);
+	        tempObject.updateMatrix();
+	        cloudsRef.current.setMatrixAt(index, tempObject.matrix);
+
+	        cloudsRef.current.setColorAt(index, 
+	        	new Color(
+					randomInRange(0.64, 1), 
+					randomInRange(0.64, 1), 
+					randomInRange(0.64, 1)
+	        	)
+	        )
+
 	        index++;
 	      });
 	    });
-
+	    cloudsRef.current.geometry.needsUpdate = true;
 	    cloudsRef.current.instanceMatrix.needsUpdate = true;
-	    cloudsRefWire.current.instanceMatrix.needsUpdate = true;
+
+
 	  }
+
+
 	}, []);
+
+	
+
 
 	useFrame(() => {
 		if (cloudsRef.current) {
@@ -279,10 +375,17 @@ function Scene(props) {
 
 				// // Update the instance's matrix in the instanced mesh
 				cloudsRef.current.setMatrixAt(i, cloud.matrix);
-				cloudsRefWire.current.setMatrixAt(i, cloud.matrix);
+				// cloudsRefWire.current.setMatrixAt(i, cloud.matrix);
 
 				cloudsRef.current.instanceMatrix.needsUpdate = true
-				cloudsRefWire.current.instanceMatrix.needsUpdate = true
+				// cloudsRefWire.current.instanceMatrix.needsUpdate = true
+
+				// if (new Vector3(...cloud.matrix.elements.slice(12, 14)).distanceTo(props.state.model.scene.position) > 50025) {
+				// 	cloudsRefWire.current.material.opacity = 0;
+				// 	cloudsRefWire.current.material.needsUpdate = true;
+				// } else if (cloudsRefWire.current.material.opacity == 0) {
+				// 	cloudsRefWire.current.material.opacity = 1;
+				// }
 			}
 		}
 	})
@@ -306,14 +409,11 @@ function Scene(props) {
 			</group>
 
 			<instancedMesh ref={cloudsRef} args={[null, null, 3000]}>
-				<sphereGeometry args={[1.2, 9, 9]} /> {/* Sphere for each point */}
+				<sphereGeometry 
+					args={[1.2, 9, 9]} />
       			<meshBasicMaterial color="white" />
 			</instancedMesh>
 
-			<instancedMesh ref={cloudsRefWire} args={[null, null, 3000]}>
-				<sphereGeometry args={[1.2, 9, 9]} /> {/* Sphere for each point */}
-      			<meshBasicMaterial color="black" wireframe transparent opacity={0.1} />
-			</instancedMesh>
 			
 		</>
 	);
