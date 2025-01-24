@@ -553,6 +553,7 @@ function sceneReducer(state, action) {
         x: action.x
       }
     case 'FIRST_PERSON_TOGGLE':
+      document.body.focus();
       return {
         ...state,
         firstPerson: !state.firstPerson
@@ -602,6 +603,7 @@ function App() {
 
   var addEvents = () => {
     const handleKeyDown = (e) => {
+      e.preventDefault();
       const key = e.key.toLowerCase();
       if (key == 'w') {
         if (!keyed.START_WALK) {
@@ -679,8 +681,8 @@ function App() {
     };
 
     const handleKeyUp = (e) => {
+      e.preventDefault();
       const key = e.key.toLowerCase();
-
       if (key == 'w') {
         keyed.START_WALK = false;
         keys.removeLast('walk')
@@ -741,8 +743,7 @@ function App() {
         }
         if (keys.contains('walk') && keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
-        }
-       
+        }       
       }
       if (key == 'arrowleft') {
         keyed.START_ROTATE_LEFT = false;
@@ -813,6 +814,7 @@ function App() {
        <button style={{ 
           width: '3rem',
           whiteSpace: 'pre-line',
+          outline: 'none',
           padding: 0, margin: 0
         }}
         onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' }) }>{state.firstPerson ? '+' : '!'}first person</button>
