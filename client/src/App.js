@@ -552,6 +552,11 @@ function sceneReducer(state, action) {
         ...state,
         x: action.x
       }
+    case 'FIRST_PERSON_TOGGLE':
+      return {
+        ...state,
+        firstPerson: !state.firstPerson
+      }
     default:
       return state;
   }
@@ -567,7 +572,7 @@ function App() {
   const [ state, dispatch ] = useReducer(sceneReducer, props);
   const model = useLoader(GLTFLoader, '/Xbot.glb');
   const [appKeys, setAppKeys] = useState();
-
+  const [firstPerson, setFirstPerson] = useState();
 
 
   useEffect(() => {
@@ -802,20 +807,15 @@ function App() {
 
   return (
 
-    eventCollection ?
+    (eventCollection && state.model.scene) ?
     <div className="App">
       <div id="stats">
-        <pre>walk:<div className="boolean">{new String(state.model.walk)}</div>
-        walking:<div className="boolean">{new String(state.model.walking)}</div>
-        strafe:<div className="boolean">{new String(state.model.strafe)}</div>
-        strafing:<div className="boolean">{new String(state.model.strafing)}</div></pre>
-        <section>
-          <ol>
-            {
-              keys.map(k => <li>{k}</li>)
-            }
-          </ol>
-        </section>
+       <button style={{ 
+          width: '3rem',
+          whiteSpace: 'pre-line',
+          padding: 0, margin: 0
+        }}
+        onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' }) }>{state.firstPerson ? '+' : '!'}first person</button>
       </div>
       <CanvasContainer 
         state={state}

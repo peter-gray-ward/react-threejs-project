@@ -240,6 +240,7 @@ function Planet(props) {
 
 			// Check condition for flower placement
 			if (g > 0.862 && b < 0.3) {
+				continue;
 				console.log('flower', x);
 
 				// Calculate flower position

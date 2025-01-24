@@ -297,7 +297,7 @@ function ModelViewer(props) {
 		props.state.model.scene.quaternion.copy(quaternion);
 
 		// Calculate the camera's position
-		let radius = props.state.cameraRadius; // Distance from the model
+		let radius = props.state.firstPerson ? 1 : props.state.cameraRadius; // Distance from the model
 		let cameraTheta = props.state.cameraTheta; // Vertical angle
 		const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
 
@@ -311,8 +311,8 @@ function ModelViewer(props) {
 
 		// Smoothly approach a radius of 1.5 when cameraTheta < 5
 		radius = cameraTheta < 5 
-		    ? 0.5 + (props.state.cameraRadius - 0.5) * (cameraTheta / 5)
-		    : props.state.cameraRadius;
+		    ? 0.5 + (radius - 0.5) * (cameraTheta / 5)
+		    : radius;
 
 		cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
 
@@ -340,6 +340,7 @@ function ModelViewer(props) {
         // Translate the point to the sphere's center (model's position)
         const center = props.state.model.scene.position.clone();
         point.add(center);
+        point.y += 1
 
 		props.camera.position.copy(point);
 

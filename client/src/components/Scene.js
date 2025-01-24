@@ -290,7 +290,7 @@ function Scene(props) {
 	    // Generate cluster centers
 	    for (let i = 0; i < clusterCount; i++) {
 	      const x = randomInRange(-100000, 100000);
-	      const y = randomInRange(radius + 1000, radius + 5000); // Above the surface
+	      const y = randomInRange(radius + 2000, radius + 5000); // Above the surface
 	      const z = randomInRange(-100000, 100000);
 
 	      Cloud_Clusters.push({
