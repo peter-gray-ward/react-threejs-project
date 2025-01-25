@@ -803,31 +803,23 @@ function App() {
 
   const q = VisualizeQuaternion(state.model.scene.quaternion, 1, .3);
 
-  var eventCollection = true
-
 
   return (
 
-    (eventCollection && state.model.scene) ?
-    <div className="App">
+    <div className="App" style={{ background: 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
+       
       <div id="stats">
-       <button style={{ 
+        <button style={{ 
           width: '3rem',
           whiteSpace: 'pre-line',
           outline: 'none',
           padding: 0, margin: 0
         }}
-        onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' }) }>{state.firstPerson ? '+' : '!'}first person</button>
-      </div>
-      <CanvasContainer 
-        state={state}
-        keys={keys}
-        dispatch={dispatch} />
-    </div>
-    :
-    <div className="App">
-      <div id="stats">
-        <div>
+        onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' })}
+
+        >{state.firstPerson ? '+' : '!'}first person</button>
+
+        {/*<div>
           <ul>
             <li><div>Planet:</div>
               <section>
@@ -918,10 +910,13 @@ function App() {
             </li>
             
           </ul>
-        </div>
-      </div>
+        </div>*/}
+      </div> 
+      
+
       <CanvasContainer 
         state={state}
+        keys={keys}
         dispatch={dispatch} />
     </div>
     

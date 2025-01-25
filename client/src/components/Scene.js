@@ -134,7 +134,7 @@ function Scene(props) {
 
 	useFrame(() => {
 	    if (starGroupRef.current) {
-	        starGroupRef.current.rotation.x += 0.0001; // Rotate around the Y-axis
+	        starGroupRef.current.rotation.x += 0.01; // Rotate around the Y-axis
 	        // 
 	        if (starGroupRef.current.rotation.x > Math.PI * 2) {
 	            starGroupRef.current.rotation.x = 0
@@ -290,7 +290,7 @@ function Scene(props) {
 	    // Generate cluster centers
 	    for (let i = 0; i < clusterCount; i++) {
 	      const x = randomInRange(-100000, 100000);
-	      const y = randomInRange(radius + 2000, radius + 5000); // Above the surface
+	      const y = randomInRange(radius + 20000, radius + 50000);
 	      const z = randomInRange(-100000, 100000);
 
 	      Cloud_Clusters.push({
@@ -302,23 +302,17 @@ function Scene(props) {
 	      });
 	    }
 
-	    var uvs = []
-	    var colors = []
-
 	    // Generate points for each cluster
 	    Cloud_Clusters.forEach((cluster) => {
 	      const { center } = cluster;
 	      for (let i = 0; i < pointsPerCluster; i++) {
 	        const x = randomInRange(center[0] - 5000, center[0] + 5000);
 	        const z = randomInRange(center[2] - 5000, center[2] + 5000);
-	        const y = center[1] + randomInRange(100, 3000); // Vertical offset
+	        const y = center[1]// + randomInRange(100, 3000); // Vertical offset
 	        const scale = randomInRange(100, 1900); // Scale variation
 	        const color = [Math.random(), Math.random(), Math.random()]; // Random color
 
 	        cluster.points.push([x, y, z]);
-
-	        uvs.push(Math.random(), Math.random());
-	        colors.push(color[0], color[1])
 	      }
 	    });
 
@@ -390,7 +384,7 @@ function Scene(props) {
 		}
 	})
 
-
+	var defaultAngle = starGroupRef.current ? starGroupRef.current.rotation.x : 0;
 	
 	return (
 		<>
@@ -408,11 +402,18 @@ function Scene(props) {
 				}
 			</group>
 
-			<instancedMesh ref={cloudsRef} args={[null, null, 3000]}>
-				<sphereGeometry 
-					args={[1.2, 9, 9]} />
-      			<meshBasicMaterial color="white" />
-			</instancedMesh>
+			{
+				(defaultAngle < Math.PI / 2 || defaultAngle > Math.PI * 2 - Math.PI / 2) ?
+				<instancedMesh ref={cloudsRef} args={[null, null, 3000]}>
+						<sphereGeometry args={[1.2, 9, 9]} />
+		      			<meshBasicMaterial color="white" />
+
+				</instancedMesh> :
+				<instancedMesh ref={cloudsRef} args={[null, null, 3000]}>
+					<sphereGeometry args={[1.2, 9, 9]} />
+	      			<meshBasicMaterial color="cadetblue" />
+				</instancedMesh>
+			}
 
 			
 		</>

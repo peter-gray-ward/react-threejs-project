@@ -51,9 +51,10 @@ export const MASS = {
 export const starRadius = 1000000//736;
 export const angularSize = 0.00345;
 // export const cameraRadius = starRadius * 2
-export const cameraRadius = 3.5
+export const cameraRadius = 1 * 3.5
 
 export const props = {
+  firstPerson: false,
   keys: { 
     w: false,
     s: false,
@@ -120,12 +121,7 @@ export const props = {
     lakeNodes: []
   },
   sun: {
-    radius: MASS.sun.radius,
-    position: [
-      MASS.planet.radius + 50000,
-      0,
-      0
-    ]
+    radius: MASS.sun.radius
   },
   interactions: new Set()
 };

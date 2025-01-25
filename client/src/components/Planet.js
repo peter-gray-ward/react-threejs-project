@@ -24,19 +24,36 @@ import {
 	ArrowHelper,
 	Quaternion,
 	TubeGeometry,
-	Matrix4
+	Matrix4,
+	CatmullRomCurve3,
+	Object3D
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
 	filterSteepGeometry,
 	randomInRange
 } from '../util';
-import Flowers from './Flowers';
 
+// The Dandilion Curvature
+let _a = 11;
+const ra = randomInRange(_a * -0.5, _a * 0.5)
+const rb = randomInRange(_a * -0.5, _a * 0.5)
+const rc = randomInRange(_a * -0.5, _a * 0.5)
+const rd = randomInRange(_a * -0.5, _a * 0.5)
+const re = randomInRange(_a * -0.5, _a * 0.5)
+const rf = randomInRange(_a * -0.5, _a * 0.5)
+const rg = randomInRange(_a * -0.5, _a * 0.5)
+const rh = randomInRange(_a * -0.5, _a * 0.5);
 	  
 function Planet(props) {
+	const a = 11;
 	var i = new Date().getTime();
 	var fiber = useThree();
+
+	const twopi = Math.PI * 2;
+	const halfpi = Math.PI / 2;
+	const threequaterspi = Math.PI * twopi;
+
 	const cliffTexture = useMemo(() => () => new TextureLoader().load("/cliff.jpg", texture => {
 		texture.wrapS = RepeatWrapping
 	    texture.wrapT = RepeatWrapping
@@ -69,12 +86,22 @@ function Planet(props) {
 	useEffect(() => {
 		const rows = 50;
 		const cols = 50;
+		const zeds = 50;
+
+		const amplitude = 100;
+		const halfAmplitude = amplitude / 2;
+
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
         const positions = geometry.attributes.position.array;
+        for (var x = 0; x < positions.length; x += 3) {
+        	var y = positions[x + 1];
+        	positions[x + 1] = positions[x + 2];
+        	positions[x + 2] = y;
+        }
 		const colors = [];
         const TOCENTER = props.state.model.scene.position.clone().normalize();
-		var amplitude = 100
+		
 
 		const noise = perlinNoise.generatePerlinNoise(50, 50, {
 			persistence: .005,
@@ -84,34 +111,58 @@ function Planet(props) {
 		const indices = [];
 
 
-        for (let x = 0; x < positions.length; x += 3) {
-            const vector = new Vector3(positions[x], positions[x + 1], positions[x + 2]);
-            const direction = vector.clone().normalize();
-			const cols = 50;
-			const xIndex = Math.floor((x / 3) % cols);
-			const zIndex = Math.floor((x / 3) / cols) + 2;
-			const noiseValue = noise[zIndex * cols + xIndex] * amplitude
-			const noiseOffset = noiseValue > 50 ? noiseValue - 50 : -(50 - noiseValue)
-	
-            positions[x] = vector.x;
-            positions[x + 1] = vector.y
-            positions[x + 2] = noiseOffset
-
-			if (xIndex < cols - 1 && zIndex < rows - 1) {
-				const topLeft = zIndex * (cols + 1) + xIndex;
-				const topRight = topLeft + 1;
-				const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
-				const bottomRight = bottomLeft + 1;
-
-				// Create two triangles for the quad
-				indices.push(topLeft, bottomLeft, topRight); // Triangle 1
-				indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
-			}
 
 
-			colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
-        }
 
+		var dandelionIndex = 0;
+		for (let x = 0; x < positions.length; x += 3) {
+		    const xIndex = Math.floor((x / 3) % cols);
+		    const zIndex = Math.floor((x / 3) / cols) + 2;
+		    const noiseValue = noise[zIndex * cols + xIndex] * amplitude;
+		    const noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
+
+		    positions[x] = positions[x];
+		    positions[x + 1] = positions[x + 1] + noiseOffset;
+		    positions[x + 2] = positions[x + 2];
+
+		    if (xIndex < cols - 1 && zIndex < rows - 1) {
+		        const topLeft = zIndex * (cols + 1) + xIndex;
+		        const topRight = topLeft + 1;
+		        const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
+		        const bottomRight = bottomLeft + 1;
+
+		        // Create two triangles for the quad
+		        indices.push(topLeft, bottomLeft, topRight); // Triangle 1
+		        indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
+		    }
+
+		    colors.push(Math.random() / 10, Math.random() / 10, Math.random() / 10);
+
+		   
+
+		    if (Math.random() < 0.33) {
+		    	const TheDandilion = new Object3D();
+			    const flowerPosition = [positions[x], positions[x + 1] + a, positions[x + 2]];
+
+			    if (Number.isNaN(flowerPosition[0]) || Number.isNaN(flowerPosition[0 + 1]) || Number.isNaN(flowerPosition[0 + 2])) {
+			        console.warn(`NaN detected in positions at index ${x}`);
+			        continue;
+			    }
+
+			    // const sc = randomInRange(1, 2);
+			    // TheDandilion.scale.set(sc, sc, sc);
+			    TheDandilion.rotation.y = randomInRange(0, twopi)
+			    TheDandilion.position.set(flowerPosition[0], flowerPosition[0 + 1], flowerPosition[0 + 2]);
+
+			    TheDandilion.updateMatrix();
+		        flowersRef.current.setMatrixAt(dandelionIndex, TheDandilion.matrix);
+		        flowersRef.current.setColorAt(dandelionIndex, new Color(0, 1, 0));
+		        dandelionIndex++;
+		    }
+		}
+
+		flowersRef.current.count = dandelionIndex;
+		flowersRef.current.instanceColor.needsUpdate = true;
 
 
 		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
@@ -125,12 +176,11 @@ function Planet(props) {
         cliffsRef.current.geometry.computeBoundingBox();
 
         var cliffColors = [];
+        var dandilionColors = [];
         const cliffUvs = [];
         var foundHobbitHole = false;
         for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
-        	// cliffsRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
-        	// cliffsRef.current.geometry.attributes.position.array[x + 1] += 0.25
-        	// cliffsRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
+
         	cliffColors.push(141 / 255, 148 / 255, 144 / 255);
         	cliffUvs.push(
         		(cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
@@ -228,44 +278,44 @@ function Planet(props) {
         grassesRef.current.geometry = geometries.other
 
         var grassesColors = [];
+        // var dandelionIndex = 0;
+        // var TheDandilion = new Object3D()
         for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
-        	grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
-        	grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
-        	grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
+        	// grassesRef.current.geometry.attributes.position.array[x] += randomInRange(-0.33, 0.33)
+        	// grassesRef.current.geometry.attributes.position.array[x + 1] += 0.25
+        	// grassesRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-0.33, 0.33)
 
         	const r = randomInRange(3, 7) / 255
         	const g = randomInRange(210, 252) / 255
         	const b = randomInRange(29, 100) / 255
+
         	grassesColors.push(r, g, b);
 
+
+
+
 			// Check condition for flower placement
-			if (g > 0.862 && b < 0.3) {
-				continue;
-				console.log('flower', x);
+			// if (dandelionIndex < 5000 && (g > 0.932 && b < 0.3)) {
 
-				// Calculate flower position
-				const flowerPosition = new Vector3(
-				  grassesRef.current.geometry.attributes.position.array[x],
-				  grassesRef.current.geometry.attributes.position.array[x + 2],
-				  grassesRef.current.geometry.attributes.position.array[x + 1]
-				);
-
-				// Set flower matrix in instancedMesh
-				if (flowersRef.current) {
-				  const matrix = new Matrix4();
-				  matrix.setPosition(flowerPosition);
-				  const instanceId = flowersRef.current.count || 0; // Count instances
-				  flowersRef.current.setMatrixAt(instanceId, matrix);
-				  flowersRef.current.count = instanceId + 1; // Increment instance count
-				}
-			}
+				
+			// }
         }
+
+        // for (var index of flowersRef.current.geometry.index.array) {
+        // 	flowersRef.current.setColorAt(index, new Color(0, 1, 0));
+        // }
+
+
+        flowersRef.current.geometry.needsUpdate = true;
+		flowersRef.current.instanceMatrix.needsUpdate = true;
+
         grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
         grassesRef.current.geometry.attributes.position.needsUpdate = true
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
         const planetOceanPositions = oceanGeometry.attributes.position.array;
         const planetOceanColors = [];
+
         for (var x = 0; x < planetOceanPositions.length; x += 3) {
         	planetOceanColors.push(1, 1, 1);
         }
@@ -282,6 +332,7 @@ function Planet(props) {
 		});
     }, []); // Add dependencies if needed
 
+
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
     const seaLevel = useMemo(() => new Vector3(0, props.state.planet.radius, 0));
 	const sphereColor = useMemo(() => 'white', []);
@@ -290,7 +341,11 @@ function Planet(props) {
 	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"))
 	const [addedWaterTexture, setAddedWaterTexture] = useState(false);
 
-
+	const dandilionstemtexture = useMemo(() => new TextureLoader().load("/dandilion-stem.jpg"), texture => {
+		texture.wrapS = RepeatWrapping
+	    texture.wrapT = RepeatWrapping
+	    texture.repeat.set(5, 10)
+	})
     const offSceneSpherePosition = useMemo(() => {
     	return [0, -99999999, 0];
     }, []);
@@ -315,7 +370,7 @@ function Planet(props) {
             />
         </mesh>
 
-		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1}
@@ -327,7 +382,7 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		<mesh ref={cliffsRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={cliffsRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1}
@@ -336,7 +391,7 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]} rotation={[Math.PI / 2, 0, 0]}>
+		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1}
@@ -345,14 +400,24 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		{/*<Flowers ref={flowersRef} 
-			{...props}
-			receiveShadow 
-			position={[0, props.state.planet.radius, 0]} 
-			rotation={[Math.PI / 2, 0, 0]}>	
-		</Flowers>	*/}
-
-
+		<group position={[0, props.state.planet.radius - a, 0]}>
+			<instancedMesh castShadow ref={flowersRef} args={[null, null, 5000]}>
+				<tubeGeometry args={[
+					new CatmullRomCurve3([
+						new Vector3(ra, 0, rb),
+						new Vector3(rc, a * 1, rd),
+						new Vector3(re, a * 2, rf),
+						new Vector3(rg, a * 3, rh)
+					]), 
+					5, // tubular segments
+					a / 20, // radius
+					11 // radial segments
+				]} />
+	  			<meshStandardMaterial
+	  				map={dandilionstemtexture}
+	  				color="white" />
+			</instancedMesh>
+		</group>
 	</>
 }
 

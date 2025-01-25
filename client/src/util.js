@@ -35,11 +35,7 @@ const colorFunction = (vertex) => {
 }
 
 export const filterSteepGeometry = (geometry, steepnessThreshold) => {
-  var result = {
-    steep: undefined,
-    other: undefined
-  };
-  const upDirection = new Vector3(0, 0, 1);
+  const upDirection = new Vector3(0, 1, 0);
   const positions = geometry.attributes.position.array; // Vertex positions
   const indices = geometry.index.array; // Indices (triangles)
   const otherIndices = [];
@@ -92,6 +88,7 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
       const newA = otherVertexMap.has(aIndex) ? otherVertexMap.get(aIndex) : addOtherVertex(aIndex, a);
       const newB = otherVertexMap.has(bIndex) ? otherVertexMap.get(bIndex) : addOtherVertex(bIndex, b);
       const newC = otherVertexMap.has(cIndex) ? otherVertexMap.get(cIndex) : addOtherVertex(cIndex, c);
+
       otherIndices.push(newA, newB, newC);
     }
   }
