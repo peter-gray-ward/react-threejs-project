@@ -6,7 +6,11 @@ import {
 	Raycaster,
     Float32BufferAttribute,
     BufferGeometry,
-    Color
+    Color,
+    MeshStandardMaterial,
+    DoubleSide,
+    Mesh,
+    Triangle
 } from 'three';
 
 
@@ -336,6 +340,25 @@ export function findRayIntersection(modelPosition, objectCenter, objectMesh) {
 }
 
 
+
+export function randomPointOnTriangle(a, b, c) {
+
+  let u = Math.random();
+  let v = Math.random();
+
+  if (u + v > 1) {
+    u = 1 - u;
+    v = 1 - v;
+  }
+
+  const P = new Vector3();
+  P.addScaledVector(a, 1 - u - v);
+  P.addScaledVector(b, u);
+  P.addScaledVector(c, v);
+
+  return P;
+}
+
 // Helper to check if a point is inside a triangle using barycentric coordinates
 export function isPointInTriangle(p, a, b, c) {
     const area = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
@@ -343,4 +366,65 @@ export function isPointInTriangle(p, a, b, c) {
     const w2 = ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / area;
     const w3 = 1 - w1 - w2;
     return w1 >= 0 && w2 >= 0 && w3 >= 0;
+}
+
+
+export function TriangleMesh(vertices, a, b, c, terrainWidth, terrainHeight) {
+
+    const triangleGeometry = new BufferGeometry();
+
+    // Extract vertex positions
+    const vertexPositions = [
+        vertices[a * 3], vertices[a * 3 + 1] + 100000, vertices[a * 3 + 2],
+        vertices[b * 3], vertices[b * 3 + 1] + 100000, vertices[b * 3 + 2],
+        vertices[c * 3], vertices[c * 3 + 1] + 100000, vertices[c * 3 + 2]
+    ];
+
+    triangleGeometry.setAttribute('position', new Float32BufferAttribute(vertexPositions, 3));
+    triangleGeometry.setIndex([0, 1, 2]);
+    triangleGeometry.computeVertexNormals();
+    triangleGeometry.computeBoundingBox();
+
+    // Calculate UVs (using simple planar mapping based on X and Z coordinates)
+    const uvs = [
+        vertexPositions[0] / terrainWidth, vertexPositions[2] / terrainHeight,  // Vertex a
+        vertexPositions[3] / terrainWidth, vertexPositions[5] / terrainHeight,  // Vertex b
+        vertexPositions[6] / terrainWidth, vertexPositions[8] / terrainHeight   // Vertex c
+    ];
+
+    triangleGeometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));  // Add UVs
+
+
+    const triangleMaterial = new MeshStandardMaterial({
+        transparent: false,
+        wireframe: false,
+        color: new Color(Math.random(), Math.random(), Math.random()),
+        side: DoubleSide
+        // color: new Color(Math.random(), Math.random(), Math.random())
+    });
+    
+
+    const triangleMesh = new Mesh(triangleGeometry, triangleMaterial);
+    triangleMesh.castShadow = true;
+    triangleMesh.receiveShadow = true;
+
+    // Store the triangle geometry in a Triangle object
+    triangleMesh.triangle = new Triangle(
+        new Vector3(vertexPositions[0], vertexPositions[1], vertexPositions[2]),
+        new Vector3(vertexPositions[3], vertexPositions[4], vertexPositions[5]),
+        new Vector3(vertexPositions[6], vertexPositions[7], vertexPositions[8])
+    );
+    triangleMesh.triangle.indices = [0,1,2]
+
+    // Calculate the triangle's normal and slope
+    const normal = new Vector3();
+    triangleMesh.triangle.getNormal(normal);
+    const slope = Math.acos(normal.dot(new Vector3(0, 1, 0))) * (180 / Math.PI);
+
+    triangleMesh.slope = slope;
+    triangleMesh.normal = normal;
+    triangleMesh.triangle.uvs = uvs;  // Store UVs for later use (e.g., for texture painting)
+
+
+    return triangleMesh;
 }

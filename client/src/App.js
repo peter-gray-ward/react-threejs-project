@@ -809,7 +809,7 @@ function App() {
     <div className="App" style={{ background: 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
        
       <div id="stats">
-        <button style={{ 
+        {/*<button style={{ 
           width: '3rem',
           whiteSpace: 'pre-line',
           outline: 'none',
@@ -817,7 +817,7 @@ function App() {
         }}
         onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' })}
 
-        >{state.firstPerson ? '+' : '!'}first person</button>
+        >{state.firstPerson ? '+' : '!'}first person</button>*/}
 
         {/*<div>
           <ul>

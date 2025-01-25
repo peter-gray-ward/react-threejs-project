@@ -321,7 +321,13 @@ function ModelViewer(props) {
 		const z = radius * Math.sin(cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (z-axis)
 		const y = radius * Math.cos(cameraTheta);                      // Vertical motion (y-axis)
 
-        let point = new Vector3(x, y, z);
+        let point
+        if (props.state.firstPerson) {
+        	point = new Vector3(x, y, z)//.add(forwardDirection)
+        	radius = 11
+        } else {
+        	point = new Vector3(x, y, z);
+        }
 
         // Get the model's forward direction
         forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());
