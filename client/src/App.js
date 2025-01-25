@@ -340,7 +340,7 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < Math.PI * 2 - 0.25) {
+      if (cameraTheta < 5.15) {
         cameraTheta += SPEED.ROTATE_DOWN;
       }
       return {
@@ -359,12 +359,14 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
       
-      if (cameraTheta > 0) {
+      if (cameraTheta > 1) {
         if (cameraTheta > Math.PI * 1.9) {
           cameraTheta -= SPEED.ROTATE_UP;
         } else {
           cameraTheta -= SPEED.ROTATE_UP;
         }
+      } else {
+        cameraTheta = 1
       }
       return {
         ...state,
@@ -654,7 +656,9 @@ function App() {
       if (key == 'arrowdown') {
         if (!keyed.START_ROTATE_DOWN) {
           keyed.ROTATE_DOWN = true;
-          dispatch({ type: 'START_ROTATE_DOWN' })
+          if (props.cameraTheta < Math.PI * 2 - 0.25) {
+            dispatch({ type: 'START_ROTATE_DOWN' })
+          }
         }
       }
       if (key.trim() == '') {
@@ -819,7 +823,7 @@ function App() {
 
         >{state.firstPerson ? '+' : '!'}first person</button>*/}
 
-        {/*<div>
+        <div>
           <ul>
             <li><div>Planet:</div>
               <section>
@@ -910,7 +914,7 @@ function App() {
             </li>
             
           </ul>
-        </div>*/}
+        </div>
       </div> 
       
 

@@ -310,9 +310,7 @@ function ModelViewer(props) {
 		}
 
 		// Smoothly approach a radius of 1.5 when cameraTheta < 5
-		radius = cameraTheta < 5 
-		    ? 0.5 + (radius - 0.5) * (cameraTheta / 5)
-		    : radius;
+		radius = 0.5 + (radius - 0.5) * (cameraTheta / 5)
 
 		cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
 
