@@ -341,7 +341,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
       if (cameraTheta < Math.PI * 2 - 0.25) {
-        cameraTheta += 0.13;
+        cameraTheta += SPEED.ROTATE_DOWN;
       }
       return {
         ...state,
@@ -361,9 +361,9 @@ function sceneReducer(state, action) {
       
       if (cameraTheta > 0) {
         if (cameraTheta > Math.PI * 1.9) {
-          cameraTheta -= 0.033;
+          cameraTheta -= SPEED.ROTATE_UP;
         } else {
-          cameraTheta -= 0.15;
+          cameraTheta -= SPEED.ROTATE_UP;
         }
       }
       return {

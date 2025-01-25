@@ -19,7 +19,6 @@ import {
 	BufferGeometry,
 	Group,
 	VSMShadowMap,
-	RepeatWrapping,
 	PCFSoftShadowMap,
 	ArrowHelper,
 	Quaternion,
@@ -27,7 +26,8 @@ import {
 	Matrix4,
 	CatmullRomCurve3,
 	Object3D,
-	Triangle
+	Triangle,
+	RepeatWrapping
 } from 'three'
 import * as perlinNoise from 'perlin-noise';
 import {
@@ -39,7 +39,7 @@ import {
 } from '../util';
 
 // The Dandilion Curvature
-let _a = 0.5;
+let _a = 10.5;
 const ra = randomInRange(_a * -0.05, _a * 0.05)
 const rb = randomInRange(_a * -0.05, _a * 0.05)
 const rc = randomInRange(_a * 0.01, _a * 0.01)
@@ -97,7 +97,6 @@ function Planet(props) {
 
 		const amplitude = 100;
 		const halfAmplitude = amplitude / 2;
-
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
         const positions = geometry.attributes.position.array;
@@ -106,7 +105,10 @@ function Planet(props) {
         	positions[x + 1] = positions[x + 2];
         	positions[x + 2] = y;
         }
-		const colors = [];
+        geometry.attributes.position.needsUpdate = true;
+        surfaceRef.current.geometry = geometry;
+        grassesRef.current.geometry = geometry;
+
         const TOCENTER = props.state.model.scene.position.clone().normalize();
 		
 
@@ -117,14 +119,16 @@ function Planet(props) {
 
 		const indices = [];
 
-
-
-
-
+		var grassesColors = []
+		var cliffColors = [];
+        var dandilionColors = [];
+        const cliffUvs = [];
+        var foundHobbitHole = false;
 		var dandelionIndex = 0;
 		var bladeIndex = 0;
+		var grassesIj = {}
 		for (let x = 0; x < positions.length; x += 3) {
-		    const xIndex = Math.floor((x / 3) % cols);
+		    const xIndex = Math.floor((x / 3) % rows);
 		    const zIndex = Math.floor((x / 3) / cols) + 2;
 		    const noiseValue = noise[zIndex * cols + xIndex] * amplitude;
 		    const noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
@@ -144,6 +148,8 @@ function Planet(props) {
 		        indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
 
 		    }
+
+
 		}
 
 		
@@ -154,20 +160,18 @@ function Planet(props) {
 		}
 		flowersBallsRef.current.geometry.attributes.position.needsUpdate = true;
 
-		geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
-        geometry.attributes.position.needsUpdate = true;
+		
+
+        
 
 
-        surfaceRef.current.geometry = geometry;
+        
 
         var geometries = filterSteepGeometry(geometry, .65, 'gray');
         cliffsRef.current.geometry = geometries.steep;
         cliffsRef.current.geometry.computeBoundingBox();
 
-        var cliffColors = [];
-        var dandilionColors = [];
-        const cliffUvs = [];
-        var foundHobbitHole = false;
+        
         for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
 
         	cliffColors.push(141 / 255, 148 / 255, 144 / 255);
@@ -272,6 +276,8 @@ function Planet(props) {
 				let b = (i + 1) + j * (rows + 1);
 				let c = (i + 1) + (j + 1) * (rows + 1);
 				let d = i + (j + 1) * (rows + 1);
+				
+
 				const TheDandilion = new Object3D();
 				const TheDandelionBall = new Object3D();
 				const TheBlade = new Object3D();
@@ -284,9 +290,9 @@ function Planet(props) {
 			    );
 
 	
-				if (Math.random() < 0.88) {
+				if (Math.random() < 0.1) {
 		
-					var clusterCount = 100//randomInRange(3, 30);
+					var clusterCount = 10//randomInRange(3, 30);
 
 					for (var k = 0; k < clusterCount; k++) {
 
@@ -318,11 +324,24 @@ function Planet(props) {
 						);
 
 
+
 						dandelionIndex++;
 					}
+
+					const grass_r = randomInRange(3, 7) / 255
+					const grass_g = randomInRange(210, 252) / 255
+					const grass_b = randomInRange(29, 100) / 255
+
+					var grass_triangle = TriangleMesh(geometries.other.attributes.position.array, a, b, d, 1000, amplitude);
+					grass_triangle.position.y += 0.1;
+					fiber.scene.add(grass_triangle);
+
+
 				}
+				
 			}
 		}
+
 
 
 		flowersRef.current.count = dandelionIndex;
@@ -330,7 +349,6 @@ function Planet(props) {
 		flowersBallsRef.current.count = dandelionIndex;
 		flowersBallsRef.current.instanceColor.needsUpdate = true;
 
-        var grassesColors = [];
         // var dandelionIndex = 0;
         // var TheDandilion = new Object3D()
         for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
@@ -354,6 +372,8 @@ function Planet(props) {
 			// }
         }
 
+        grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3));
+        grassesRef.current.geometry.needsUpdate = true;
         // for (var index of flowersRef.current.geometry.index.array) {
         // 	flowersRef.current.setColorAt(index, new Color(0, 1, 0));
         // }
@@ -363,9 +383,6 @@ function Planet(props) {
 		flowersRef.current.instanceMatrix.needsUpdate = true;
 		flowersBallsRef.current.geometry.needsUpdate = true;
 		flowersBallsRef.current.instanceMatrix.needsUpdate = true;
-
-        grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3))
-        grassesRef.current.geometry.attributes.position.needsUpdate = true
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
         const planetOceanPositions = oceanGeometry.attributes.position.array;
@@ -423,14 +440,14 @@ function Planet(props) {
             	opacity={0}
             	transparent={true}
             	side={DoubleSide}
-            	vertexColors={true}
+            	vertexColors={false}
             />
         </mesh>
 
 		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
-				opacity={0}
+				opacity={1}
 				wireframe
 				transparent={true}
 				side={DoubleSide}
@@ -451,10 +468,8 @@ function Planet(props) {
 		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
-				opacity={1}
 				side={DoubleSide}
-				vertexColors={true}
-				transparent
+				vertexColors
 			/>
 		</mesh>
 
@@ -476,9 +491,9 @@ function Planet(props) {
   				color="white" />
 		</instancedMesh>
 
-		<instancedMesh ref={flowersBallsRef} args={[null, null, 300000]}>
+		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 300000]}>
 			<sphereGeometry args={[a * 0.1, 9, 9]} />
-  			<meshBasicMaterial color="white" />
+  			<meshStandardMaterial color="white" />
 		</instancedMesh>
 
 		<instancedMesh ref={bladesOfGrassRef} args={[null, null, 3000000]}>

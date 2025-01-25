@@ -22,15 +22,17 @@ export class CustomSinCurve extends Curve {
 
 
 export const SPEED = {
-  GRAVITY: 0.055, // Slightly faster gravitational pull for a realistic fall speed (2 m/s², not Earth-like 9.8 m/s² but game-friendly)
-  WALK: .15 * 4,      // Average human walking speed ~2.5 meters per second
+  GRAVITY: 0.055, 
+  WALK: .15 * 4,     
   RUN: 3.8 * 5,
-  STRAFE: .1,    // Strafing is typically slower than walking forward
+  STRAFE: .15 * 4,    
   CAMERA: {
-    SIN: 0.5,    // Reduced sinusoidal camera effect for subtle motion
+    SIN: 0.5,   
   },
-  JUMP: 0.35,        // Realistic jump height considering gravity (parabolic arc ~1.25 meters with these values)
-  ROTATE: 0.05    // Reduced rotation speed for smoother turning (~2.86 degrees per frame at 60fps)
+  JUMP: 0.35,     
+  ROTATE: 0.05,
+  ROTATE_DOWN: 0.13,
+  ROTATE_UP: 0.15
 };
 
 
