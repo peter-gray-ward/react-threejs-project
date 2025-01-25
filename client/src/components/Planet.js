@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useFrame, useThree, InstancedMesh } from '@react-three/fiber'
+import { useFrame, useThree, InstancedMesh, useLoader } from '@react-three/fiber'
 import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
@@ -28,7 +28,8 @@ import {
 	Object3D,
 	Triangle,
 	RepeatWrapping
-} from 'three'
+} from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import * as perlinNoise from 'perlin-noise';
 import {
 	filterSteepGeometry,
@@ -54,7 +55,9 @@ function Planet(props) {
 	const aa = _a;
 	var i = new Date().getTime();
 	var fiber = useThree();
-
+	const sword = useLoader(OBJLoader, '/sword.obj');
+	const swordRef = useRef();
+	let swordHasBeenPlaced = false;
 	const twopi = Math.PI * 2;
 	const halfpi = Math.PI / 2;
 	const threequaterspi = Math.PI * twopi;
@@ -97,15 +100,21 @@ function Planet(props) {
 
 		const amplitude = 100;
 		const halfAmplitude = amplitude / 2;
+
+
         const geometry = new PlaneGeometry(1000, 1000, 50, 50);
 		geometry.vertexColors = true;
-        const positions = geometry.attributes.position.array;
-        for (var x = 0; x < positions.length; x += 3) {
-        	var y = positions[x + 1];
-        	positions[x + 1] = positions[x + 2];
-        	positions[x + 2] = y;
+
+
+        for (var x = 0; x < geometry.attributes.position.array.length; x += 3) {
+        	var y = geometry.attributes.position.array[x + 1];
+        	geometry.attributes.position.array[x + 1] = geometry.attributes.position.array[x + 2];
+        	geometry.attributes.position.array[x + 2] = y;
         }
-        geometry.attributes.position.needsUpdate = true;
+		geometry.attributes.position.needsUpdate = true;
+
+		const positions = geometry.attributes.position.array;
+        
         surfaceRef.current.geometry = geometry;
         grassesRef.current.geometry = geometry;
 
@@ -131,24 +140,27 @@ function Planet(props) {
 		    const xIndex = Math.floor((x / 3) % rows);
 		    const zIndex = Math.floor((x / 3) / cols) + 2;
 		    const noiseValue = noise[zIndex * cols + xIndex] * amplitude;
-		    const noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
+		    if (zIndex >= 0 && zIndex < rows && xIndex >= 0 && xIndex < cols) {
+			    const noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
 
-		    positions[x] = positions[x];
-		    positions[x + 1] = positions[x + 1] + noiseOffset;
-		    positions[x + 2] = positions[x + 2];
+			    if (x < positions.length - 2) {
+				    positions[x] = positions[x];
+				    positions[x + 1] = positions[x + 1] + noiseOffset;
+				    positions[x + 2] = positions[x + 2];
 
-		    if (xIndex < cols - 1 && zIndex < rows - 1) {
-		        const topLeft = zIndex * (cols + 1) + xIndex;
-		        const topRight = topLeft + 1;
-		        const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
-		        const bottomRight = bottomLeft + 1;
+				    if (xIndex < cols - 1 && zIndex < rows - 1) {
+				        const topLeft = zIndex * (cols + 1) + xIndex;
+				        const topRight = topLeft + 1;
+				        const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
+				        const bottomRight = bottomLeft + 1;
 
-		        // Create two triangles for the quad
-		        indices.push(topLeft, bottomLeft, topRight); // Triangle 1
-		        indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
+				        // Create two triangles for the quad
+				        indices.push(topLeft, bottomLeft, topRight); // Triangle 1
+				        indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
 
-		    }
-
+				    }
+				}
+			}
 
 		}
 
@@ -289,6 +301,15 @@ function Planet(props) {
 			        new Vector3(geometries.other.attributes.position.array[c * 3], geometries.other.attributes.position.array[c * 3 + 1] + props.state.planet.radius, geometries.other.attributes.position.array[c * 3 + 2])
 			    );
 
+			    if (!swordHasBeenPlaced && i > 45 && j > 45 && i < 55 && j < 55) {
+			    	swordRef.current.position.set(new Vector3(
+			    		Math.max(triangle.a.x, triangle.b.x, triangle.c.x) - Math.min(triangle.a.x, triangle.b.x, triangle.c.x),
+			    		Math.max(triangle.a.y, triangle.b.y, triangle.c.y) - Math.min(triangle.a.y, triangle.b.y, triangle.c.y),
+			    		Math.max(triangle.a.z, triangle.b.z, triangle.c.z) - Math.min(triangle.a.z, triangle.b.z, triangle.c.z)
+			    	))
+			    	swordHasBeenPlaced = true;
+			    }
+
 	
 				if (Math.random() < 0.1) {
 		
@@ -402,7 +423,10 @@ function Planet(props) {
 			surfaceGeometry: surfaceRef.current,
 			planetGeometry: sphereRef.current
 		});
-    }, []); // Add dependencies if needed
+
+
+
+    }, []); // happens once
 	
 	
 
@@ -490,6 +514,8 @@ function Planet(props) {
   				map={dandilionstemtexture}
   				color="white" />
 		</instancedMesh>
+
+		<primitive ref={swordRef} object={sword} />
 
 		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 300000]}>
 			<sphereGeometry args={[a * 0.1, 9, 9]} />

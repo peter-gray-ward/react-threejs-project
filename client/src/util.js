@@ -13,6 +13,14 @@ import {
     Triangle
 } from 'three';
 
+Array.prototype.any = function(predicate) {
+    for (var i = 0; i < this.length; i++) {
+        if (predicate(this[i])) {
+            return true;
+        }
+    }
+    return false;
+}
 
 const planetCenter = new Vector3(0, 0, 0);
 
