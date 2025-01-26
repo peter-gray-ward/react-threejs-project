@@ -340,7 +340,7 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < 5.15) {
+      if (cameraTheta < 5) {
         cameraTheta += SPEED.ROTATE_DOWN;
       }
       return {
@@ -359,7 +359,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
       
-      if (cameraTheta > 1) {
+      if (cameraTheta > .21) {
         if (cameraTheta > Math.PI * 1.9) {
           cameraTheta -= SPEED.ROTATE_UP;
         } else {
@@ -517,7 +517,8 @@ function sceneReducer(state, action) {
         planet: {
           ...state.planet,
           surfaceGeometry: action.surfaceGeometry,
-          planetGeometry: action.planetGeometry
+          planetGeometry: action.planetGeometry,
+          triangles: action.triangles
         }
       }
     case 'LOAD_SUN':
@@ -662,10 +663,8 @@ function App() {
         }
       }
       if (key.trim() == '') {
-        // if (!keyed.START_JUMP) {
-        //   keyed.START_JUMP = true;
-          dispatch({ type: 'START_JUMP' })
-        // }
+        keys = Array.from(new Set([...keys, 'jump']))
+        dispatch({ type: 'START_JUMP' })
       }
       if (key == 'enter') {
         dispatch({ type: 'MODEL_LOADED', model })
@@ -767,6 +766,8 @@ function App() {
       }
       if (key.trim() == '') {
         keyed.START_JUMP = false;
+        keys.removeLast('jump');
+
         // dispatch({ type: 'STOP_JUMP' })
       }
       if (key == 'shift') {
@@ -877,16 +878,6 @@ function App() {
 
               </section>
             </li>
-            <li>walk speed...<span className="number">{state.model.speed.walk}</span></li>
-            <li>run <span className="boolean">{new String(state.model.run)}</span> speed...<span className="number">{state.model.speed.run}</span></li>
-            <li>strafe <span className="boolean">{new String(state.model.strafe)}</span> speed...<span className="number">{state.model.speed.strafe}</span></li>
-            <li>camera theta...<span className="number">{state.cameraTheta}</span></li>
-            <li>walking...<span className="boolean">{new String(state.model.walk)}</span></li>
-            <li>strafing...<span className="boolean">{new String(state.model.strafe)}</span></li>
-            <li>jumping...<span className="boolean">{new String(state.model.jump)}</span></li>
-            <li>
-              gravity distance {state.planet.distanceTo}
-            </li>
            <li>
               <i>DISPATCHES</i>
               <ol id="interactions">
@@ -912,6 +903,8 @@ function App() {
                 }
               </ol>
             </li>
+
+
             
           </ul>
         </div>

@@ -188,11 +188,26 @@ function ModelViewer(props) {
 
 		if (props.state.planet.surfaceGeometry) {
 			const userPosition = new Box3().setFromObject(props.state.model.scene)
-			const surfaceFloor = findRayIntersection(
+
+			var triangleFloor = null;
+			var userbox = new Box3().setFromObject(props.state.model.scene);
+			
+			props.state.planet.triangles
+				.filter(t => t.a.distanceTo(props.state.model.scene.position) < 15)
+				.forEach(triangle => {
+
+					var intersects = userbox.intersectsTriangle(triangle)
+					
+					if (intersects) {
+						triangleFloor = triangle.center;
+					}
+				});
+
+			var surfaceFloor = findRayIntersection(
 				props.state.model.scene.position.clone(), 
 				planetCenter, 
 				props.state.planet.surfaceGeometry
-			);
+			); 
 			
 
 			let waterFloor
@@ -207,9 +222,20 @@ function ModelViewer(props) {
 						);
 					}
 				});
-			}
+			}	
 
-			if (surfaceFloor) {
+			if (triangleFloor) {
+				if (props.state.model.scene.position) {
+					const dist = triangleFloor.distanceTo(props.state.model.scene.position);
+					props.state.model.intersectsSurface = dist;
+				}
+				props.state.model.floor = triangleFloor
+				props.state.model.floor.type = 'surface'
+				props.dispatch({ type: 'LOAD_MODEL', model: props.state.model })
+				if (props.state.animations.contains("jump")) {
+					props.dispatch({ type: 'STOP_JUMP '});
+				}
+			} else if (surfaceFloor) {
 				if (props.state.model.scene.position) {
 					const dist = surfaceFloor.distanceTo(props.state.model.scene.position);
 					props.state.model.intersectsSurface = dist;

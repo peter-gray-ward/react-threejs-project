@@ -46,13 +46,23 @@ const colorFunction = (vertex) => {
   return new Color().setHSL(0.3, 1.0, height > 0 ? 0.6 : 0.2); // Greenish tones
 }
 
+
+
+
+class Terrain {
+    constructor(steepGeometry, otherGeometry) {
+        this.steepGeometry = steepGeometry;
+        this.otherGeometry = otherGeometry;
+    }
+}
+
 export const filterSteepGeometry = (geometry, steepnessThreshold) => {
   const upDirection = new Vector3(0, 1, 0);
   const positions = geometry.attributes.position.array; // Vertex positions
   const indices = geometry.index.array; // Indices (triangles)
   const otherIndices = [];
-  const newPositions = [];
-  const newIndices = [];
+  const steepPositions = [];
+  const steepIndices = [];
   const otherPositions = [];
   const vertexMap = new Map(); // Map to track old-to-new vertex index mapping
   const otherVertexMap = new Map();
@@ -95,7 +105,7 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
       const newB = vertexMap.has(bIndex) ? vertexMap.get(bIndex) : addVertex(bIndex, b);
       const newC = vertexMap.has(cIndex) ? vertexMap.get(cIndex) : addVertex(cIndex, c);
 
-      newIndices.push(newA, newB, newC);
+      steepIndices.push(newA, newB, newC);
     } else {
       const newA = otherVertexMap.has(aIndex) ? otherVertexMap.get(aIndex) : addOtherVertex(aIndex, a);
       const newB = otherVertexMap.has(bIndex) ? otherVertexMap.get(bIndex) : addOtherVertex(bIndex, b);
@@ -107,8 +117,8 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
 
   // Helper: Add a vertex, track its mapping, and assign a color
   function addVertex(oldIndex, vertex) {
-    const newIndex = newPositions.length / 3;
-    newPositions.push(...vertex);
+    const newIndex = steepPositions.length / 3;
+    steepPositions.push(...vertex);
 
     vertexMap.set(oldIndex, newIndex);
     return newIndex;
@@ -123,20 +133,17 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
   }
 
   // Create a new geometry
-  const newGeometry = new BufferGeometry();
-  newGeometry.setAttribute('position', new Float32BufferAttribute(newPositions, 3));
-  newGeometry.setIndex(newIndices);
-  newGeometry.computeVertexNormals(); // Recalculate normals
+  const steepGeometry = new BufferGeometry();
+  steepGeometry.setAttribute('position', new Float32BufferAttribute(steepPositions, 3));
+  steepGeometry.setIndex(steepIndices);
+  steepGeometry.computeVertexNormals(); // Recalculate normals
 
   const otherGeometry = new BufferGeometry();
   otherGeometry.setAttribute('position', new Float32BufferAttribute(otherPositions, 3));
   otherGeometry.setIndex(otherIndices);
   otherGeometry.computeVertexNormals(); // Recalculate normals
 
-  return {
-    steep: newGeometry,
-    other: otherGeometry
-  };
+  return new Terrain(steepGeometry, otherGeometry);
 }
 
 export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, originalDirection, planetCenter }) => { // Step 1: Convert spherical to Cartesian coordinates 
@@ -348,6 +355,35 @@ export function findRayIntersection(modelPosition, objectCenter, objectMesh) {
 }
 
 
+export function interpolateNoise(originalNoise, originalRows, originalCols, newRows, newCols) {
+  const interpolatedNoise = [];
+  for (let i = 0; i <= newRows; i++) {
+    for (let j = 0; j <= newCols; j++) {
+      // Map new grid to original grid
+      const x = (i / newRows) * (originalRows - 1);
+      const y = (j / newCols) * (originalCols - 1);
+
+      // Find surrounding grid points
+      const x0 = Math.floor(x);
+      const x1 = Math.min(x0 + 1, originalRows - 1);
+      const y0 = Math.floor(y);
+      const y1 = Math.min(y0 + 1, originalCols - 1);
+
+      // Interpolate between the grid points
+      const dx = x - x0;
+      const dy = y - y0;
+
+      const value =
+        (1 - dx) * (1 - dy) * originalNoise[x0 * originalCols + y0] +
+        dx * (1 - dy) * originalNoise[x1 * originalCols + y0] +
+        (1 - dx) * dy * originalNoise[x0 * originalCols + y1] +
+        dx * dy * originalNoise[x1 * originalCols + y1];
+
+      interpolatedNoise.push(value);
+    }
+  }
+  return interpolatedNoise;
+}
 
 export function randomPointOnTriangle(a, b, c) {
 
@@ -376,7 +412,13 @@ export function isPointInTriangle(p, a, b, c) {
     return w1 >= 0 && w2 >= 0 && w3 >= 0;
 }
 
-
+export function size(triangle) {
+    return Math.abs(
+        Math.max(triangle.a.x, triangle.b.x, triangle.c.x) - Math.min(triangle.a.x, triangle.b.x, triangle.c.x)
+        + Math.max(triangle.a.y, triangle.b.y, triangle.c.y) - Math.min(triangle.a.y, triangle.b.y, triangle.c.y)
+        + Math.max(triangle.a.z, triangle.b.z, triangle.c.z) - Math.min(triangle.a.z, triangle.b.z, triangle.c.z)
+    );
+}
 export function TriangleMesh(vertices, a, b, c, terrainWidth, terrainHeight) {
 
     const triangleGeometry = new BufferGeometry();
@@ -388,10 +430,15 @@ export function TriangleMesh(vertices, a, b, c, terrainWidth, terrainHeight) {
         vertices[c * 3], vertices[c * 3 + 1] + 100000, vertices[c * 3 + 2]
     ];
 
+    if (vertexPositions.some(v => Number.isNaN(v))) {
+        debugger
+    }
+
     triangleGeometry.setAttribute('position', new Float32BufferAttribute(vertexPositions, 3));
     triangleGeometry.setIndex([0, 1, 2]);
     triangleGeometry.computeVertexNormals();
     triangleGeometry.computeBoundingBox();
+    
 
     // Calculate UVs (using simple planar mapping based on X and Z coordinates)
     const uvs = [

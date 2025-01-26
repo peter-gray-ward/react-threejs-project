@@ -31,8 +31,8 @@ export const SPEED = {
   },
   JUMP: 0.35,     
   ROTATE: 0.05,
-  ROTATE_DOWN: 0.13,
-  ROTATE_UP: 0.15
+  ROTATE_DOWN: 0.413,
+  ROTATE_UP: 0.415
 };
 
 
