@@ -35,6 +35,7 @@ import {
 let __dispatch__ = '';
 
 let hidden = []
+const halfpi = Math.PI / 2
 
 Array.prototype.contains = function(str) {
   for (var i = 0 ;i < this.length; i++) {
@@ -340,7 +341,7 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < 5) {
+      if (cameraTheta < Math.PI * 2 + halfpi) {
         cameraTheta += SPEED.ROTATE_DOWN;
       }
       return {
@@ -366,7 +367,7 @@ function sceneReducer(state, action) {
           cameraTheta -= SPEED.ROTATE_UP;
         }
       } else {
-        cameraTheta = 1
+        cameraTheta = .21
       }
       return {
         ...state,
