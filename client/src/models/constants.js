@@ -78,6 +78,7 @@ export const props = {
   interaction: new Date().getTime(),
   animations: [],
   centerStage: new Vector3(0, MASS.planet.radius, 0),
+  setSurface: false,
   model: {
     floor: new Vector3(0,0,0),
     walk: false,

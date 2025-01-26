@@ -10,6 +10,7 @@ import {
 	Vector3,
 	DoubleSide,
 	PlaneGeometry,
+	Raycaster,
 	Float32BufferAttribute,
 	SphereGeometry,
 	TextureLoader,
@@ -43,7 +44,7 @@ import {
 } from '../util';
 
 // The Dandilion Curvature
-let _a = 5.5;
+let _a = 3.5;
 const ra = randomInRange(_a * -0.05, _a * 0.05)
 const rb = randomInRange(_a * -0.05, _a * 0.05)
 const rc = randomInRange(_a * 0.01, _a * 0.01)
@@ -194,20 +195,56 @@ function Planet(props) {
         	const normalZ = TerrainInstance.steepGeometry.attributes.normal.array[x + 2];
 
 
-        	TheNormalSphere.position.set(
-        		TerrainInstance.steepGeometry.attributes.position.array[x],
-        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
-        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
-        	).add(new Vector3(normalX * -50, normalY * -50, normalZ * -50));
+        	for (var yyy = 25; yyy < 75; yyy += 5) {
+	        	
+
+	        	for (var jjj = 0; jjj < 1; jjj++) {
+	        		TheNormalSphere.position.set(
+		        		TerrainInstance.steepGeometry.attributes.position.array[x],
+		        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
+		        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
+		        	).add(new Vector3(
+			        		normalX * -yyy, 
+			        		normalY * -yyy, 
+			        		normalZ * -yyy
+		        		)
+		        	);
+
+		        	if (props.state.model.scene.position.x == 0) {
+		        		props.state.model.scene.position.copy(TheNormalSphere.position).add(new Vector3(0, 3, 0));
+		        	}
+	        		
+		       		TheNormalSphere.updateMatrix();
+
+		        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
+		        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(1, 0, 0));
 
 
-       		TheNormalSphere.updateMatrix();
-
-        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
-        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(1, 0, 0));
+		        	normalSphereIndex++;
 
 
-        	normalSphereIndex++;
+		        	for (var jj = 0; jj < 1; jj++) {
+		        		TheNormalSphere.position.set(
+			        		TerrainInstance.steepGeometry.attributes.position.array[x],
+			        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
+			        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
+			        	).add(new Vector3(
+				        		(normalX * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20)), 
+				        		normalY * -yyy, 
+				        		(normalZ * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20))
+			        		)
+			        	);
+		        		
+			       		TheNormalSphere.updateMatrix();
+
+			        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
+			        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(1, 0, 0));
+
+
+			        	normalSphereIndex++;
+		        	}
+		        }
+	        }
         }
 
 
@@ -281,7 +318,7 @@ function Planet(props) {
 			    	tb, tc, td
 			    );
 
-			    if (false && ta.x < 6 && ta.z < 6) {
+			    if (ta.x < 6 && ta.z < 6) {
 
 				    if (!swordHasBeenPlaced && i > 45 && j > 45 && i < 55 && j < 55) {
 				    	swordRef.current.position.set(new Vector3(
@@ -472,6 +509,60 @@ function Planet(props) {
     }, []); // happens once
 	
 	
+	useEffect(() => {
+		if (normalSphereRef.current) {
+			const TheNormalSphere = new Object3D();
+			const TheNormalSphereMatrix = new Matrix4();
+			const TheNormalSpherePosition = new Vector3();
+
+			const TheFlowerStem = new Object3D();
+			const TheFlowerStemPosition = new Vector3();
+			const TheFlowerStemRotation = new Quaternion();
+			const TheFlowerStemScale = new Vector3();
+			const TheFlowerStemMatrix = new Matrix4();
+
+			const TheFlowerBall = new Object3D();
+			const TheFlowerBallPosition = new Vector3();
+			const TheFlowerBallRotation = new Quaternion();
+			const TheFlowerBallMatrix = new Matrix4();
+			const TheFlowerBallScale = new Vector3();
+
+			for (var i = 0; i < normalSphereRef.current.count; i++) {
+				flowersRef.current.getMatrixAt(i, TheFlowerStemMatrix);
+				TheFlowerStemMatrix.decompose(TheFlowerStemPosition, TheFlowerStemRotation, TheFlowerStemScale);
+				flowersBallsRef.current.getMatrixAt(i, TheFlowerBallMatrix);
+				TheFlowerStemMatrix.decompose(TheFlowerBallPosition, TheFlowerBallRotation, TheFlowerBallScale);
+
+				normalSphereRef.current.getMatrixAt(i, TheNormalSphereMatrix);
+				TheNormalSphereMatrix.decompose(TheNormalSpherePosition, new Quaternion(), new Vector3());
+				const raycaster = new Raycaster();
+
+				raycaster.set(TheNormalSpherePosition, new Vector3(0, -1, 0).normalize());
+
+				const intersects = raycaster.intersectObject(surfaceRef.current, true);
+				if (intersects.length > 0) {
+					const scale = randomInRange(.09, .5);
+
+					TheNormalSphere.position.set(intersects[0].point.x, intersects[0].point.y + props.state.planet.radius, intersects[0].point.z);
+					TheNormalSphere.updateMatrix();
+
+					TheFlowerStem.position.copy(TheNormalSphere.position);
+					TheFlowerStem.scale.set(scale, scale, scale);
+					TheFlowerStem.updateMatrix();
+
+
+					let balladdition = new Vector3(0, aa * scale, 0);
+					TheFlowerBall.position.copy(TheFlowerStem.position).add(balladdition);
+					TheFlowerBall.scale.set(scale, scale, scale);
+					TheFlowerBall.updateMatrix();
+
+				    flowersRef.current.setMatrixAt(i, TheFlowerStem.matrix);
+				    flowersBallsRef.current.setMatrixAt(i, TheFlowerBall.matrix);
+				}
+			}
+
+		}
+	}, []) // happens once
 
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
@@ -533,7 +624,7 @@ function Planet(props) {
 			/>
 		</mesh>
 
-		<instancedMesh ref={flowersRef} args={[null, null, 300000]}>
+		<instancedMesh ref={flowersRef} args={[null, null, 100000]}>
 			<tubeGeometry args={[
 				new CatmullRomCurve3([
 					new Vector3(ra, 0, rb),
@@ -553,17 +644,20 @@ function Planet(props) {
 
 		<primitive ref={swordRef} object={sword} />
 
-		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 300000]}>
+		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
 			<sphereGeometry args={[a * 0.1, 9, 9]} />
   			<meshStandardMaterial 
   				transparent
-  				opacity={0.5}
+  				opacity={1}
   				color="white" />
 		</instancedMesh>
 
-		<instancedMesh ref={normalSphereRef} args={[null, null, 500]}>
+		<instancedMesh ref={normalSphereRef} args={[null, null, 1000000]}>
 			<sphereGeometry args={[3, 9, 9]} />
   			<meshBasicMaterial 
+  				wireframe
+  				transparent
+  				opacity={0}
   				color="red" />
 		</instancedMesh>
 	</>
