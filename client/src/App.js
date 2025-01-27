@@ -842,16 +842,22 @@ function App() {
 
     <div className="App" style={{ background: state.model.scene ? 'none' : 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
        
-      <div id="stats">
-        {/*<button style={{ 
-          width: '3rem',
-          whiteSpace: 'pre-line',
-          outline: 'none',
-          padding: 0, margin: 0
-        }}
-        onClick={() => dispatch({ type: 'FIRST_PERSON_TOGGLE' })}
+      
+      
 
-        >{state.firstPerson ? '+' : '!'}first person</button>*/}
+      <CanvasContainer 
+        state={state}
+        keys={keys}
+        dispatch={dispatch} />
+    </div>
+    
+  );
+}
+
+export default App;
+
+/**
+ * <div id="stats">
 
         <div>
           <ul>
@@ -937,16 +943,4 @@ function App() {
             
           </ul>
         </div>
-      </div> 
-      
-
-      <CanvasContainer 
-        state={state}
-        keys={keys}
-        dispatch={dispatch} />
-    </div>
-    
-  );
-}
-
-export default App;
+      </div> **/

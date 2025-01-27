@@ -689,8 +689,6 @@ function Planet(props) {
 		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
 			<sphereGeometry args={[a * 0.2, 9, 9]} />
   			<meshStandardMaterial 
-  				transparent
-  				opacity={0.95}
   				/>
 		</instancedMesh>
 
