@@ -91,6 +91,7 @@ function sceneReducer(state, action) {
       }
     
     case 'START_WALK':
+      let speed = SPEED.WALK;
       var result = { 
         ...state,
         animations: Array.from(new Set([
@@ -567,6 +568,22 @@ function sceneReducer(state, action) {
         ...state,
         setSurface: !state.setSurface
       };
+    case 'WALK_SLOWER':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          walkSlow: true
+        }
+      };
+    case 'WALK_NORMAL':
+      return {
+        ...state,
+        model: {
+          ...state.model,
+          walkSlow: false
+        }
+      };
     default:
       return state;
   }
@@ -605,7 +622,7 @@ function App() {
         child.receiveShadow = true;
       }
     });
-
+    model.scene.position.set(-220, state.planet.radius, -50)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 
@@ -621,46 +638,46 @@ function App() {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
         }
       }
-      if (key == 's') {
+      else if (key == 's') {
         if (!keyed.START_WALK_BACK) {
           keyed.START_WALK_BACK = true;
           keys.push('walk')
           dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
-      if (key == 'a') {
+      else if (key == 'a') {
         if (!keyed.START_STRAFE_LEFT) {
           keyed.START_STRAFE_LEFT = true;
           keys.push('strafe')
           dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT });
         }
       }
-      if (key == 'd') {
+      else if (key == 'd') {
         if (!keyed.START_STRAFE_RIGHT) {
           keyed.START_STRAFE_RIGHT = true;
           keys.push('strafe')
           dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT });
         }
       }
-      if (key == 'arrowleft') {
+      else if (key == 'arrowleft') {
         if (!keyed.START_ROTATE_LEFT) {
           keyed.START_ROTATE_LEFT = true;
           dispatch({ type: 'START_ROTATE_LEFT' })
         }
       }
-      if (key == 'arrowright') {
+      else if (key == 'arrowright') {
         if (!keyed.START_ROTATE_RIGHT) {
           keyed.START_ROTATE_RIGHT = true;
           dispatch({ type: 'START_ROTATE_RIGHT' })
         }
       }
-      if (key == 'arrowup') {
+      else if (key == 'arrowup') {
         if (!keyed.START_ROTATE_UP) {
           keyed.START_ROTATE_UP = true;
           dispatch({ type: 'START_ROTATE_UP' })
         }
       }
-      if (key == 'arrowdown') {
+      else if (key == 'arrowdown') {
         if (!keyed.START_ROTATE_DOWN) {
           keyed.ROTATE_DOWN = true;
           if (props.cameraTheta < Math.PI * 2 - 0.25) {
@@ -668,14 +685,14 @@ function App() {
           }
         }
       }
-      if (key.trim() == '') {
+      else if (key.trim() == '') {
         keys = Array.from(new Set([...keys, 'jump']))
         dispatch({ type: 'START_JUMP' })
       }
-      if (key == 'enter') {
+      else if (key == 'enter') {
         dispatch({ type: 'MODEL_LOADED', model })
       }
-      if (key == 'shift') {
+      else if (key == 'shift') {
         keyed.SHIFT = true;
         if (keyed.START_WALK) {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT })
@@ -686,6 +703,9 @@ function App() {
         } else if (keyed.START_STRAFE_RIGHT) {
           dispatch({ type: 'START_STRAFE_RIGHT', shift: keyed.SHIFT })
         }
+      }
+      else if (key == 'capslock') {
+        dispatch({ type: 'WALK_SLOWER' })
       }
     };
 
@@ -707,7 +727,7 @@ function App() {
           dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
-      if (key == 's') {
+      else if (key == 's') {
         keyed.START_WALK_BACK = false;
         keys.removeLast('walk')
         dispatch({ type: 'STOP_WALK_BACK' })
@@ -723,7 +743,7 @@ function App() {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
         }
       }
-      if (key == 'a') {
+      else if (key == 'a') {
         keyed.START_STRAFE_LEFT = false;
         keys.removeLast('strafe')
         dispatch({ type: 'STOP_STRAFE_LEFT' })
@@ -738,7 +758,7 @@ function App() {
           dispatch({ type: 'START_WALK_BACK', shift: keyed.SHIFT });
         }
       }
-      if (key == 'd') {
+      else if (key == 'd') {
         keyed.START_STRAFE_RIGHT = false;
         keys.removeLast('strafe')
 
@@ -754,29 +774,29 @@ function App() {
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT });
         }       
       }
-      if (key == 'arrowleft') {
+      else if (key == 'arrowleft') {
         keyed.START_ROTATE_LEFT = false;
         dispatch({ type: 'STOP_ROTATE_LEFT' })
       }
-      if (key == 'arrowright') {
+      else if (key == 'arrowright') {
         keyed.START_ROTATE_RIGHT = false;
         dispatch({ type: 'STOP_ROTATE_RIGHT' })
       }
-      if (key == 'arrowup') {
+      else if (key == 'arrowup') {
         keyed.START_ROTATE_UP = false;
         dispatch({ type: 'STOP_ROTATE_UP' })
       }
-      if (key == 'arrowdown') {
+      else if (key == 'arrowdown') {
         keyed.START_ROTATE_DOWN = false;
         dispatch({ type: 'STOP_ROTATE_DOWN' })
       }
-      if (key.trim() == '') {
+      else if (key.trim() == '') {
         keyed.START_JUMP = false;
         keys.removeLast('jump');
 
         // dispatch({ type: 'STOP_JUMP' })
       }
-      if (key == 'shift') {
+      else if (key == 'shift') {
         keyed.SHIFT = false;
         if (keyed.START_WALK) { // if walking
           dispatch({ type: 'START_WALK', shift: keyed.SHIFT })
@@ -790,6 +810,9 @@ function App() {
         if (keyed.START_STRAFE_LEFT) {
           dispatch({ type: 'START_STRAFE_LEFT', shift: keyed.SHIFT })
         }
+      }
+      else if (key == 'capslock') {
+        dispatch({ type: 'WALK_NORMAL' })
       }
     };
 

@@ -197,53 +197,52 @@ function Planet(props) {
 
         	for (var yyy = 25; yyy < 75; yyy += 5) {
 	        	
-
-	        	for (var jjj = 0; jjj < 1; jjj++) {
-	        		TheNormalSphere.position.set(
-		        		TerrainInstance.steepGeometry.attributes.position.array[x],
-		        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
-		        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
-		        	).add(new Vector3(
-			        		normalX * -yyy, 
-			        		normalY * -yyy, 
-			        		normalZ * -yyy
-		        		)
-		        	);
-
-		        	if (props.state.model.scene.position.x == 0) {
-		        		props.state.model.scene.position.copy(TheNormalSphere.position).add(new Vector3(0, 3, 0));
-		        	}
-	        		
-		       		TheNormalSphere.updateMatrix();
-
-		        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
-		        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(1, 0, 0));
-
-
-		        	normalSphereIndex++;
-
-
-		        	for (var jj = 0; jj < 1; jj++) {
+        		if (Math.random() < 0.1) {
+		        	for (var jjj = 0; jjj < 1; jjj++) {
 		        		TheNormalSphere.position.set(
 			        		TerrainInstance.steepGeometry.attributes.position.array[x],
 			        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
 			        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
 			        	).add(new Vector3(
-				        		(normalX * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20)), 
+				        		normalX * -yyy, 
 				        		normalY * -yyy, 
-				        		(normalZ * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20))
+				        		normalZ * -yyy
 			        		)
 			        	);
+
+			
 		        		
+		        		TheNormalSphere.position.y -= a * 2;
 			       		TheNormalSphere.updateMatrix();
 
 			        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
-			        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(1, 0, 0));
 
 
 			        	normalSphereIndex++;
-		        	}
-		        }
+
+
+			        	for (var jj = 0; jj < 1; jj++) {
+			        		TheNormalSphere.position.set(
+				        		TerrainInstance.steepGeometry.attributes.position.array[x],
+				        		TerrainInstance.steepGeometry.attributes.position.array[x + 1] + props.state.planet.radius,
+				        		TerrainInstance.steepGeometry.attributes.position.array[x + 2]
+				        	).add(new Vector3(
+					        		(normalX * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20)), 
+					        		normalY * -yyy, 
+					        		(normalZ * -yyy) + randomInRange(-randomInRange(-a * 20, a * 20), randomInRange(-a * 20, a * 20))
+				        		)
+				        	);
+			        		TheNormalSphere.position.y -= a * 2;
+				       		TheNormalSphere.updateMatrix();
+
+				        	normalSphereRef.current.setMatrixAt(normalSphereIndex, TheNormalSphere.matrix);
+				        	normalSphereRef.current.setColorAt(normalSphereIndex, new Color(0, 1, 0));
+
+
+				        	normalSphereIndex++;
+			        	}
+			        }
+			    }
 	        }
         }
 
@@ -329,66 +328,11 @@ function Planet(props) {
 				    	swordHasBeenPlaced = true;
 				    }
 		
-					if (Math.random() < 0.1) {
 			
-						var clusterCount = 1//randomInRange(3, 30);
-
-						for (var k = 0; k < clusterCount; k++) {
-
-							[triangle, otherTriangle].forEach(triangle => {
-								const flowerPosition = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
-								// const flowerPosition = [triangle.a.x, triangle.a.y, triangle.a.z];
-
-								if (Number.isNaN(flowerPosition.x) || Number.isNaN(flowerPosition.y) || Number.isNaN(flowerPosition.z)) {
-									
-									return;
-								}
-
-								TheDandilion.rotation.y = randomInRange(0, twopi)
-								TheDandilion.position.set(flowerPosition.x, flowerPosition.y, flowerPosition.z);
-
-								const scale = randomInRange(0.03, 19)
-
-								
-								TheDandilion.scale.set(scale, scale)
-								TheDandelionBall.position.set(flowerPosition.x, flowerPosition.y + (aa * scale), flowerPosition.z)
-								TheDandelionBall.scale.set(scale, scale, scale)
-								TheDandelionBall.updateMatrix();
-								TheDandilion.updateMatrix();
-
-								flowersRef.current.setMatrixAt(dandelionIndex, TheDandilion.matrix);
-								if (scale > 2) {
-									flowersRef.current.setColorAt(dandelionIndex, new Color(0.2, 0.2, 0.2))
-									TheDandelionBall.scale.set(randomInRange(scale, scale * 2), randomInRange(scale, scale * 1.2), randomInRange(scale, scale * 2))
-									TheDandelionBall.updateMatrix();
-									flowersBallsRef.current.setColorAt(dandelionIndex, 
-										new Color(
-											0, 1, 0
-										)
-									);
-								} else {
-									flowersRef.current.setColorAt(dandelionIndex, new Color(randomInRange(0, 0.1), randomInRange(0.9, 1), 0));
-									flowersBallsRef.current.setColorAt(dandelionIndex, 
-										new Color(
-											randomInRange(0.7, 1), 
-											Math.random(),
-											Math.random()
-										)
-									);
-								}
-								flowersBallsRef.current.setMatrixAt(dandelionIndex, TheDandelionBall.matrix);
-								
-
-
-
-								dandelionIndex++;
-							})
-						}
-
-
 						
-					} 
-				} else if (i > 23 && i < 30 && j > 23 && j < 30) {
+				}
+
+				if (i > 23 && i < 30 && j > 23 && j < 30) {
 					if (true) {
 						var clusterCount = randomInRange(3, 30);
 
@@ -425,7 +369,13 @@ function Planet(props) {
 										Math.random()
 									)
 								);
-
+								normalSphereRef.current.setColorAt(dandelionIndex, 
+									new Color(
+										randomInRange(0.7, 1), 
+										Math.random(),
+										Math.random()
+									)
+								);
 								flowersBallsRef.current.setMatrixAt(dandelionIndex, TheDandelionBall.matrix);
 								
 
@@ -433,6 +383,67 @@ function Planet(props) {
 							})
 						}
 					}
+				} else if (Math.random() < 0.23) {
+					var clusterCount = 3//randomInRange(3, 30);
+
+					for (var k = 0; k < clusterCount; k++) {
+
+						[triangle, otherTriangle].forEach(triangle => {
+							const flowerPosition = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
+							// const flowerPosition = [triangle.a.x, triangle.a.y, triangle.a.z];
+
+							if (Number.isNaN(flowerPosition.x) || Number.isNaN(flowerPosition.y) || Number.isNaN(flowerPosition.z)) {
+								
+								return;
+							}
+
+							TheDandilion.rotation.y = randomInRange(0, twopi)
+							TheDandilion.position.set(flowerPosition.x, flowerPosition.y, flowerPosition.z);
+
+							const scale = randomInRange(0.03, 23)
+
+							
+							TheDandilion.scale.set(scale, scale)
+							TheDandelionBall.position.set(flowerPosition.x, flowerPosition.y + (aa * scale), flowerPosition.z)
+							TheDandelionBall.scale.set(scale, scale, scale)
+							TheDandelionBall.updateMatrix();
+							TheDandilion.updateMatrix();
+
+							flowersRef.current.setMatrixAt(dandelionIndex, TheDandilion.matrix);
+							if (scale > 2) {
+								flowersRef.current.setColorAt(dandelionIndex, new Color(0.2, 0.2, 0.2))
+								TheDandelionBall.scale.set(randomInRange(scale, scale * 2), randomInRange(scale, scale * 1.2), randomInRange(scale, scale * 2))
+								TheDandelionBall.updateMatrix();
+							    flowersBallsRef.current.setColorAt(
+							    	dandelionIndex,
+							    	new Color(
+							    		randomInRange(0, 0.5),
+							    		randomInRange(0.5, 1),
+							    		randomInRange(0.35, 0.65)
+							    	)
+							    );
+							} else {
+								flowersRef.current.setColorAt(dandelionIndex, new Color(randomInRange(0, 0.1), randomInRange(0.9, 1), 0));
+								flowersBallsRef.current.setColorAt(dandelionIndex, 
+									new Color(
+										randomInRange(0.7, 1), 
+										Math.random(),
+										Math.random()
+									)
+								);
+							}
+							flowersBallsRef.current.setMatrixAt(dandelionIndex, TheDandelionBall.matrix);
+							
+
+
+
+							dandelionIndex++;
+						})
+					}
+
+
+						
+					 
 				}
 				
 
@@ -547,6 +558,12 @@ function Planet(props) {
 					TheNormalSphere.updateMatrix();
 
 					TheFlowerStem.position.copy(TheNormalSphere.position);
+					
+					var sc = scale * randomInRange(1, 11);
+					TheNormalSphere.scale.set(sc, sc, sc)
+					TheNormalSphere.position.y = props.state.planet.radius + 21;
+					TheNormalSphere.updateMatrix();
+
 					TheFlowerStem.scale.set(scale, scale, scale);
 					TheFlowerStem.updateMatrix();
 
@@ -558,10 +575,24 @@ function Planet(props) {
 
 				    flowersRef.current.setMatrixAt(i, TheFlowerStem.matrix);
 				    flowersBallsRef.current.setMatrixAt(i, TheFlowerBall.matrix);
+				    normalSphereRef.current.setMatrixAt(i,new Matrix4());
 				}
 			}
 
+
+			// for (var x = 0; x < normalSphereRef.current.geometry.attributes.position.array.length; x += 3) {
+			// 	normalSphereRef.current.geometry.attributes.position.array[x] += randomInRange(
+			// 		-randomInRange(1, 5), randomInRange(1, 5)
+			// 	)
+			// 	normalSphereRef.current.geometry.attributes.position.array[x + 1] = props.state.planet.radius + 21
+			// 	normalSphereRef.current.geometry.attributes.position.array[x + 1] += randomInRange(
+			// 		-randomInRange(1, 5), randomInRange(1, 5)
+			// 	)
+			// }
+
+			// normalSphereRef.current.geometry.attributes.position.needsUpdate = true;
 		}
+
 	}, []) // happens once
 
 
@@ -572,7 +603,9 @@ function Planet(props) {
 	const [lakeNodes, setLakeNodes] = useState([]);
 	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"))
 	const [addedWaterTexture, setAddedWaterTexture] = useState(false);
-
+	const [roofR, setRoofR] = useState(0)
+	var [roofG, setRoofG] = useState(1)
+	const [roofB, setRoofB] = useState(0)
 	const dandilionstemtexture = useMemo(() => new TextureLoader().load("/dandilion-stem.jpg"), texture => {
 		texture.wrapS = RepeatWrapping
 	    texture.wrapT = RepeatWrapping
@@ -582,6 +615,15 @@ function Planet(props) {
     	return [0, -99999999, 0];
     }, []);
 
+    useFrame(() => {
+	    roofG += Math.random() < 0.5 ? 0.001 : -0.001;
+	    if (roofG > 1) {
+	    	roofG = 0;
+	    } else if (roofG < 0) {
+	    	roofG = 1 + roofG;
+	    }
+	    setRoofG(roofG)
+    })
 
 	return <>
 
@@ -634,11 +676,11 @@ function Planet(props) {
 					new Vector3(0, a * 1, 0)
 				]), 
 				11, // tubular segments
-				a / 75, // radius
+				a / 50, // radius
 				11 // radial segments
 			]} />
   			<meshStandardMaterial
-  				// map={dandilionstemtexture}
+  				map={dandilionstemtexture}
   				color="white" />
 		</instancedMesh>
 
@@ -652,13 +694,10 @@ function Planet(props) {
   				color="white" />
 		</instancedMesh>
 
-		<instancedMesh ref={normalSphereRef} args={[null, null, 1000000]}>
-			<sphereGeometry args={[3, 9, 9]} />
-  			<meshBasicMaterial 
-  				wireframe
-  				transparent
-  				opacity={0}
-  				color="red" />
+		<instancedMesh castShadow ref={normalSphereRef} args={[null, null, 1000000]}>
+			<sphereGeometry args={[18, 9, 9]} />
+  			<meshStandardMaterial 
+  				side={DoubleSide}/>
 		</instancedMesh>
 	</>
 }

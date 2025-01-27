@@ -168,7 +168,11 @@ function ModelViewer(props) {
 	        
 	        props.dispatch({ type: "WALK" })
 	    } else if (props.keys.contains('walk')) {
-	        forwardDirection.multiplyScalar(props.state.model.speed.walk);
+	    	var speed = props.state.model.speed.walk
+	    	if (props.state.model.walkSlow) {
+	    		speed *= 0.23
+	    	}
+	        forwardDirection.multiplyScalar(speed);
 	        props.state.model.scene.position.add(forwardDirection);
 	        
 	        props.dispatch({ type: "WALK" })

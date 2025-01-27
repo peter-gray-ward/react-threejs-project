@@ -30,7 +30,7 @@ export const SPEED = {
     SIN: 0.5,   
   },
   JUMP: 0.35,     
-  ROTATE: 0.05,
+  ROTATE: 0.5,
   ROTATE_DOWN: 0.413,
   ROTATE_UP: 0.415
 };
@@ -82,6 +82,7 @@ export const props = {
   model: {
     floor: new Vector3(0,0,0),
     walk: false,
+    walkSlow: false,
     walking: false,
     strafe: false,
     strafing: false,
