@@ -687,11 +687,11 @@ function Planet(props) {
 		<primitive ref={swordRef} object={sword} />
 
 		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
-			<sphereGeometry args={[a * 0.1, 9, 9]} />
+			<sphereGeometry args={[a * 0.2, 9, 9]} />
   			<meshStandardMaterial 
   				transparent
-  				opacity={1}
-  				color="white" />
+  				opacity={0.95}
+  				/>
 		</instancedMesh>
 
 		<instancedMesh castShadow ref={normalSphereRef} args={[null, null, 1000000]}>

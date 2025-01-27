@@ -840,7 +840,7 @@ function App() {
 
   return (
 
-    <div className="App" style={{ background: 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
+    <div className="App" style={{ background: state.model.scene ? 'none' : 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
        
       <div id="stats">
         {/*<button style={{ 
