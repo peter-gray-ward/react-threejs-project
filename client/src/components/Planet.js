@@ -32,6 +32,7 @@ import {
 	Shape
 } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import * as perlinNoise from 'perlin-noise';
 import {
 	filterSteepGeometry,
@@ -59,18 +60,21 @@ function Planet(props) {
 	const aa = _a;
 	var i = new Date().getTime();
 	var fiber = useThree();
-	const sword = useLoader(OBJLoader, '/sword.obj');
-	const swordRef = useRef();
-	let swordHasBeenPlaced = false;
+	// const sword = useLoader(OBJLoader, '/sword.obj');
+	// const swordRef = useRef();
+
 	const twopi = Math.PI * 2;
 	const halfpi = Math.PI / 2;
 	const threequaterspi = Math.PI * twopi;
 
-	const cliffTexture = useMemo(() => () => new TextureLoader().load("/cliff.jpg", texture => {
+	const cliffTexture = useMemo(() => new TextureLoader().load("/cliff.jpg", texture => {
 		texture.wrapS = RepeatWrapping
 	    texture.wrapT = RepeatWrapping
 	    texture.repeat.set(2, 1)
 	}), []);
+
+	const tree1 = useLoader(FBXLoader, '/tree1.fbx');
+
 	useEffect(() => {
 		fiber.gl.shadowMap.enabled = true;
         fiber.gl.shadowMap.type = PCFSoftShadowMap;
@@ -103,11 +107,11 @@ function Planet(props) {
 		const cols = 50;
 		const zeds = 50;
 
-		const amplitude = 100;
+		const amplitude = 30;
 		const halfAmplitude = amplitude / 2;
 
 
-        const geometry = new PlaneGeometry(1000, 1000, rows, cols);
+        const geometry = new PlaneGeometry(300, 300, rows, cols);
 		geometry.vertexColors = true;
 
 
@@ -188,6 +192,12 @@ function Planet(props) {
 
         var TerrainInstance = filterSteepGeometry(geometry, .65, 'gray');
         var TheNormalSphere = new Object3D();
+        debugger
+        props.state.model.scene.position.set(
+			TerrainInstance.steepGeometry.attributes.position.array[105],
+			TerrainInstance.steepGeometry.attributes.position.array[106] + props.state.planet.radius + 10,
+			TerrainInstance.steepGeometry.attributes.position.array[107]
+		);
 
         for (var x = 0; x < TerrainInstance.steepGeometry.attributes.normal.array.length; x += 3) {
         	const normalX = TerrainInstance.steepGeometry.attributes.normal.array[x];
@@ -195,7 +205,7 @@ function Planet(props) {
         	const normalZ = TerrainInstance.steepGeometry.attributes.normal.array[x + 2];
 
 
-        	for (var yyy = 25; yyy < 75; yyy += 5) {
+        	for (var yyy = 11; yyy < 25; yyy += 5) {
 	        	
 
 	        	for (var jjj = 0; jjj < 1; jjj++) {
@@ -209,10 +219,6 @@ function Planet(props) {
 			        		normalZ * -yyy
 		        		)
 		        	);
-
-		        	if (props.state.model.scene.position.x == 0) {
-		        		props.state.model.scene.position.copy(TheNormalSphere.position).add(new Vector3(0, 3, 0));
-		        	}
 	        		
 		       		TheNormalSphere.updateMatrix();
 
@@ -265,7 +271,7 @@ function Planet(props) {
 
 
         cliffsRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(cliffUvs, 2));
-        cliffsRef.current.material.map = cliffTexture()
+        cliffsRef.current.material.map = cliffTexture
         cliffsRef.current.geometry.attributes.position.needsUpdate = true
 
         grassesRef.current.geometry = TerrainInstance.otherGeometry;
@@ -454,37 +460,50 @@ function Planet(props) {
 			}
 
 			
-			for (var i = 0; i < 150; i++) {
+			for (var i = 0; i < 16; i++) {
 				var pos = new Vector3(
-					randomInRange(300, 500),
+					randomInRange(-150, 150),
 					props.state.planet.radius + 100,
-					randomInRange(-500, 500)
+					randomInRange(-150, 150)
 				);
 				raycaster.set(pos, new Vector3(0, -1, 0).normalize());
 
 				const intersects = raycaster.intersectObject(surfaceRef.current, true);
+
+				console.log(intersects)
 				if (intersects.length > 0) {
-					const scale = randomInRange(15, 50);
+					var tree = tree1.clone();
+					tree.position.copy(intersects[0].point);
+					var scale = randomInRange(0.1, 0.5);
+					tree.position.y += props.state.planet.radius - (1 / scale);
+					tree.scale.set(scale, scale, scale)
+					tree.rotation.y = randomInRange(0, Math.PI * 2);
+					tree.children[0].castShadow = true;
+	
+					// First group (green, e.g., leaves)
+					for (let i = 0; i < tree.children[0].geometry.groups[0].count; i++) {
+					    let index = (tree.children[0].geometry.groups[0].start + i) * 3;
+					    tree.children[0].geometry.attributes.color.array[index] = 0.5;   // Red (brownish)
+					    tree.children[0].geometry.attributes.color.array[index + 1] = 0.25; // Green (dark brown)
+					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+					}
 
-					TheNormalSphere.position.set(intersects[0].point.x, intersects[0].point.y + props.state.planet.radius, intersects[0].point.z);
-					TheNormalSphere.updateMatrix();
+					// Second group (brown, e.g., trunk)
+					for (let i = 0; i < tree.children[0].geometry.groups[1].count; i++) {
+					    let index = (tree.children[0].geometry.groups[1].start + i) * 3;
+					    
+					    tree.children[0].geometry.attributes.color.array[index] = 0;     // Red
+					    tree.children[0].geometry.attributes.color.array[index + 1] = 1; // Green
+					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+					}
 
-					TheFlowerStem.position.copy(TheNormalSphere.position);
-					TheFlowerStem.scale.set(scale, scale, scale);
-					TheFlowerStem.updateMatrix();
+					// Mark as needing an update
+					tree.children[0].geometry.attributes.color.needsUpdate = true;
 
+					// Ensure the material uses vertex colors
+					tree.children[0].material.vertexColors = true;
 
-					let balladdition = new Vector3(0, aa * scale, 0);
-					TheFlowerBall.position.copy(TheFlowerStem.position).add(balladdition);
-					TheFlowerBall.scale.set(scale, scale, scale);
-					TheFlowerBall.updateMatrix();
-
-				    flowersRef.current.setMatrixAt(index, TheFlowerStem.matrix);
-				    flowersBallsRef.current.setMatrixAt(index, TheFlowerBall.matrix);
-
-				    flowersBallsRef.current.setColorAt(index, new Color(0, 1, 0))
-				    
-				    index++
+					fiber.scene.add(tree);
 				}
 			}
 
@@ -502,14 +521,14 @@ function Planet(props) {
 	const sphereColor = useMemo(() => 'white', []);
 	const surfaceRef = useRef();
 	const [lakeNodes, setLakeNodes] = useState([]);
-	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"))
+	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"), [])
 	const [addedWaterTexture, setAddedWaterTexture] = useState(false);
 
 	const dandilionstemtexture = useMemo(() => new TextureLoader().load("/dandilion-stem.jpg"), texture => {
 		texture.wrapS = RepeatWrapping
 	    texture.wrapT = RepeatWrapping
 	    texture.repeat.set(5, 10)
-	})
+	}, [])
     const offSceneSpherePosition = useMemo(() => {
     	return [0, -99999999, 0];
     }, []);
@@ -530,7 +549,7 @@ function Planet(props) {
 		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
-				opacity={0}
+				opacity={1}
 				wireframe
 				transparent={true}
 				side={DoubleSide}
@@ -574,7 +593,6 @@ function Planet(props) {
   				color="green" />
 		</instancedMesh>
 
-		<primitive ref={swordRef} object={sword} />
 
 		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
 			<sphereGeometry args={[a * 0.1, 9, 9]} />

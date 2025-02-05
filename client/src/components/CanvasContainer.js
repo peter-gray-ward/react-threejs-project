@@ -5,7 +5,7 @@ import Lighting from './Lighting';
 
 function CanvasContainer(props) {
 	return (
-		<Canvas camera={{ position: [0, 1, 5] }}>
+		<Canvas shadows camera={{ position: [0, 1, 5] }}>
 			<Lighting {...props} />
 			<Scene {...props} />
 		</Canvas>
