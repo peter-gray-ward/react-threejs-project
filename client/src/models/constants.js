@@ -57,6 +57,9 @@ export const cameraRadius = 1 * 3.5
 
 export const props = {
   firstPerson: false,
+  closeThings: {
+    '/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/uuid.py':{}
+  },
   keys: { 
     w: false,
     s: false,
@@ -79,6 +82,7 @@ export const props = {
   animations: [],
   centerStage: new Vector3(0, MASS.planet.radius, 0),
   setSurface: false,
+  plants: [],
   model: {
     floor: new Vector3(0,0,0),
     walk: false,

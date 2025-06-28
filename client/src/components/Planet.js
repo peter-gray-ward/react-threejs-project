@@ -409,8 +409,12 @@ function Planet(props) {
 			const TheFlowerBallMatrix = new Matrix4();
 			const TheFlowerBallScale = new Vector3();
 
+			var plants = [];
+
 			var index = 0;
 			const raycaster = new Raycaster();
+
+			debugger
 
 			for (var i = 0; i < normalSphereRef.current.count; i++) {
 				flowersRef.current.getMatrixAt(i, TheFlowerStemMatrix);
@@ -450,9 +454,16 @@ function Planet(props) {
 
 					    flowersRef.current.setMatrixAt(index, TheFlowerStem.matrix);
 					    flowersBallsRef.current.setMatrixAt(index, TheFlowerBall.matrix);
-
 					    flowersBallsRef.current.setColorAt(index, new Color(Math.random(), Math.random(), Math.random()))
 					    
+
+					    plants.push({
+						  type: 'flower',
+						  index, 
+						  stem: TheFlowerStem.matrix.clone(),
+						  ball: TheFlowerBall.matrix.clone()
+						});
+
 					    index++
 					}
 				}
@@ -505,14 +516,24 @@ function Planet(props) {
 					tree.children[0].material.vertexColors = true;
 
 					fiber.scene.add(tree);
+
+					plants.push({
+					  type: 'tree',
+					  object: tree,
+					});
 				}
 			}
 
 			flowersRef.current.count = index;
-			// flowersRef.current.instanceColor.needsUpdate = true;
 			flowersBallsRef.current.count = index;
 			flowersBallsRef.current.instanceColor.needsUpdate = true;
 
+
+			props.dispatch({
+				type: 'ADD_PLANTS',
+				plants,
+				flowerRefCurrent: flowersRef.current
+			});
 		}
 	}, []) // happens once
 

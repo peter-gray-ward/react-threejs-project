@@ -462,7 +462,18 @@ function sceneReducer(state, action) {
           planetElement: action.planetElement
         }
       }
-    
+    case 'ADD_CLOSE_THINGS':
+      return {
+        ...state,
+        closeThings: action.closeThings
+      };
+      break;
+    case 'ADD_PLANTS':
+      return {
+        ...state,
+        plants: action.plants,
+        flowerRefCurrent: action.flowerRefCurrent
+      };
     case 'ENGAGE_PLANET':
       return {
         ...state,
@@ -826,7 +837,7 @@ function App() {
   }
 
   useEffect(addEvents, []);
-  useEffect(() => {}, [keyed, state.interactions])
+  useEffect(() => {}, [keyed, state.interactions]);
 
   if (!state.model.scene) {
     return <div className="App"></div>
