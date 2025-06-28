@@ -103,15 +103,15 @@ function Planet(props) {
 	const normalSphereRef = useRef();
 
 	useEffect(() => {
-		const rows = 50;
-		const cols = 50;
-		const zeds = 50;
+		const rows = 100;
+		const cols = 100;
+		const zeds = 100;
 
 		const amplitude = 30;
 		const halfAmplitude = amplitude / 2;
 
 
-        const geometry = new PlaneGeometry(300, 300, rows, cols);
+        const geometry = new PlaneGeometry(1000, 1000, rows, cols);
 		geometry.vertexColors = true;
 
 
@@ -192,7 +192,7 @@ function Planet(props) {
 
         var TerrainInstance = filterSteepGeometry(geometry, .65, 'gray');
         var TheNormalSphere = new Object3D();
-        debugger
+        
         props.state.model.scene.position.set(
 			TerrainInstance.steepGeometry.attributes.position.array[105],
 			TerrainInstance.steepGeometry.attributes.position.array[106] + props.state.planet.radius + 10,
@@ -425,19 +425,20 @@ function Planet(props) {
 				for (var j = 0; j < 3; j++) {
 					var pos = new Vector3(
 						randomInRange(TheNormalSpherePosition.x - 5, TheNormalSpherePosition.x + 5),
-						TheNormalSpherePosition.y,
+						TheNormalSpherePosition.y + 1,
 						randomInRange(TheNormalSpherePosition.z - 5, TheNormalSpherePosition.z + 5)
 					);
 					raycaster.set(pos, new Vector3(0, -1, 0).normalize());
 
 					const intersects = raycaster.intersectObject(surfaceRef.current, true);
 					if (intersects.length > 0) {
-						const scale = randomInRange(.09, .5);
+						const scale = randomInRange(0.1, 30)// const scale = randomInRange(100, 1000);
 
 						TheNormalSphere.position.set(intersects[0].point.x, intersects[0].point.y + props.state.planet.radius, intersects[0].point.z);
 						TheNormalSphere.updateMatrix();
 
 						TheFlowerStem.position.copy(TheNormalSphere.position);
+						TheFlowerStem.rotation.y = randomInRange(0, Math.PI * 2)
 						TheFlowerStem.scale.set(scale, scale, scale);
 						TheFlowerStem.updateMatrix();
 
