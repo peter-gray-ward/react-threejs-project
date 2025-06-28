@@ -23,9 +23,9 @@ export class CustomSinCurve extends Curve {
 
 export const SPEED = {
   GRAVITY: 0.055, 
-  WALK: .15 * 4,     
+  WALK: .05 * 4,     
   RUN: 3.8 * 5,
-  STRAFE: .15 * 4,    
+  STRAFE: .05 * 4,    
   CAMERA: {
     SIN: 0.5,   
   },
