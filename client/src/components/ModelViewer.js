@@ -71,7 +71,7 @@ function ModelViewer(props) {
             uuidNew = document.createElement('div');
             uuidNew.style = "position:'absolute';z-index:Infinity;font-size:'0.25rem';color:'white';text-shadow:'-1px -1px black'";
             uuidNew.id = "close-children";
-            var uuidHtml = "";
+            var uuidHtml = "<pre>camera theta " + props.state.cameraTheta + "</pre>";
             closeThings.forEach(thing => {
                 uuidHtml +=  `<h1 style="color:white;text-shadow:-1px 1px black;">
                     ${thing.type}-${thing.index}
@@ -80,7 +80,7 @@ function ModelViewer(props) {
             uuidNew.innerHTML = uuidHtml;
             document.body.appendChild(uuidNew);
 
-        }, 500);
+        }, 10);
         return () => clearInterval(intervalId);
     }, [props.state.closeThings])
     
@@ -378,7 +378,7 @@ function ModelViewer(props) {
         props.state.model.scene.quaternion.copy(quaternion);
 
         // Calculate the camera's position
-        let radius = props.state.firstPerson ? 1 : props.state.cameraRadius; // Distance from the model
+        let radius = 10//props.state.firstPerson ? 0 : props.state.cameraRadius; // Distance from the model
         let cameraTheta = props.state.cameraTheta; // Vertical angle
         const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
 
@@ -391,9 +391,9 @@ function ModelViewer(props) {
         }
 
         // Smoothly approach a radius of 1.5 when cameraTheta < 5
+        cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
         radius = 0.5 + (radius - 0.5) * (cameraTheta / 5)
 
-        cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
 
         // Compute position on the sphere in the y-up coordinate system
         const x = radius * Math.sin(cameraTheta) * Math.cos(cameraPhi); // Horizontal plane (x-axis)
@@ -428,11 +428,15 @@ function ModelViewer(props) {
         point.y += 1
 
         props.camera.position.copy(point);
+        if (props.state.firstPerson) {
+            props.camera.position.y += 0.65
+        }
 
         // Define the look-at position based on the model's height and TOCENTER
         const lookPosition = props.state.model.scene.position.clone();
         const upDirection = TOCENTER.clone().normalize();
-        lookPosition.add(upDirection.multiplyScalar(props.state.model.height * .75));
+        lookPosition.add(upDirection.multiplyScalar(props.state.model.height * (
+            props.state.firstPerson ? 1 : .75)));
 
         // Make the camera look at the adjusted position
         props.camera.lookAt(lookPosition);

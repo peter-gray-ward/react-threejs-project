@@ -342,7 +342,7 @@ function sceneReducer(state, action) {
       }
     case 'ROTATE_DOWN':
       var cameraTheta = action.state.cameraTheta;
-      if (cameraTheta < Math.PI * 2 + halfpi) {
+      if (true || cameraTheta < Math.PI * 2 + halfpi) {
         cameraTheta += SPEED.ROTATE_DOWN;
       }
       return {
@@ -361,7 +361,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       var cameraTheta = action.state.cameraTheta;
       
-      if (cameraTheta > .21) {
+      if (true || cameraTheta > .21) {
         if (cameraTheta > Math.PI * 1.9) {
           cameraTheta -= SPEED.ROTATE_UP;
         } else {
@@ -633,12 +633,16 @@ function App() {
         child.receiveShadow = true;
       }
     });
+    model.scene.scale.set(8, 8, 8)
     model.scene.position.set(-220, state.planet.radius, -50)
     dispatch({ type: 'MODEL_LOADED', model, dial })
   }, []);
 
 
   var addEvents = () => {
+    window.addEventListener('click', () => {
+      dispatch({ type: 'FIRST_PERSON_TOGGLE' })
+    })
     const handleKeyDown = (e) => {
       e.preventDefault();
       const key = e.key.toLowerCase();
@@ -689,11 +693,10 @@ function App() {
         }
       }
       else if (key == 'arrowdown') {
+        console.log(props.cameraTheta)
         if (!keyed.START_ROTATE_DOWN) {
           keyed.ROTATE_DOWN = true;
-          if (props.cameraTheta < Math.PI * 2 - 0.25) {
-            dispatch({ type: 'START_ROTATE_DOWN' })
-          }
+          dispatch({ type: 'START_ROTATE_DOWN' })
         }
       }
       else if (key.trim() == '') {
@@ -852,10 +855,7 @@ function App() {
   return (
 
     <div className="App" style={{ background: state.model.scene ? 'none' : 'url(/dandelion.gif)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
-       
       
-      
-
       <CanvasContainer 
         state={state}
         keys={keys}
@@ -867,91 +867,4 @@ function App() {
 
 export default App;
 
-/**
- * <div id="stats">
-
-        <div>
-          <ul>
-            <li><div>Planet:</div>
-              <section>
-                <i>position: </i>
-                <span className="number">{new Number(state.planet.position[0]).toFixed(2)},</span>
-                <span className="number">{new Number(state.planet.position[1]).toFixed(2)},</span>
-                <span className="number">{new Number(state.planet.position[2]).toFixed(2)}</span>
-                <br/>
-                <i>radius: <strong>{MASS.planet.radius}</strong></i>
-              </section>
-            </li>
-            <li><div>Model:</div>
-              <section>
-                <i>position: </i>
-                <span className="number">{new Number(state.model.scene.position.x).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.scene.position.y).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.scene.position.z).toFixed(2)}</span>
-              
-                <br/>
-                
-                <i>velocity: </i>
-                <span className="number">{new Number(state.model.velocity.x).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.velocity.y).toFixed(2)},</span> 
-                <span className="number">{new Number(state.model.velocity.z).toFixed(2)}</span>
-
-                <br />
-
-                <i>quaternion: </i>
-                <span className="number">{new Number(q.quaternion.w).toFixed(2)},</span> 
-                <span className="number">{new Number(q.quaternion.x).toFixed(2)},</span> 
-                <span className="number">{new Number(q.quaternion.y).toFixed(2)},</span> 
-                <span className="number">{new Number(q.quaternion.z).toFixed(2)}</span>
-
-                <br />
-                <i><h2>{state.model.floor.type} floor</h2></i>
-                <span className="number"><big>{new Number(state.model.floor.x).toFixed(2)}</big>
-                  ,<big>{new Number(state.model.floor.y).toFixed(2)}</big>
-                  <big>{new Number(state.model.floor.z).toFixed(2)}</big></span>
-
-                <i><h2>Surface Distance</h2></i>
-                <span className="number"><big>{state.model.intersectsSurface}</big></span>
-
-                <br />
-                <i><h2>Sun:</h2></i>
-                <span className="number">{new Number(state.sunPosition[0]).toFixed(2)},</span> 
-                <span className="number">{new Number(state.sunPosition[1]).toFixed(2)},</span> 
-                <span className="number">{new Number(state.sunPosition[2]).toFixed(2)}</span>
-
-                <span className="number">{new Number(state.x).toFixed(2)}</span>
-                <br />
-
-              </section>
-            </li>
-           <li>
-              <i>DISPATCHES</i>
-              <ol id="interactions">
-                {
-                  Array.from(new Set(Array.from(state.interactions).map(interaction => {
-                    var i = JSON.parse(interaction);
-                    delete i.date;
-                    return JSON.stringify(i);
-                  }))).sort().map((interaction, i) => {
-                    return <li key={i}>{interaction}</li>
-                  })
-                }
-              </ol>
-            </li>
-
-            <li>
-              <i>animations</i>
-              <ol id="interactions">
-                {
-                  state.animations.map((animation, i) => {
-                    return <li key={i}>{animation}</li>
-                  })
-                }
-              </ol>
-            </li>
-
-
-            
-          </ul>
-        </div>
-      </div> **/
+      

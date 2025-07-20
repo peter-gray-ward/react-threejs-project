@@ -23,16 +23,16 @@ export class CustomSinCurve extends Curve {
 
 export const SPEED = {
   GRAVITY: 0.055, 
-  WALK: .05 * 4,     
+  WALK: .5 * 4,     
   RUN: 3.8 * 5,
-  STRAFE: .05 * 4,    
+  STRAFE: .5 * 4,    
   CAMERA: {
     SIN: 0.5,   
   },
-  JUMP: 0.35,     
+  JUMP: 2.35,     
   ROTATE: 0.5,
-  ROTATE_DOWN: 0.413,
-  ROTATE_UP: 0.415
+  ROTATE_DOWN: 0.113,
+  ROTATE_UP: 0.115
 };
 
 
@@ -53,7 +53,7 @@ export const MASS = {
 export const starRadius = 1000000//736;
 export const angularSize = 0.00345;
 // export const cameraRadius = starRadius * 2
-export const cameraRadius = 1 * 3.5
+export const cameraRadius = 11
 
 export const props = {
   firstPerson: false,

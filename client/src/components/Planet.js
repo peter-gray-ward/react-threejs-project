@@ -414,7 +414,7 @@ function Planet(props) {
 			var index = 0;
 			const raycaster = new Raycaster();
 
-			debugger
+			
 
 			for (var i = 0; i < normalSphereRef.current.count; i++) {
 				flowersRef.current.getMatrixAt(i, TheFlowerStemMatrix);
@@ -426,7 +426,7 @@ function Planet(props) {
 				TheNormalSphereMatrix.decompose(TheNormalSpherePosition, new Quaternion(), new Vector3());
 				
 
-				for (var j = 0; j < 3; j++) {
+				for (var j = 0; j < 2; j++) {
 					var pos = new Vector3(
 						randomInRange(TheNormalSpherePosition.x - 5, TheNormalSpherePosition.x + 5),
 						TheNormalSpherePosition.y + 1,
@@ -483,7 +483,7 @@ function Planet(props) {
 				const intersects = raycaster.intersectObject(surfaceRef.current, true);
 
 				console.log(intersects)
-				if (intersects.length > 0) {
+				if (false && intersects.length > 0) {
 					var tree = tree1.clone();
 					tree.position.copy(intersects[0].point);
 					var scale = randomInRange(0.1, 0.5);
