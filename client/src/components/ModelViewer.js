@@ -36,6 +36,7 @@ function ModelViewer(props) {
     const mixerRef = useRef(null);
 
     useEffect(() => {
+
         const intervalId = setInterval(() => {
             let closeThings = [];
             let plantIndex = 0;
@@ -71,7 +72,11 @@ function ModelViewer(props) {
             uuidNew = document.createElement('div');
             uuidNew.style = "position:'absolute';z-index:Infinity;font-size:'0.25rem';color:'white';text-shadow:'-1px -1px black'";
             uuidNew.id = "close-children";
-            var uuidHtml = "<pre>camera theta " + props.state.cameraTheta + "</pre>";
+            var uuidHtml = `<pre style='font-weight:800;padding:1rem;text-shadow:-0.15rem 0.15rem white;font-size:2rem'>
+<h1>${props.state.firstPerson ? "1st" : "3rd"}
+camera theta ${props.state.cameraTheta.toFixed(2)}
+camera radius ${props.state.cameraRadius}
+</pre>`;
             closeThings.forEach(thing => {
                 uuidHtml +=  `<h1 style="color:white;text-shadow:-1px 1px black;">
                     ${thing.type}-${thing.index}
@@ -154,6 +159,9 @@ function ModelViewer(props) {
         });
 
         setActions(actionAnimations);
+
+        props.dispatch({ type: 'FIRST_PERSON_ANIMATE' })
+        
         
 
         mixerRef.current?.update(props.state.deltaTime || 0.016); // Assuming a default frame time of ~16ms
@@ -378,7 +386,7 @@ function ModelViewer(props) {
         props.state.model.scene.quaternion.copy(quaternion);
 
         // Calculate the camera's position
-        let radius = 10//props.state.firstPerson ? 0 : props.state.cameraRadius; // Distance from the model
+        let radius = props.state.cameraRadius; // Distance from the model
         let cameraTheta = props.state.cameraTheta; // Vertical angle
         const cameraPhi = props.state.cameraPhi || 0; // Horizontal angle
 
@@ -400,13 +408,8 @@ function ModelViewer(props) {
         const z = radius * Math.sin(cameraTheta) * Math.sin(cameraPhi); // Horizontal plane (z-axis)
         const y = radius * Math.cos(cameraTheta);                      // Vertical motion (y-axis)
 
-        let point
-        if (props.state.firstPerson) {
-            point = new Vector3(x, y, z)//.add(forwardDirection)
-            radius = 11
-        } else {
-            point = new Vector3(x, y, z);
-        }
+        let point = new Vector3(x, y, z);
+        
 
         // Get the model's forward direction
         forwardDirection = props.state.model.scene.getWorldDirection(new Vector3());

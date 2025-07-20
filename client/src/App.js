@@ -569,10 +569,28 @@ function sceneReducer(state, action) {
         x: action.x
       }
     case 'FIRST_PERSON_TOGGLE':
-      document.body.focus();
       return {
         ...state,
         firstPerson: !state.firstPerson
+      };
+    case 'FIRST_PERSON_ANIMATE':
+      // console.log('FIRST_PERSON_TOGGLE')
+      document.body.focus();
+      let cameraRadius = state.cameraRadius;
+      let firstPerson = state.firstPerson;
+      if (firstPerson) {
+        if (cameraRadius > 35) {
+          cameraRadius -= 1;
+        }
+      } else {
+        if (cameraRadius < 100) {
+          cameraRadius += 1;
+        }
+      }
+      return {
+        ...state,
+        firstPerson,
+        cameraRadius
       }
     case 'SET_SURFACE':
       return {
@@ -720,6 +738,9 @@ function App() {
       }
       else if (key == 'capslock') {
         dispatch({ type: 'WALK_SLOWER' })
+      }
+      else if (key == 'q') {
+        dispatch({ type: 'FIRST_PERSON_TOGGLE' });
       }
     };
 

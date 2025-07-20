@@ -482,8 +482,7 @@ function Planet(props) {
 
 				const intersects = raycaster.intersectObject(surfaceRef.current, true);
 
-				console.log(intersects)
-				if (false && intersects.length > 0) {
+				if (intersects.length > 0) {
 					var tree = tree1.clone();
 					tree.position.copy(intersects[0].point);
 					var scale = randomInRange(0.1, 0.5);
