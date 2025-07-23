@@ -33,7 +33,7 @@ export const SPEED = {
   ROTATE: 0.5,
   ROTATE_DOWN: 0.113,
   ROTATE_UP: 0.115,
-  SUN: 0.001
+  SUN: 0.000
 };
 
 
