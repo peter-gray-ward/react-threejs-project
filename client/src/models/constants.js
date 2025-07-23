@@ -22,7 +22,7 @@ export class CustomSinCurve extends Curve {
 
 
 export const SPEED = {
-  GRAVITY: 0.055, 
+  GRAVITY: 1, 
   WALK: .5 * 4,     
   RUN: 3.8 * 5,
   STRAFE: .5 * 4,    
@@ -32,7 +32,8 @@ export const SPEED = {
   JUMP: 2.35,     
   ROTATE: 0.5,
   ROTATE_DOWN: 0.113,
-  ROTATE_UP: 0.115
+  ROTATE_UP: 0.115,
+  SUN: 0.001
 };
 
 
@@ -53,7 +54,7 @@ export const MASS = {
 export const starRadius = 1000000//736;
 export const angularSize = 0.00345;
 // export const cameraRadius = starRadius * 2
-export const cameraRadius = 100
+export const cameraRadius = 40
 
 export const props = {
   firstPerson: false,
@@ -71,10 +72,12 @@ export const props = {
       roots hung over cliffs, and piled up behind into mounting slopes of pine-wood.`
   },
   x: 0,
+  SPEED,
   cameraTheta: Math.PI * 1.7,
   cameraPhi: Math.PI / 2,
   cameraRadius,
   starRadius,
+  sunTheta: Math.PI / 2,
   sunPosition: [0,0,0],
   starBuffer: [],
   cameraPoint: new Vector3(0,0,0),

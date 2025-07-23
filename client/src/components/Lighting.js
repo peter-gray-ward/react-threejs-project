@@ -5,7 +5,7 @@ import { starRadius } from '../models/constants';
 function Sunlight({ state }) {
   const sunRef = useRef();
   const targetRef = useRef(() => new Object3D()); // Ensure it's created once
-  const sphereGeometryArgs = useMemo(() => [starRadius / 80, 100, 100], []);
+  const sphereGeometryArgs = useMemo(() => [starRadius / 50, 100, 100], []);
   const isNight = state.x > Math.PI / 2 && state.x < Math.PI * 1.5;
 
   return (
@@ -28,7 +28,7 @@ function Sunlight({ state }) {
       />
       <mesh ref={sunRef} position={state.sunPosition}>
         <sphereGeometry args={sphereGeometryArgs} />
-        <meshBasicMaterial color={0xffffff} side={DoubleSide} />
+        <meshBasicMaterial color={0xff0000} side={DoubleSide} />
       </mesh>
       <ambientLight
         position={[0, state.planet.radius + 100, 0]}

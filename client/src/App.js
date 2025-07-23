@@ -341,13 +341,9 @@ function sceneReducer(state, action) {
         }
       }
     case 'ROTATE_DOWN':
-      var cameraTheta = action.state.cameraTheta;
-      if (true || cameraTheta < Math.PI * 2 + halfpi) {
-        cameraTheta += SPEED.ROTATE_DOWN;
-      }
       return {
         ...state,
-        cameraTheta
+        cameraTheta: state.cameraTheta + 0.1
       }
     case 'START_ROTATE_UP':
       return {
@@ -359,23 +355,10 @@ function sceneReducer(state, action) {
         }
       }
     case 'ROTATE_UP':
-      var cameraTheta = action.state.cameraTheta;
-      
-      if (true || cameraTheta > .21) {
-        if (cameraTheta > Math.PI * 1.9) {
-          cameraTheta -= SPEED.ROTATE_UP;
-        } else {
-          cameraTheta -= SPEED.ROTATE_UP;
-        }
-      } else {
-        cameraTheta = .21
-      }
       return {
         ...state,
-        cameraTheta
+        cameraTheta: state.cameraTheta - 0.1
       }
-
-      
     case 'STOP_ROTATE_UP':
       return {
         ...state,
@@ -542,6 +525,13 @@ function sceneReducer(state, action) {
           ...action.sun
         }
       };
+    case 'ROTATE_EARTH':
+      var nextPosition = state.sunTheta + state.SPEED.SUN;
+      // if (nextPosition > )
+      return {
+        ...state,
+        sunTheta: nextPosition > Math.PI * 2 ? 0 : nextPosition
+      };
     case 'FILL_OCEAN':
       return {
         ...state,
@@ -579,12 +569,12 @@ function sceneReducer(state, action) {
       let cameraRadius = state.cameraRadius;
       let firstPerson = state.firstPerson;
       if (firstPerson) {
-        if (cameraRadius > 35) {
-          cameraRadius -= 1;
+        if (cameraRadius > 10) {
+          cameraRadius -= 10;
         }
       } else {
-        if (cameraRadius < 100) {
-          cameraRadius += 1;
+        if (cameraRadius < 40) {
+          cameraRadius += 10;
         }
       }
       return {

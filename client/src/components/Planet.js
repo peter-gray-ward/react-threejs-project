@@ -101,6 +101,7 @@ function Planet(props) {
 	const flowersBallsRef = useRef();
 	const bladesOfGrassRef = useRef();
 	const normalSphereRef = useRef();
+	const triangles = useMemo(() => ([]), []);
 
 	useEffect(() => {
 		const rows = 100;
@@ -277,7 +278,6 @@ function Planet(props) {
         grassesRef.current.geometry = TerrainInstance.otherGeometry;
 
 
-        var triangles = []
         var dists = new Set()
 
         for (var i = 0; i < rows; i++) {
@@ -426,7 +426,7 @@ function Planet(props) {
 				TheNormalSphereMatrix.decompose(TheNormalSpherePosition, new Quaternion(), new Vector3());
 				
 
-				for (var j = 0; j < 2; j++) {
+				for (var j = 0; j < 1; j++) {
 					var pos = new Vector3(
 						randomInRange(TheNormalSpherePosition.x - 5, TheNormalSpherePosition.x + 5),
 						TheNormalSpherePosition.y + 1,
@@ -472,11 +472,11 @@ function Planet(props) {
 			}
 
 			
-			for (var i = 0; i < 16; i++) {
+			for (var i = 0; i < 160; i++) {
 				var pos = new Vector3(
-					randomInRange(-150, 150),
+					randomInRange(-1000, 1000),
 					props.state.planet.radius + 100,
-					randomInRange(-150, 150)
+					randomInRange(-1000, 1000)
 				);
 				raycaster.set(pos, new Vector3(0, -1, 0).normalize());
 
@@ -535,6 +535,11 @@ function Planet(props) {
 			});
 		}
 	}, []) // happens once
+
+
+	useFrame(() => {
+
+	});
 
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);

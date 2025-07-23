@@ -72,10 +72,13 @@ function ModelViewer(props) {
             uuidNew = document.createElement('div');
             uuidNew.style = "position:'absolute';z-index:Infinity;font-size:'0.25rem';color:'white';text-shadow:'-1px -1px black'";
             uuidNew.id = "close-children";
-            var uuidHtml = `<pre style='font-weight:800;padding:1rem;text-shadow:-0.15rem 0.15rem white;font-size:2rem'>
+            var uuidHtml = `<pre style='font-weight:800;padding:1rem;text-shadow:-0.15rem 0.15rem white;font-size:1rem'>
 <h1>${props.state.firstPerson ? "1st" : "3rd"}
 camera theta ${props.state.cameraTheta.toFixed(2)}
 camera radius ${props.state.cameraRadius}
+sun theta ${props.state.sunTheta}
+rotateUp: ${props.state.model.rotateUp}
+rotatingUp: ${props.state.model.rotatingUp}
 </pre>`;
             closeThings.forEach(thing => {
                 uuidHtml +=  `<h1 style="color:white;text-shadow:-1px 1px black;">
@@ -399,7 +402,7 @@ camera radius ${props.state.cameraRadius}
         }
 
         // Smoothly approach a radius of 1.5 when cameraTheta < 5
-        cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
+        //cameraTheta = cameraTheta < 5 ? 5 : cameraTheta;
         radius = 0.5 + (radius - 0.5) * (cameraTheta / 5)
 
 
@@ -428,7 +431,7 @@ camera radius ${props.state.cameraRadius}
         // Translate the point to the sphere's center (model's position)
         const center = props.state.model.scene.position.clone();
         point.add(center);
-        point.y += 1
+        point.y += props.state.firstPerson ? 10 : 10
 
         props.camera.position.copy(point);
         if (props.state.firstPerson) {
