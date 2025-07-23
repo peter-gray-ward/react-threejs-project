@@ -11,6 +11,8 @@ import {
   Matrix4
 } from 'three'
 import { SPEED } from '../models/constants'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { 
     coordsToQuaternion,
     coords,
@@ -34,6 +36,7 @@ function ModelViewer(props) {
     const [floorDistances, setFloorDistances] = useState({})
     const sphereRef = useRef()
     const mixerRef = useRef(null);
+
 
     useEffect(() => {
 
@@ -93,6 +96,7 @@ rotatingUp: ${props.state.model.rotatingUp}
     }, [props.state.closeThings])
     
     useEffect(() => {
+
         if (props.state.model?.scene) {
             mixerRef.current = new AnimationMixer(props.state.model.scene);
         }
@@ -248,14 +252,15 @@ rotatingUp: ${props.state.model.rotatingUp}
         var jumpUp = localUp.multiplyScalar(props.state.model.velocity.y);
         let aboveTheFloor = false;
         props.state.model.scene.position.add(jumpUp);
-
+        let waterFloor;
+        let grassFloor;
         let velocity = 0;
         var minSurfaceDist = Infinity
+        var triangleFloor = null
 
         if (props.state.planet.surfaceGeometry) {
             const userPosition = new Box3().setFromObject(props.state.model.scene)
 
-            var triangleFloor = null;
             var userbox = new Box3().setFromObject(props.state.model.scene);
             
             props.state.planet.triangles
@@ -275,8 +280,6 @@ rotatingUp: ${props.state.model.rotatingUp}
                 props.state.planet.surfaceGeometry
             ); 
             
-
-            let waterFloor
             if (props.state.planet.lakeNodes) {
                 props.state.planet.lakeNodes.forEach(lakeNode => {
                     const lakeNodeBox = new Box3().setFromObject(lakeNode)
@@ -291,6 +294,7 @@ rotatingUp: ${props.state.model.rotatingUp}
             }   
 
             if (triangleFloor) {
+                console.log('triangle floor', triangleFloor)
                 if (props.state.model.scene.position) {
                     const dist = triangleFloor.distanceTo(props.state.model.scene.position);
                     props.state.model.intersectsSurface = dist;
@@ -301,6 +305,8 @@ rotatingUp: ${props.state.model.rotatingUp}
                 if (props.state.animations.contains("jump")) {
                     props.dispatch({ type: 'STOP_JUMP '});
                 }
+            
+                
             } else if (surfaceFloor) {
                 if (props.state.model.scene.position) {
                     const dist = surfaceFloor.distanceTo(props.state.model.scene.position);
@@ -452,35 +458,9 @@ rotatingUp: ${props.state.model.rotatingUp}
             props.dispatch({ type: 'GRAVITY', model: props.state.model, velocity });
         }
 
-
-        
-
     });
 
     const q = VisualizeQuaternion(props.state.model.scene.quaternion, 1, .3);
-
-    // useEffect(() => {
-    //     if (props.state.model.scene) {
-    //         let theta = 0; // Start angle for vertical motion
-    //         const phi = Math.PI / 2; // Keep phi constant for fixed horizontal direction
-
-    //         const interval = setInterval(() => {
-                
-
-    //             // Update sphere position
-    //             sphereRef.current.position.set(point.x, point.y, point.z);
-
-    //             // Increment theta for vertical motion
-    //             theta += 0.1; // Adjust speed as needed
-    //             if (theta > Math.PI * 2) {
-    //                 theta = 0; // Reset after a full rotation
-    //             }
-    //         }, 50); // Adjust interval for smoother motion
-
-    //         return () => clearInterval(interval); // Cleanup interval on unmount
-    //     }
-    // }, [props.state.model.scene, props.state.cameraRadius]);
-
 
 
 
@@ -519,8 +499,8 @@ rotatingUp: ${props.state.model.rotatingUp}
             ]} />
             <meshBasicMaterial wireframe color="lawngreen" />
         </mesh>*/}
-        </>
-    )
+
+    </>)
 }
 
 export default ModelViewer;

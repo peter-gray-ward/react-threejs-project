@@ -103,6 +103,11 @@ function Planet(props) {
 	const normalSphereRef = useRef();
 	const triangles = useMemo(() => ([]), []);
 
+    let grass2 = useLoader(FBXLoader, '/grass2.fbx')
+    let [grass2Position, setGrass2Position] = useState([]);
+    let grass3 = useLoader(FBXLoader, '/grass2.fbx')
+    let grass1 = useLoader(FBXLoader, '/grass3.fbx')
+
 	useEffect(() => {
 		const rows = 100;
 		const cols = 100;
@@ -207,8 +212,6 @@ function Planet(props) {
 
 
         	for (var yyy = 11; yyy < 25; yyy += 5) {
-	        	
-
 	        	for (var jjj = 0; jjj < 1; jjj++) {
 	        		TheNormalSphere.position.set(
 		        		TerrainInstance.steepGeometry.attributes.position.array[x],
@@ -280,6 +283,9 @@ function Planet(props) {
 
         var dists = new Set()
 
+        var growing = false
+        var grown = 0
+
         for (var i = 0; i < rows; i++) {
 			for (var j = 0; j < cols; j++) {
 				let a = i + j * (rows + 1);
@@ -325,24 +331,29 @@ function Planet(props) {
 			    );
 
 
-				// [triangle, otherTriangle].forEach(triangle => {
-				// 	for (var g = 0; g < 100; g++) {
-				// 		var pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
-				// 		TheBlade.position.set(pos.x, pos.y, pos.z)
-				// 		TheBlade.rotation.set(randomInRange(Math.PI - 0.1, Math.PI + 0.1), randomInRange(0, Math.PI * 2), randomInRange(Math.PI - 0.1, Math.PI + 0.1))
-				// 		TheBlade.scale.set(randomInRange(1, 10),randomInRange(1, 10),randomInRange(1, 10))
-				// 		TheBlade.updateMatrix();
-				// 		bladesOfGrassRef.current.setMatrixAt(bladeIndex, TheBlade.matrix);
-				// 		bladesOfGrassRef.current.setColorAt(bladeIndex, new Color(
-				// 				7 * randomInRange(3, 7) / 255,
-				// 	        	7 * randomInRange(210, 252) / 255,
-				// 	        	7 * randomInRange(29, 100) / 255
-				// 			)
-				// 		);
-
-				// 		bladeIndex++;
-				// 	}
-				// })
+			    if (Math.random() < 0.1) {
+				    if ((growing && Math.random() < 0.5) || Math.random() < 0.05) {
+				    	if (!growing) {
+				    		growing = true;
+				    		grown = 0
+				    	}
+						for (var g = 0; g < 1; g++) {
+							var pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
+							var grass = grass1.clone();
+							grass.position.copy(pos);
+							let s = randomInRange(0.005, .15)
+							grass.scale.set(s, s, s);
+							grass.children[0].castShadow = true;
+							grass.children[0].receiveShadow = true;
+							grass.children[0].geometry.computeVertexNormals();
+							fiber.scene.add(grass)
+						}
+						grown++
+						if (grown > 2) {
+							growing = false
+						}
+					}
+				}
 			}
 		}
 
@@ -426,7 +437,7 @@ function Planet(props) {
 				TheNormalSphereMatrix.decompose(TheNormalSpherePosition, new Quaternion(), new Vector3());
 				
 
-				for (var j = 0; j < 1; j++) {
+				for (var j = 0; j < 0; j++) {
 					var pos = new Vector3(
 						randomInRange(TheNormalSpherePosition.x - 5, TheNormalSpherePosition.x + 5),
 						TheNormalSpherePosition.y + 1,
@@ -469,77 +480,76 @@ function Planet(props) {
 				}
 
 				normalSphereRef.current.setMatrixAt(i, new Matrix4())
-			}
+			// }
 
 			
-			for (var i = 0; i < 160; i++) {
-				var pos = new Vector3(
-					randomInRange(-1000, 1000),
-					props.state.planet.radius + 100,
-					randomInRange(-1000, 1000)
-				);
-				raycaster.set(pos, new Vector3(0, -1, 0).normalize());
+			// for (var i = 0; i < 80; i++) {
 
-				const intersects = raycaster.intersectObject(surfaceRef.current, true);
+				if (false && Math.random() < 0.01) {
+					var pos = new Vector3(
+						randomInRange(TheNormalSpherePosition.x - randomInRange(0, 500), TheNormalSpherePosition.x + randomInRange(0, 500)),
+						TheNormalSpherePosition.y + 1,
+						randomInRange(TheNormalSpherePosition.z - randomInRange(0, 500), TheNormalSpherePosition.z + randomInRange(0, 500))
+					);
+					raycaster.set(pos, new Vector3(0, -1, 0).normalize());
 
-				if (intersects.length > 0) {
-					var tree = tree1.clone();
-					tree.position.copy(intersects[0].point);
-					var scale = randomInRange(0.1, 0.5);
-					tree.position.y += props.state.planet.radius - (1 / scale);
-					tree.scale.set(scale, scale, scale)
-					tree.rotation.y = randomInRange(0, Math.PI * 2);
-					tree.children[0].castShadow = true;
-	
-					// First group (green, e.g., leaves)
-					for (let i = 0; i < tree.children[0].geometry.groups[0].count; i++) {
-					    let index = (tree.children[0].geometry.groups[0].start + i) * 3;
-					    tree.children[0].geometry.attributes.color.array[index] = 0.5;   // Red (brownish)
-					    tree.children[0].geometry.attributes.color.array[index + 1] = 0.25; // Green (dark brown)
-					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+					const intersects = raycaster.intersectObject(surfaceRef.current, true);
+
+					if (intersects.length > 0) {
+						var tree = tree1.clone();
+						tree.position.copy(intersects[0].point);
+						var scale = randomInRange(0.3, 1.15);
+						tree.position.y += props.state.planet.radius - (1 / scale);
+						tree.scale.set(scale, scale, scale)
+						tree.rotation.y = randomInRange(0, Math.PI * 2);
+						tree.children[0].castShadow = true;
+		
+						// First group (green, e.g., leaves)
+						for (let i = 0; i < tree.children[0].geometry.groups[0].count; i++) {
+						    let index = (tree.children[0].geometry.groups[0].start + i) * 3;
+						    tree.children[0].geometry.attributes.color.array[index] = 0.5;   // Red (brownish)
+						    tree.children[0].geometry.attributes.color.array[index + 1] = 0.25; // Green (dark brown)
+						    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+						}
+
+						// Second group (brown, e.g., trunk)
+						for (let i = 0; i < tree.children[0].geometry.groups[1].count; i++) {
+						    let index = (tree.children[0].geometry.groups[1].start + i) * 3;
+						    
+						    tree.children[0].geometry.attributes.color.array[index] = 0;     // Red
+						    tree.children[0].geometry.attributes.color.array[index + 1] = 1; // Green
+						    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+						}
+
+						// Mark as needing an update
+						tree.children[0].geometry.attributes.color.needsUpdate = true;
+
+						// Ensure the material uses vertex colors
+						tree.children[0].material.vertexColors = true;
+
+						fiber.scene.add(tree);
+
+						plants.push({
+						  type: 'tree',
+						  object: tree,
+						});
 					}
-
-					// Second group (brown, e.g., trunk)
-					for (let i = 0; i < tree.children[0].geometry.groups[1].count; i++) {
-					    let index = (tree.children[0].geometry.groups[1].start + i) * 3;
-					    
-					    tree.children[0].geometry.attributes.color.array[index] = 0;     // Red
-					    tree.children[0].geometry.attributes.color.array[index + 1] = 1; // Green
-					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
-					}
-
-					// Mark as needing an update
-					tree.children[0].geometry.attributes.color.needsUpdate = true;
-
-					// Ensure the material uses vertex colors
-					tree.children[0].material.vertexColors = true;
-
-					fiber.scene.add(tree);
-
-					plants.push({
-					  type: 'tree',
-					  object: tree,
-					});
 				}
 			}
 
-			flowersRef.current.count = index;
-			flowersBallsRef.current.count = index;
-			flowersBallsRef.current.instanceColor.needsUpdate = true;
+			// flowersRef.current.count = index;
+			// flowersBallsRef.current.count = index;
+			// flowersBallsRef.current.instanceColor.needsUpdate = true;
 
 
-			props.dispatch({
-				type: 'ADD_PLANTS',
-				plants,
-				flowerRefCurrent: flowersRef.current
-			});
+			// props.dispatch({
+			// 	type: 'ADD_PLANTS',
+			// 	plants,
+			// 	flowerRefCurrent: flowersRef.current
+			// });
 		}
 	}, []) // happens once
 
-
-	useFrame(() => {
-
-	});
 
 
     const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
@@ -550,14 +560,13 @@ function Planet(props) {
 	const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"), [])
 	const [addedWaterTexture, setAddedWaterTexture] = useState(false);
 
-	const dandilionstemtexture = useMemo(() => new TextureLoader().load("/dandilion-stem.jpg"), texture => {
-		texture.wrapS = RepeatWrapping
-	    texture.wrapT = RepeatWrapping
-	    texture.repeat.set(5, 10)
+	const dandilionstemtexture = useMemo(() => {
+		return new TextureLoader().load("/dandilion-stem.jpg")
 	}, [])
     const offSceneSpherePosition = useMemo(() => {
     	return [0, -99999999, 0];
     }, []);
+    const mossTexture = useMemo(() => new TextureLoader().load("/moss.jpg", () => {}), []);
 
 
 	return <>
@@ -576,10 +585,11 @@ function Planet(props) {
 			<planeGeometry args={[200, 200, 200, 200]} />
 			<meshStandardMaterial 
 				opacity={1}
-				wireframe
+				wireframe={false}
 				transparent={true}
 				side={DoubleSide}
-				vertexColors={true}
+				map={mossTexture}
+				vertexColors={false}
             	
 			/>
 		</mesh>
@@ -636,6 +646,8 @@ function Planet(props) {
   				opacity={0}
   				color="red" />
 		</instancedMesh>
+
+
 	</>
 }
 

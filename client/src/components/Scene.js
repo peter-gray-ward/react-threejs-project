@@ -210,7 +210,7 @@ function Scene(props) {
 	    // Generate cluster centers
 	    for (let i = 0; i < clusterCount; i++) {
 	      const x = randomInRange(-100000, 100000);
-	      const y = randomInRange(radius + 1000, radius + 20000);
+	      const y = randomInRange(radius + 10000, radius + 20000);
 	      const z = randomInRange(-100000, 100000);
 
 	      Cloud_Clusters.push({
@@ -282,7 +282,7 @@ function Scene(props) {
 				// Get the current matrix of the instance
 				cloudsRef.current.getMatrixAt(i, cloud.matrix);
 
-				cloud.matrix.elements[12] += randomInRange(11, 111)
+				cloud.matrix.elements[12] += randomInRange(.1, 1)
 				if (cloud.matrix.elements[12] > 100000) {
 					cloud.matrix.elements[12] = -100000
 				}
