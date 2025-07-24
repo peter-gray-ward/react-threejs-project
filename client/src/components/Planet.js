@@ -180,18 +180,6 @@ function Planet(props) {
 	        indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
 		}
 
-		
-		// style the dandilions
-		for (var x = 0; x < flowersBallsRef.current.geometry.attributes.position.array.length; x += 3) {
-			flowersBallsRef.current.geometry.attributes.position.array[x] += randomInRange(-a * 0.1, a * 0.1);
-			flowersBallsRef.current.geometry.attributes.position.array[x + 1] += randomInRange(-a * 0.1, a * 0.1);
-			flowersBallsRef.current.geometry.attributes.position.array[x + 2] += randomInRange(-a * 0.1, a * 0.1);
-		}
-		flowersBallsRef.current.geometry.attributes.position.needsUpdate = true;
-
-		
-
-        
 
 
         
@@ -213,18 +201,15 @@ function Planet(props) {
 
 
         cliffsRef.current.geometry = TerrainInstance.steepGeometry;
-
         cliffsRef.current.geometry.computeBoundingBox();
 
         
         for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
-
         	cliffColors.push(141 / 255, 148 / 255, 144 / 255);
         	cliffUvs.push(
         		(cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
         		(cliffsRef.current.geometry.attributes.position.array[x + 2] - cliffsRef.current.geometry.boundingBox.min.z) / cliffsRef.current.geometry.boundingBox.max.z
         	);
-
         }
 
 
@@ -236,12 +221,11 @@ function Planet(props) {
 
 
         var dists = new Set()
-
         var growing = false
         var grown = 0
 
         for (var i = 0; i < rows; i++) {
-        	var iGrownRandom = Math.random()
+        	var onrun = Math.random() > 0.08
 			for (var j = 0; j < cols; j++) {
 				let a = i + j * (rows + 1);
 				let b = (i + 1) + j * (rows + 1);
@@ -285,26 +269,25 @@ function Planet(props) {
 			    	tb, tc, td
 			    );
 
-			    growing = Math.random() < 0.9
 			    var pos;
-
-				if (growing && Math.random() < 0.5) {
+			    var smallGrass = Math.random() < 0.9
+				var grass = smallGrass ? grass2.clone() : grass1.clone();
+				var clusterCount = smallGrass ? Math.floor(randomInRange(0, 8)) : 1
+				for (var cc = 0; cc < clusterCount; cc++) {
 					pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
-					var grass = grass3.clone();
-					let s = randomInRange(0.005, .15)
+					
+					let s = randomInRange(0.02, 0.08)
 
-					if (Math.random() < 0.05) {
-						grass = grass2.clone();
-					} else if (Math.random() < 0.05) {
+					if ((onrun && Math.random() < 0.1) || Math.random() < 0.01) {
 						grass = grass1.clone();
-						s = randomInRange(.05, .25)
+						s = 0.035
 					}
 					grass.position.copy(pos);
 					
 					grass.scale.set(s, s, s);
 					grass.rotation.y = Math.random() * Math.PI * 2
 					grass.children[0].castShadow = true
-					grass.children[0].receiveShadow = false
+					grass.children[0].receiveShadow = true
 					grass.children[0].geometry.computeVertexNormals();
 					fiber.scene.add(grass)
 				}
@@ -319,6 +302,7 @@ function Planet(props) {
 					tree.scale.set(scale, scale, scale)
 					tree.rotation.y = randomInRange(0, Math.PI * 2);
 					tree.children[0].castShadow = true;
+					tree.children[0].receiveShadow = true;
 
 					// First group (green, e.g., leaves)
 					for (let i = 0; i < tree.children[0].geometry.groups[0].count; i++) {

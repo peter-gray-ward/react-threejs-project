@@ -88,8 +88,8 @@ rotatingUp: ${props.state.model.rotatingUp}
                     ${thing.type}-${thing.index}
                 </h1>`
             });
-            uuidNew.innerHTML = uuidHtml;
-            document.body.appendChild(uuidNew);
+            // uuidNew.innerHTML = uuidHtml;
+            // document.body.appendChild(uuidNew);
 
         }, 10);
         return () => clearInterval(intervalId);
