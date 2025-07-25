@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useFrame, useThree, InstancedMesh, useLoader } from '@react-three/fiber'
+import { useFrame, useThree, useLoader } from '@react-three/fiber'
 import { SPEED, MASS, cameraRadius, props } from '../models/constants';
 import { 
 	Box3,
 	BoxGeometry,
 	MeshBasicMaterial,
+	InstancedMesh,
 	Mesh,
 	Sphere,
+	InstancedBufferAttribute,
 	Vector3,
 	DoubleSide,
 	PlaneGeometry,
@@ -223,6 +225,8 @@ function Planet(props) {
         var dists = new Set()
         var growing = false
         var grown = 0
+		let grassInstances = []
+		let grassInstanceIndex = 0;
 
         for (var i = 0; i < rows; i++) {
         	var onrun = Math.random() > 0.08
@@ -269,36 +273,55 @@ function Planet(props) {
 			    	tb, tc, td
 			    );
 
-			    var pos;
-			    var smallGrass = Math.random() < 0.9
-				var grass = smallGrass ? grass2.clone() : grass1.clone();
-				var clusterCount = smallGrass ? Math.floor(randomInRange(0, 8)) : 1
-				for (var cc = 0; cc < clusterCount; cc++) {
-					pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
-					
-					let s = randomInRange(0.02, 0.08)
 
-					if ((onrun && Math.random() < 0.1) || Math.random() < 0.01) {
-						grass = grass1.clone();
-						s = 0.035
+			    if (Math.random() < 0.85) {
+			    	var pos;
+				    var smallGrass = Math.random() < 0.9
+					var grass = smallGrass ? grass2.clone() : grass2.clone();
+					var clusterCount = Math.floor(randomInRange(1, 15))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
+					for (var cc = 0; cc < clusterCount; cc++) {
+						pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
+
+						// if (pos.distanceTo(props.state.model.scene.position) > 60) continue;
+						
+						let s = randomInRange(0.01, 0.04)
+
+						if ((onrun && Math.random() < 0.1) || Math.random() < 0.01) {
+							grass = Math.random() < 0.01 ? grass1.clone() : grass3.clone()
+							s = 0.05
+						}
+
+						const dummy = new Object3D();
+						dummy.position.copy(pos);
+						dummy.scale.set(s, s, s);
+						dummy.rotation.y = Math.random() * Math.PI * 2;
+						dummy.updateMatrix();
+
+
+						grassInstances.push({
+							dummy,
+							instanceIndex: grassInstanceIndex,
+							color: new Color(
+								randomInRange(3, 7) / 255,
+								randomInRange(210, 252) / 255,
+								randomInRange(29, 100) / 255
+							)
+						})
+
+						grassInstanceIndex++;
 					}
-					grass.position.copy(pos);
-					
-					grass.scale.set(s, s, s);
-					grass.rotation.y = Math.random() * Math.PI * 2
-					grass.children[0].castShadow = true
-					grass.children[0].receiveShadow = true
-					grass.children[0].geometry.computeVertexNormals();
-					fiber.scene.add(grass)
-				}
+			    }
 
-				if (Math.random() < 0.02 && Math.random() > 0.89) {
+				if (Math.random() < 0.02 && Math.random() > 0.59) {
 					pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
+
+					// if (pos.distanceTo(props.state.model.scene.position) > 60) continue;
+
 					var tree = tree1.clone();
 					console.log("a new tree", tree)
 					tree.position.copy(pos);
 					var scale = randomInRange(0.3, 1.15);
-					// tree.position.y += props.state.planet.radius - (1 / scale);
+					tree.position.y -= 10
 					tree.scale.set(scale, scale, scale)
 					tree.rotation.y = randomInRange(0, Math.PI * 2);
 					tree.children[0].castShadow = true;
@@ -332,8 +355,25 @@ function Planet(props) {
 				
 			}
 		}
-        // var dandelionIndex = 0;
-        // var TheDandilion = new Object3D()
+
+		const baseGrassMesh = grass2.children[0];
+        const grassGeometry = baseGrassMesh.geometry.clone();
+		const grassMaterial = new MeshBasicMaterial();
+		const grassInstanceCount = grassInstances.length;
+		const grassesInstanceMesh = new InstancedMesh(grassGeometry, grassMaterial, grassInstanceCount);
+		
+		grassesInstanceMesh.instanceColor = new InstancedBufferAttribute(new Float32Array(grassInstanceCount * 3), 3);
+		grassesInstanceMesh.castShadow = true;
+		grassesInstanceMesh.receiveShadow = true;
+
+		for (var grassInstance of grassInstances) {
+			grassesInstanceMesh.setMatrixAt(grassInstance.instanceIndex, grassInstance.dummy.matrix);
+			grassesInstanceMesh.setColorAt(grassInstance.instanceIndex, grassInstance.color);
+		}
+
+		fiber.scene.add(grassesInstanceMesh);
+
+
         for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
 
         	const r = randomInRange(3, 7) / 255

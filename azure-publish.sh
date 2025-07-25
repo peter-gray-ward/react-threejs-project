@@ -1,0 +1,1 @@
+scp -i ./finance-calendar_key.pem -r ./ azureuser@172.171.243.235:~/game
