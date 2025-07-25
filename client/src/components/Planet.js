@@ -108,7 +108,7 @@ function Planet(props) {
     let grass2 = useLoader(FBXLoader, '/grass2.fbx')
     let [grass2Position, setGrass2Position] = useState([]);
     let grass3 = useLoader(FBXLoader, '/grass2.fbx')
-    let grass1 = useLoader(FBXLoader, '/grass3.fbx')
+    let grass1 = useLoader(FBXLoader, '/grass1.fbx')
 
 	useEffect(() => {
 		const rows = 100;
@@ -229,7 +229,8 @@ function Planet(props) {
 		let grassInstanceIndex = 0;
 
         for (var i = 0; i < rows; i++) {
-        	var onrun = Math.random() > 0.08
+        	var onrun = false
+        	var runcount = 0
 			for (var j = 0; j < cols; j++) {
 				let a = i + j * (rows + 1);
 				let b = (i + 1) + j * (rows + 1);
@@ -274,20 +275,24 @@ function Planet(props) {
 			    );
 
 
-			    if (Math.random() < 0.85) {
+			    if (onrun || Math.random() < 0.05) {
+			    	if (!onrun) {
+			    		runcount = 0
+			    	}
+			    	onrun = true
+			    	runcount++
+			    	if (Math.random() < 0.1) {
+			    		onrun = false
+			    	}
 			    	var pos;
 				    var smallGrass = Math.random() < 0.9
-					var grass = smallGrass ? grass2.clone() : grass2.clone();
-					var clusterCount = Math.floor(randomInRange(1, 15))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
+					var clusterCount = Math.floor(randomInRange(11, 190))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
 					for (var cc = 0; cc < clusterCount; cc++) {
 						pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
 
-						// if (pos.distanceTo(props.state.model.scene.position) > 60) continue;
-						
 						let s = randomInRange(0.01, 0.04)
 
-						if ((onrun && Math.random() < 0.1) || Math.random() < 0.01) {
-							grass = Math.random() < 0.01 ? grass1.clone() : grass3.clone()
+						if ((onrun && Math.random() < 0.2)) {
 							s = 0.05
 						}
 
@@ -302,9 +307,9 @@ function Planet(props) {
 							dummy,
 							instanceIndex: grassInstanceIndex,
 							color: new Color(
-								randomInRange(3, 7) / 255,
+								randomInRange(3, 77) / 255,
 								randomInRange(210, 252) / 255,
-								randomInRange(29, 100) / 255
+								randomInRange(29, 170) / 255
 							)
 						})
 
@@ -358,12 +363,12 @@ function Planet(props) {
 
 		const baseGrassMesh = grass2.children[0];
         const grassGeometry = baseGrassMesh.geometry.clone();
-		const grassMaterial = new MeshBasicMaterial();
+		const grassMaterial = baseGrassMesh.material.clone()
 		const grassInstanceCount = grassInstances.length;
 		const grassesInstanceMesh = new InstancedMesh(grassGeometry, grassMaterial, grassInstanceCount);
 		
 		grassesInstanceMesh.instanceColor = new InstancedBufferAttribute(new Float32Array(grassInstanceCount * 3), 3);
-		grassesInstanceMesh.castShadow = true;
+		grassesInstanceMesh.castShadow = false;
 		grassesInstanceMesh.receiveShadow = true;
 
 		for (var grassInstance of grassInstances) {
@@ -448,7 +453,7 @@ function Planet(props) {
 
 
 		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[200, 200, 200, 200]} />
+			<planeGeometry args={[100, 100, 100, 100]} />
 			<meshStandardMaterial 
 				side={DoubleSide}
 				vertexColors={true}
@@ -456,7 +461,7 @@ function Planet(props) {
 		</mesh>
 
 		<mesh ref={cliffsRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[200, 200, 200, 200]} />
+			<planeGeometry args={[100, 100, 100, 100]} />
 			<meshStandardMaterial 
 				opacity={1}
 				side={DoubleSide}
@@ -465,7 +470,7 @@ function Planet(props) {
 		</mesh>
 
 		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[200, 200, 200, 200]} />
+			<planeGeometry args={[100, 100, 100, 100]} />
 			<meshStandardMaterial 
 				side={DoubleSide}
 				vertexColors
