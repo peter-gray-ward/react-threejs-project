@@ -111,15 +111,15 @@ function Planet(props) {
     let grass1 = useLoader(FBXLoader, '/grass1.fbx')
 
 	useEffect(() => {
-		const rows = 100;
-		const cols = 100;
-		const zeds = 100;
+		const rows = 30;
+		const cols = 30;
+		const zeds = 30;
 
 		const amplitude = 50;
 		const halfAmplitude = amplitude / 2;
 
 
-        const geometry = new PlaneGeometry(1000, 1000, rows, cols);
+        const geometry = new PlaneGeometry(333, 333, rows, cols);
 		geometry.vertexColors = true;
 
 
@@ -274,6 +274,9 @@ function Planet(props) {
 			    	tb, tc, td
 			    );
 
+			    if (Math.random() < 0.33) {
+			    	onrun = true
+			    }
 
 			    if (onrun || Math.random() < 0.05) {
 			    	if (!onrun) {
@@ -287,33 +290,36 @@ function Planet(props) {
 			    	var pos;
 				    var smallGrass = Math.random() < 0.9
 					var clusterCount = Math.floor(randomInRange(11, 190))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
-					for (var cc = 0; cc < clusterCount; cc++) {
-						pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
+					for (var t of [triangle, otherTriangle]) {
+						for (var cc = 0; cc < clusterCount; cc++) {
+							
+							pos = randomPointOnTriangle(t.a, t.b, t.c)
 
-						let s = randomInRange(0.01, 0.04)
+							let s = randomInRange(0.01, 0.04)
 
-						if ((onrun && Math.random() < 0.2)) {
-							s = 0.05
+							if ((onrun && Math.random() < 0.2)) {
+								s = 0.05
+							}
+
+							const dummy = new Object3D();
+							dummy.position.copy(pos);
+							dummy.scale.set(s, s, s);
+							dummy.rotation.y = Math.random() * Math.PI * 2;
+							dummy.updateMatrix();
+
+
+							grassInstances.push({
+								dummy,
+								instanceIndex: grassInstanceIndex,
+								color: new Color(
+									randomInRange(3, 77) / 255,
+									randomInRange(210, 252) / 255,
+									randomInRange(29, 170) / 255
+								)
+							})
+
+							grassInstanceIndex++;
 						}
-
-						const dummy = new Object3D();
-						dummy.position.copy(pos);
-						dummy.scale.set(s, s, s);
-						dummy.rotation.y = Math.random() * Math.PI * 2;
-						dummy.updateMatrix();
-
-
-						grassInstances.push({
-							dummy,
-							instanceIndex: grassInstanceIndex,
-							color: new Color(
-								randomInRange(3, 77) / 255,
-								randomInRange(210, 252) / 255,
-								randomInRange(29, 170) / 255
-							)
-						})
-
-						grassInstanceIndex++;
 					}
 			    }
 
@@ -390,9 +396,6 @@ function Planet(props) {
 
         grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3));
         grassesRef.current.geometry.needsUpdate = true;
-        // for (var index of flowersRef.current.geometry.index.array) {
-        // 	flowersRef.current.setColorAt(index, new Color(0, 1, 0));
-        // }
 
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
@@ -436,7 +439,11 @@ function Planet(props) {
     const offSceneSpherePosition = useMemo(() => {
     	return [0, -99999999, 0];
     }, []);
-    const mossTexture = useMemo(() => new TextureLoader().load("/moss.jpg", () => {}), []);
+    const mossTexture = useMemo(() => new TextureLoader().load("/moss.jpg", (texture) => {
+    	texture.wrapS = RepeatWrapping
+	    texture.wrapT = RepeatWrapping
+	    texture.repeat.set(2, 1)
+    }), []);
 
 
 	return <>
@@ -453,15 +460,15 @@ function Planet(props) {
 
 
 		<mesh ref={surfaceRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[100, 100, 100, 100]} />
+			<planeGeometry />
 			<meshStandardMaterial 
 				side={DoubleSide}
-				vertexColors={true}
+				wireframe
 			/>
 		</mesh>
 
 		<mesh ref={cliffsRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[100, 100, 100, 100]} />
+			<planeGeometry />
 			<meshStandardMaterial 
 				opacity={1}
 				side={DoubleSide}
@@ -470,8 +477,8 @@ function Planet(props) {
 		</mesh>
 
 		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
-			<planeGeometry args={[100, 100, 100, 100]} />
-			<meshStandardMaterial 
+			<planeGeometry />
+			<meshBasicMaterial 
 				side={DoubleSide}
 				vertexColors
 			/>
