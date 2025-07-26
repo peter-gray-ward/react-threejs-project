@@ -29,7 +29,7 @@ export const SPEED = {
   CAMERA: {
     SIN: 0.5,   
   },
-  JUMP: 3.35,     
+  JUMP: 13.35,     
   ROTATE: 0.5,
   ROTATE_DOWN: 0.113,
   ROTATE_UP: 0.115,

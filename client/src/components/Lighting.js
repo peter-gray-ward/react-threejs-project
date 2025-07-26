@@ -31,9 +31,9 @@ function Sunlight({ state }) {
         <meshBasicMaterial color={0xff0000} side={DoubleSide} />
       </mesh>
       <ambientLight
-        position={[0, state.planet.radius + 100, 0]}
+        position={[0, state.planet.radius, 0]}
         color={0xffffff}
-        intensity={isNight ? 0.9 : 0.15}
+        intensity={isNight ? 0.9 : 0.35}
       />
     </>
   );

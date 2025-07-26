@@ -110,6 +110,9 @@ function Planet(props) {
     let [grass2Position, setGrass2Position] = useState([]);
     let grass3 = useLoader(FBXLoader, '/grass2.fbx')
     let grass1 = useLoader(FBXLoader, '/grass1.fbx')
+    let statue = useLoader(FBXLoader, '/Thai_Female_Sandstone_V2.2.fbx')
+
+    var statuecount = 0
 
 	useEffect(() => {
 		const rows = 30;
@@ -278,6 +281,10 @@ function Planet(props) {
 			    var sa = computeSteepness(ta, tb, tc)
 			    var sb = computeSteepness(tb, tc, td)
 
+
+
+
+
 				if (sa < 0.75 || sb < 0.75) continue
 
 
@@ -319,7 +326,10 @@ function Planet(props) {
 					}
 			    }
 
+			    var hasTree = false
+
 				if (Math.random() < 0.02 && Math.random() > 0.59) {
+					hasTree = true
 					pos = randomPointOnTriangle(triangle.a, triangle.b, triangle.c)
 
 					// if (pos.distanceTo(props.state.model.scene.position) > 60) continue;
@@ -331,6 +341,7 @@ function Planet(props) {
 					tree.position.y -= 10
 					tree.scale.set(scale, scale, scale)
 					tree.rotation.y = randomInRange(0, Math.PI * 2);
+					tree.children[0].material.side  = DoubleSide
 					tree.children[0].castShadow = true;
 					tree.children[0].receiveShadow = true;
 
@@ -360,6 +371,23 @@ function Planet(props) {
 					tree.children[0].material.vertexColors = true;
 
 					fiber.scene.add(tree);
+				}
+
+				if (i > 10 && j > 10 && i < rows - 10 && j < cols - 10 && !hasTree) {
+					if (Math.random() < 0.1 && statuecount < 1) {
+						var s = statue.clone();
+						s.position.copy(triangle.a)
+						s.rotation.y = Math.random() * Math.PI * 2
+						s.castShadow = true
+
+						if (s.children.length) {
+							s.children[0].castShadow = true
+							s.children[0].position.y -= 3
+							s.children[0].material.map = cliffTexture
+						}
+						fiber.scene.add(s)
+						statuecount++
+					}
 				}
 				
 			}
