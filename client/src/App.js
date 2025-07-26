@@ -343,7 +343,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_DOWN':
       return {
         ...state,
-        cameraTheta: state.cameraTheta + 0.1
+        cameraTheta: Math.min(5.5, state.cameraTheta + 0.1)
       }
     case 'START_ROTATE_UP':
       return {
@@ -357,7 +357,7 @@ function sceneReducer(state, action) {
     case 'ROTATE_UP':
       return {
         ...state,
-        cameraTheta: state.cameraTheta - 0.1
+        cameraTheta: Math.max(4.5, state.cameraTheta - 0.1)
       }
     case 'STOP_ROTATE_UP':
       return {

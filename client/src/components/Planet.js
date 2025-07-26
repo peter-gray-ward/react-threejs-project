@@ -38,6 +38,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import * as perlinNoise from 'perlin-noise';
 import {
 	filterSteepGeometry,
+	computeSteepness,
 	randomInRange,
 	randomPointOnTriangle,
 	randomPointOnTriangleFromGrid,
@@ -119,7 +120,7 @@ function Planet(props) {
 		const halfAmplitude = amplitude / 2;
 
 
-        const geometry = new PlaneGeometry(333, 333, rows, cols);
+        const geometry = new PlaneGeometry(420, 420, rows, cols);
 		geometry.vertexColors = true;
 
 
@@ -271,35 +272,34 @@ function Planet(props) {
 			    );
 
 			    let otherTriangle = new Triangle(
-			    	tb, tc, td
+			    	ta, tc, td
 			    );
 
-			    if (Math.random() < 0.33) {
+			    var sa = computeSteepness(ta, tb, tc)
+			    var sb = computeSteepness(tb, tc, td)
+
+				if (sa < 0.75 || sb < 0.75) continue
+
+
+			    if (Math.random() < 0.1) {
 			    	onrun = true
 			    }
 
-			    if (onrun || Math.random() < 0.05) {
+			    if (onrun || Math.random() < 0.1) {
 			    	if (!onrun) {
 			    		runcount = 0
 			    	}
 			    	onrun = true
 			    	runcount++
-			    	if (Math.random() < 0.1) {
-			    		onrun = false
-			    	}
 			    	var pos;
 				    var smallGrass = Math.random() < 0.9
-					var clusterCount = Math.floor(randomInRange(11, 190))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
+					var clusterCount = randomInRange(0, 100)//Math.random() < 0.33 ? 100 : Math.floor(randomInRange(10, 50))//smallGrass ? Math.floor(randomInRange(80, 100)) : 1
 					for (var t of [triangle, otherTriangle]) {
 						for (var cc = 0; cc < clusterCount; cc++) {
 							
 							pos = randomPointOnTriangle(t.a, t.b, t.c)
 
-							let s = randomInRange(0.01, 0.04)
-
-							if ((onrun && Math.random() < 0.2)) {
-								s = 0.05
-							}
+							let s = randomInRange(0.01, 0.05)
 
 							const dummy = new Object3D();
 							dummy.position.copy(pos);
@@ -311,11 +311,7 @@ function Planet(props) {
 							grassInstances.push({
 								dummy,
 								instanceIndex: grassInstanceIndex,
-								color: new Color(
-									randomInRange(3, 77) / 255,
-									randomInRange(210, 252) / 255,
-									randomInRange(29, 170) / 255
-								)
+								color: new Color('#a4eb34')
 							})
 
 							grassInstanceIndex++;
@@ -341,18 +337,20 @@ function Planet(props) {
 					// First group (green, e.g., leaves)
 					for (let i = 0; i < tree.children[0].geometry.groups[0].count; i++) {
 					    let index = (tree.children[0].geometry.groups[0].start + i) * 3;
-					    tree.children[0].geometry.attributes.color.array[index] = 0.5;   // Red (brownish)
-					    tree.children[0].geometry.attributes.color.array[index + 1] = 0.25; // Green (dark brown)
+					    tree.children[0].geometry.attributes.color.array[index] = randomInRange(0, 0.5);   // Red (brownish)
+					    tree.children[0].geometry.attributes.color.array[index + 1] = randomInRange(0, 0.25); // Green (dark brown)
 					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
 					}
 
 					// Second group (brown, e.g., trunk)
 					for (let i = 0; i < tree.children[0].geometry.groups[1].count; i++) {
 					    let index = (tree.children[0].geometry.groups[1].start + i) * 3;
+
+					    var yellow = Math.random() < 0.33;
 					    
-					    tree.children[0].geometry.attributes.color.array[index] = 0;     // Red
-					    tree.children[0].geometry.attributes.color.array[index + 1] = 1; // Green
-					    tree.children[0].geometry.attributes.color.array[index + 2] = 0; // Blue
+					    tree.children[0].geometry.attributes.color.array[index] = yellow ? 1 : 0;     // Red
+					    tree.children[0].geometry.attributes.color.array[index + 1] = yellow ? 1 : 1; // Green
+					    tree.children[0].geometry.attributes.color.array[index + 2] = yellow ? 0 : 0; // Blue
 					}
 
 					// Mark as needing an update
@@ -384,18 +382,24 @@ function Planet(props) {
 
 		fiber.scene.add(grassesInstanceMesh);
 
+		grassesRef.current.geometry.computeBoundingBox();
+		grassesRef.current.geometry.computeBoundingSphere();
+		grassesRef.current.geometry.computeVertexNormals();
+		// console.log(grassesRef)
+		// grassesRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(generatedUVs, 2));
 
-        for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
 
-        	const r = randomInRange(3, 7) / 255
-        	const g = randomInRange(210, 252) / 255
-        	const b = randomInRange(29, 100) / 255
+        // for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
 
-        	grassesColors.push(r, g, b);
-        }
+        // 	const r = randomInRange(3, 7) / 255
+        // 	const g = randomInRange(210, 252) / 255
+        // 	const b = randomInRange(29, 10) / 255
 
-        grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3));
-        grassesRef.current.geometry.needsUpdate = true;
+        // 	grassesColors.push(r, g, b);
+        // }
+
+        // grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3));
+        // grassesRef.current.geometry.needsUpdate = true;
 
 
         const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
@@ -442,7 +446,7 @@ function Planet(props) {
     const mossTexture = useMemo(() => new TextureLoader().load("/moss.jpg", (texture) => {
     	texture.wrapS = RepeatWrapping
 	    texture.wrapT = RepeatWrapping
-	    texture.repeat.set(2, 1)
+	    texture.repeat.set(3, 3)
     }), []);
 
 
@@ -478,9 +482,10 @@ function Planet(props) {
 
 		<mesh ref={grassesRef} receiveShadow position={[0, props.state.planet.radius, 0]}>
 			<planeGeometry />
-			<meshBasicMaterial 
+			<meshStandardMaterial 
 				side={DoubleSide}
-				vertexColors
+				vertexColors={false}
+				map={mossTexture}
 			/>
 		</mesh>
 
@@ -503,7 +508,7 @@ function Planet(props) {
 		</instancedMesh>
 
 
-		<instancedMesh castShadow receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
+		<instancedMesh receiveShadow ref={flowersBallsRef} args={[null, null, 1000000]}>
 			<sphereGeometry args={[a * 0.1, 9, 9]} />
   			<meshStandardMaterial 
   				transparent

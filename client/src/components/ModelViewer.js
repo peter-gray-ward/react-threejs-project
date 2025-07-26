@@ -245,7 +245,6 @@ rotatingUp: ${props.state.model.rotatingUp}
 
         }
 
-        
 
 
         // Update position based on velocity and direction

@@ -1,9 +1,9 @@
 import {
-	Vector3,
-	Quaternion,
-	Group,
-	ArrowHelper,
-	Raycaster,
+    Vector3,
+    Quaternion,
+    Group,
+    ArrowHelper,
+    Raycaster,
     Float32BufferAttribute,
     BufferGeometry,
     Color,
@@ -25,20 +25,20 @@ Array.prototype.any = function(predicate) {
 const planetCenter = new Vector3(0, 0, 0);
 
 export const coords = object => {
-	const objectPosition = object.position.clone().sub(planetCenter);
-	const radialDistance = objectPosition.length();
-	const azimuthalAngle = Math.atan2(
-			objectPosition.y,
-			objectPosition.x
-		)
-	return {
-		radialDistance,
-		polarAngle: Math.acos(
-			objectPosition.z /
-			radialDistance
-		),
-		azimuthalAngle
-	}
+    const objectPosition = object.position.clone().sub(planetCenter);
+    const radialDistance = objectPosition.length();
+    const azimuthalAngle = Math.atan2(
+            objectPosition.y,
+            objectPosition.x
+        )
+    return {
+        radialDistance,
+        polarAngle: Math.acos(
+            objectPosition.z /
+            radialDistance
+        ),
+        azimuthalAngle
+    }
 }
 
 const colorFunction = (vertex) => {
@@ -46,6 +46,38 @@ const colorFunction = (vertex) => {
   return new Color().setHSL(0.3, 1.0, height > 0 ? 0.6 : 0.2); // Greenish tones
 }
 
+function generateUVsFromXZ(positions) {
+  let uvs = [];
+
+  // First, compute bounds
+  let minX = Infinity, maxX = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i];
+    const z = positions[i + 2];
+
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
+  }
+
+  const width = maxX - minX;
+  const depth = maxZ - minZ;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i];
+    const z = positions[i + 2];
+
+    const u = (x - minX) / width;
+    const v = (z - minZ) / depth;
+
+    uvs.push(u, v);
+  }
+
+  return uvs;
+}
 
 
 
@@ -55,6 +87,18 @@ class Terrain {
         this.otherGeometry = otherGeometry;
     }
 }
+
+export const computeSteepness = (a, b, c) => {
+    const up = new Vector3(0, 1, 0);
+    
+    const edge1 = new Vector3().subVectors(b, a);
+    const edge2 = new Vector3().subVectors(c, a);
+
+    const normal = new Vector3().crossVectors(edge1, edge2).normalize();
+
+    return Math.abs(normal.dot(up));
+};
+
 
 export const filterSteepGeometry = (geometry, steepnessThreshold) => {
   const upDirection = new Vector3(0, 1, 0);
@@ -132,14 +176,20 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
     return newIndex;
   }
 
+  const steepUVs = generateUVsFromXZ(steepPositions);
+  const otherUVs = generateUVsFromXZ(otherPositions);
+
+
   // Create a new geometry
   const steepGeometry = new BufferGeometry();
   steepGeometry.setAttribute('position', new Float32BufferAttribute(steepPositions, 3));
+  steepGeometry.setAttribute('uv', new Float32BufferAttribute(steepUVs, 2));
   steepGeometry.setIndex(steepIndices);
   steepGeometry.computeVertexNormals(); // Recalculate normals
 
   const otherGeometry = new BufferGeometry();
   otherGeometry.setAttribute('position', new Float32BufferAttribute(otherPositions, 3));
+  otherGeometry.setAttribute('uv', new Float32BufferAttribute(otherUVs, 2));
   otherGeometry.setIndex(otherIndices);
   otherGeometry.computeVertexNormals(); // Recalculate normals
 
@@ -147,61 +197,61 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
 }
 
 export const coordsToVector3 = ({ radialDistance, polarAngle, azimuthalAngle, originalDirection, planetCenter }) => { // Step 1: Convert spherical to Cartesian coordinates 
-	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
-	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
-	const z = radialDistance * Math.cos(polarAngle); var vector = new Vector3(x, y, z); vector.add(planetCenter); // Adjust for planet center // Step 2: Align with the original direction 
-	const targetVector = vector.clone().normalize(); 
-	const initialVector = new Vector3(0, 1, 0); // Assuming original "up" was y-axis 
-	const rotationAxis = new Vector3().crossVectors(initialVector, originalDirection).normalize(); 
-	const rotationAngle = Math.acos(initialVector.dot(originalDirection)); 
-	const rotationQuaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
-	vector.applyQuaternion(rotationQuaternion); 
-	return vector; 
+    const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
+    const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
+    const z = radialDistance * Math.cos(polarAngle); var vector = new Vector3(x, y, z); vector.add(planetCenter); // Adjust for planet center // Step 2: Align with the original direction 
+    const targetVector = vector.clone().normalize(); 
+    const initialVector = new Vector3(0, 1, 0); // Assuming original "up" was y-axis 
+    const rotationAxis = new Vector3().crossVectors(initialVector, originalDirection).normalize(); 
+    const rotationAngle = Math.acos(initialVector.dot(originalDirection)); 
+    const rotationQuaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
+    vector.applyQuaternion(rotationQuaternion); 
+    return vector; 
 };
 
 export const coordsToQuaternion = ({ initialVector, radialDistance, polarAngle, azimuthalAngle }) => { // Step 1: Convert spherical to Cartesian coordinates 
-	const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
-	const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
-	const z = radialDistance * Math.cos(polarAngle); // Create a Vector3 from the calculated coordinates 
-	const vector = new Vector3(x, y, z); // Step 2: Calculate the rotation angles and axis // Assuming that the orientation starts aligned with the x-axis 
-	const targetVector = vector.clone().normalize(); // Direction vector 
-	initialVector = new Vector3(0, 1, 0).normalize(); // Initial direction (aligned with x-axis) 
-	const rotationAxis = new Vector3().crossVectors(initialVector, targetVector).normalize(); 
-	const rotationAngle = Math.acos(initialVector.dot(targetVector)); // Step 3: Convert to a quaternion 
-	const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
-	return quaternion;
+    const x = radialDistance * Math.sin(polarAngle) * Math.cos(azimuthalAngle); 
+    const y = radialDistance * Math.sin(polarAngle) * Math.sin(azimuthalAngle); 
+    const z = radialDistance * Math.cos(polarAngle); // Create a Vector3 from the calculated coordinates 
+    const vector = new Vector3(x, y, z); // Step 2: Calculate the rotation angles and axis // Assuming that the orientation starts aligned with the x-axis 
+    const targetVector = vector.clone().normalize(); // Direction vector 
+    initialVector = new Vector3(0, 1, 0).normalize(); // Initial direction (aligned with x-axis) 
+    const rotationAxis = new Vector3().crossVectors(initialVector, targetVector).normalize(); 
+    const rotationAngle = Math.acos(initialVector.dot(targetVector)); // Step 3: Convert to a quaternion 
+    const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle); 
+    return quaternion;
 };
 
 export const getUpAndBackwardVector = (modelScene) => { // Step 1: Get the model's position and quaternion 
-	const modelPosition = modelScene.position.clone(); 
-	const modelQuaternion = modelScene.quaternion.clone(); // Step 2: Calculate the "up" vector using the quaternion 
-	const upVector = new Vector3(0, 1, 0).applyQuaternion(modelQuaternion); // Step 3: Calculate the "backward" vector using the quaternion 
-	const forwardVector = new Vector3(0, 0, 1).applyQuaternion(modelQuaternion); 
-	forwardVector.add(modelPosition)
-	const backwardVector = forwardVector; // Step 4: Combine "up" and "backward" vectors 
-	const upAndBackwardVector = upVector.add(backwardVector).normalize(); 
-	return { upVector, backwardVector, upAndBackwardVector }; 
+    const modelPosition = modelScene.position.clone(); 
+    const modelQuaternion = modelScene.quaternion.clone(); // Step 2: Calculate the "up" vector using the quaternion 
+    const upVector = new Vector3(0, 1, 0).applyQuaternion(modelQuaternion); // Step 3: Calculate the "backward" vector using the quaternion 
+    const forwardVector = new Vector3(0, 0, 1).applyQuaternion(modelQuaternion); 
+    forwardVector.add(modelPosition)
+    const backwardVector = forwardVector; // Step 4: Combine "up" and "backward" vectors 
+    const upAndBackwardVector = upVector.add(backwardVector).normalize(); 
+    return { upVector, backwardVector, upAndBackwardVector }; 
 };
 
 export const moveObjectAlongGlobe = (object, normalizedDistanceVector) => {
-	const coodinates = coords(object);
+    const coodinates = coords(object);
 
 }
 
 export const child = (scene, name) => {
-	for (var child of scene.children) {
-		if (child.name == name) {
-			return child;
-		}
-	}
-	return null;
+    for (var child of scene.children) {
+        if (child.name == name) {
+            return child;
+        }
+    }
+    return null;
 }
 
 
 export const pointOnSphere = (center, radius, theta, phi, direction) => {
     const x = radius * Math.cos(theta) * Math.sin(phi); // Horizontal plane
-	const z = radius * Math.sin(theta) * Math.sin(phi); // Horizontal plane
-	const y = radius * Math.cos(theta);                // Vertical position
+    const z = radius * Math.sin(theta) * Math.sin(phi); // Horizontal plane
+    const y = radius * Math.cos(theta);                // Vertical position
 
 
     const point = new Vector3(x, y, z);
@@ -253,11 +303,11 @@ export function randomInRange(from, to, randomSeed, startDistance = 0) {
 }
 
 export const spin180 = (quaternion, angle) => { 
-	const upAxis = new Vector3(0, 1, 0); // The y-axis 
-	const rotationAngle = angle || Math.PI; // Default to 180 degrees (π radians) 
-	const rotationQuaternion = new Quaternion().setFromAxisAngle(upAxis, rotationAngle); 
-	quaternion.multiply(rotationQuaternion);
-	return quaternion;
+    const upAxis = new Vector3(0, 1, 0); // The y-axis 
+    const rotationAngle = angle || Math.PI; // Default to 180 degrees (π radians) 
+    const rotationQuaternion = new Quaternion().setFromAxisAngle(upAxis, rotationAngle); 
+    quaternion.multiply(rotationQuaternion);
+    return quaternion;
 };
 
 export const rotateCameraOffset = (offset, theta) => {
