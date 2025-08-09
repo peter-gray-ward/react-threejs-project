@@ -2,12 +2,14 @@ import { useMemo, useRef, useEffect } from 'react'
 
 export default function AudioController(props) {
 	var genericMeadowMusic = useMemo(() => '/Relaxing Nature Ambience Meditation 🌼 8h GOOD MORNING SPRING NATURE THERAPY🌷 Meadow Healing Sounds.mp3', []);
-	// var genericMeadowMusic = useMemo(() => '/Castle_Outskirts_Music_Atmosphere.mp3', []);
-	
 	var genericMeadowMusicRef = useRef();
+	var gameMusic = useMemo(() => '/Castle_Outskirts_Music_Atmosphere.mp3', []);
 	var gameMusicRef = useRef();
 
 	var start = props.start;
+	var commandLineReference = useMemo(() => `
+		ffmpeg -i step.m4a -filter:a "atempo=2.0" step_fast.m4a
+	`, [])
 
 	useEffect(() => {
 		if (start) {

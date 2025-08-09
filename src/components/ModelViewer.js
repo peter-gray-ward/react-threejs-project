@@ -194,17 +194,6 @@ function ModelViewer(props) {
 
 
 
-        
-
-        const extended = (rot) => rot > 0.9;
-        const rightLeg = scene.getObjectByName('mixamorigRightLeg');
-        const leftLeg = scene.getObjectByName('mixamorigLeftLeg');
-	const isJumping = props.state.model.jump || props.state.model.jumping;
-
-        if (!isJumping && (extended(rightLeg.rotation.x) || extended(leftLeg.rotation.x))) {
-            props.walkingInGrassAudio.volume =  randomInRange(0.1, 0.2)
-            props.walkingInGrassAudio.play()
-        }
 
 
         // document.getElementById('stats').innerHTML = now - animationTimers.walk + ' vs ' + animationTimers.walk
@@ -372,6 +361,8 @@ function ModelViewer(props) {
                 
         }
 
+        var onGround = true;
+
         if (props.state.model.jump && !props.state.model.jumping) {
             velocity += SPEED.JUMP;
             props.state.model.scene.position.y += SPEED.JUMP;
@@ -379,6 +370,7 @@ function ModelViewer(props) {
                 ...props.state.model,
                 jumping: true 
             }});
+            onGround = false
         }
 
 
@@ -388,6 +380,7 @@ function ModelViewer(props) {
             
             if (aboveTheFloor) {
                 velocity -= SPEED.GRAVITY;
+                onGround = false
             } else {
                 props.state.model.scene.position.copy(props.state.model.floor);
                 // if (props.state.animations.contains("jump")) {
@@ -397,6 +390,23 @@ function ModelViewer(props) {
             }
         }
 
+
+        if (onGround) {
+            const extended = (rot) => rot > 0.9;
+            const rightLeg = scene.getObjectByName('mixamorigRightLeg');
+            const leftLeg = scene.getObjectByName('mixamorigLeftLeg');
+            const isJumping = props.state.model.jump || props.state.model.jumping;
+
+            if (!isJumping && (extended(rightLeg.rotation.x) || extended(leftLeg.rotation.x))) {
+                props.walkingInGrassAudio.volume = 0.33
+                props.walkingInGrassAudio.play()
+                console.log(props.state.model.jumping, 'playing')
+            }
+        }
+
+        
+
+       
         
 
 

@@ -50,6 +50,8 @@ import {
   interpolateNoise
 } from '../util';
 
+import BackgroundHills from './BackgroundHills'
+
 // The Dandilion Curvature
 let _a = 3.5;
 const ra = randomInRange(_a * -0.05, _a * 0.05)
@@ -120,20 +122,12 @@ function Planet(props) {
   const bladesOfGrassRef = useRef();
   const normalSphereRef = useRef();
   const triangles = useMemo(() => ([]), []);
-  const leafColors = useMemo(() => ([
-    new Color(0xB7D7A8), // Bright Sage
-    new Color(0xA8C66C), // Soft Pickle
-    new Color(0x00D36D), // Brighter Emerald
-    new Color(0x6E8B3D)  // Mossy but still light
-  ]), []);
-
 
   let grass2 = useLoader(FBXLoader, '/grass2.fbx')
   let [grass2Position, setGrass2Position] = useState([]);
   let grass3 = useLoader(FBXLoader, '/grass2.fbx')
   let grass1 = useLoader(FBXLoader, '/grass1.fbx')
   let statue = useLoader(FBXLoader, '/Thai_Female_Sandstone_V2.2.fbx')
-
 
   var statuecount = 0
 
@@ -319,7 +313,7 @@ function Planet(props) {
             runcount++
             var pos;
             var green = false
-            var clusterCount = Math.random() < 0.33 ? randomInRange(50, 150) : Math.floor(randomInRange(30, 50))//smallGrass ? Math.floor(randomInRange(80, 10)) : 1
+            var clusterCount = Math.random() < 0.33 ? randomInRange(100, 190) : Math.floor(randomInRange(100, 130))//smallGrass ? Math.floor(randomInRange(80, 10)) : 1
             if (Math.random() < 0.25) {
               clusterCount = randomInRange(10, 50)
               green = true
@@ -333,7 +327,7 @@ function Planet(props) {
                 
                 pos = randomPointOnTriangle(t.a, t.b, t.c)
 
-                let s = !green ? randomInRange(0.01, 0.03) : 0.02//randomInRange(0.01, 0.03)
+                let s = !green ? randomInRange(0.01, randomInRange(0.02, 0.05)) : 0.02//randomInRange(0.01, 0.03)
 
                 // if (Math.random() < 0.01) {
                 //   s = randomInRange(0.05, 0.06)
@@ -355,7 +349,7 @@ function Planet(props) {
                 grassInstances.push({
                   dummy,
                   instanceIndex: grassInstanceIndex,
-                  color: (green || Math.random() < 0.99 ? new Color('#66c204') : cl)
+                  color: Math.random() < 0.05 ? cl : (Math.random() < 0.5 ? new Color('#66c204') : new Color('#26c201'))
                 })
 
                 grassInstanceIndex++;
@@ -395,6 +389,8 @@ function Planet(props) {
             var paints = 0;
             for (let i = 0; i < tree.children[0].geometry.groups[1].count; i++) {
               let index = (tree.children[0].geometry.groups[1].start + i) * 3;
+
+              
               
               tree.children[0].geometry.attributes.color.array[index] = (yellow && paints < 2) ? 1 : 0;     // Red
               tree.children[0].geometry.attributes.color.array[index + 1] = (yellow && paints < 2) ? 1 : 1; // Green
