@@ -20,6 +20,7 @@ import {
 import CanvasContainer from './components/CanvasContainer';
 import './styles/App.css';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { SPEED, MASS, cameraRadius, props } from './models/constants';
 import Planet from './components/Planet';
 import { 
@@ -638,6 +639,15 @@ function App() {
 
   const [ state, dispatch ] = useReducer(sceneReducer, props);
   const model = useLoader(GLTFLoader, '/Xbot.glb');
+  const modelFlyingAnimationSource = useLoader(FBXLoader, '/flying.fbx');
+
+  useEffect(() => {
+    // debugger
+    if (false && model.animations.length < 8) {
+      model.animations = model.animations.concat(modelFlyingAnimationSource.animations)
+    }
+  }, [])
+
   const [appKeys, setAppKeys] = useState();
   const [firstPerson, setFirstPerson] = useState();
   const [start, setStart] = useState(false);

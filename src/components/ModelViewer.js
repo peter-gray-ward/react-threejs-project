@@ -133,6 +133,7 @@ function ModelViewer(props) {
         switch (which) {
             case 'run':
                 animationIndex = 3;
+                speedFactor = 0.8
                 break;
             case 'walk':
                 animationIndex = 6;
@@ -146,8 +147,8 @@ function ModelViewer(props) {
                 speedFactor = 0.00;
                 break;
             case 'jump':
-                animationIndex = 5;
-                speedFactor = 0.2;
+                animationIndex = 6;
+                speedFactor = 2;
                 break;
             default:
                 return null;
@@ -166,7 +167,6 @@ function ModelViewer(props) {
         var playWalkSound = false;
 
         animations.forEach((action) => {
-            const actionLengthMs = 300
             if (props.state.model[action] && !actionAnimations[action]) {
                 for (var animation in actionAnimations) {
                     actionAnimations[animation].stop();
@@ -392,21 +392,29 @@ function ModelViewer(props) {
 
 
         if (onGround) {
-            const extended = (rot) => rot > 0.9;
+            const extended = (rot) => rot > 1;
             const rightLeg = scene.getObjectByName('mixamorigRightLeg');
             const leftLeg = scene.getObjectByName('mixamorigLeftLeg');
             const isJumping = props.state.model.jump || props.state.model.jumping;
 
+            // document.getElementById('stats').innerHTML = `${rightLeg.rotation.x.toFixed(1)} ${leftLeg.rotation.x.toFixed(1)}`
+
             if (!isJumping && (extended(rightLeg.rotation.x) || extended(leftLeg.rotation.x))) {
                 props.walkingInGrassAudio.volume = 0.33
                 props.walkingInGrassAudio.play()
-                console.log(props.state.model.jumping, 'playing')
             }
+        } else {
+            props.state.model.walk = false
         }
 
         
 
-       
+        var childCount = 0;
+        for (let child of scene.children) {
+            if (!['grass','cloud','star'].includes(child.name)) {
+                childCount++
+            }
+        }
         
 
 

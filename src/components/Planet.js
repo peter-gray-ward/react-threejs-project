@@ -40,7 +40,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import * as perlinNoise from 'perlin-noise';
 import {
-  filterSteepGeometry,
+  generateTerrainInstance,
   computeSteepness,
   randomInRange,
   randomPointOnTriangle,
@@ -68,8 +68,8 @@ function Planet(props) {
   const aa = _a;
   var i = new Date().getTime();
   var fiber = useThree();
-  // const sword = useLoader(OBJLoader, '/sword.obj');
-  // const swordRef = useRef();
+
+  const surfaceRef = useRef();
 
   const twopi = Math.PI * 2;
   const halfpi = Math.PI / 2;
@@ -128,128 +128,20 @@ function Planet(props) {
   let grass3 = useLoader(FBXLoader, '/grass2.fbx')
   let grass1 = useLoader(FBXLoader, '/grass1.fbx')
   let statue = useLoader(FBXLoader, '/Thai_Female_Sandstone_V2.2.fbx')
-
+  let grassUserPosRef = useRef(props.state.model.scene.position.clone());
   var statuecount = 0
 
-  useEffect(() => {
+  const makeGrass = useCallback(() => {
+    if (!surfaceRef.current) return
     const rows = 30;
     const cols = 30;
     const zeds = 30;
-
-    const amplitude = 70;
-    const halfAmplitude = amplitude / 2;
-
-
-    const geometry = new PlaneGeometry(350, 350, rows, cols);
-    geometry.vertexColors = true;
-
-
-    for (var x = 0; x < geometry.attributes.position.array.length; x += 3) {
-      var y = geometry.attributes.position.array[x + 1];
-      geometry.attributes.position.array[x + 1] = geometry.attributes.position.array[x + 2];
-      geometry.attributes.position.array[x + 2] = y;
-    }
-
-    geometry.attributes.position.needsUpdate = true;
-
-    const positions = geometry.attributes.position.array;
-        
-    surfaceRef.current.geometry = geometry;
-    grassesRef.current.geometry = geometry;
-
-    const TOCENTER = props.state.model.scene.position.clone().normalize();
-    const noise = perlinNoise.generatePerlinNoise(rows, cols, {
-      persistence: .005,
-      amplitude
-    });
-
-    const indices = [];
-
-    var grassesColors = []
-    var cliffColors = [];
-    var dandilionColors = [];
-    const cliffUvs = [];
-    const grassUvs = [];
-    var foundHobbitHole = false;
-    var dandelionIndex = 0;
-    var normalSphereIndex = 0;
-    var bladeIndex = 0;
-    var grassesIj = {}
-
-    var currentNoiseOffset = 0;
-    for (let x = 0; x < positions.length; x += 3) {
-      const xIndex = Math.floor((x / 3) % rows);
-      const zIndex = Math.floor((x / 3) / cols) + 2;
-      const noiseValue = noise[zIndex * cols + xIndex] * amplitude;
-      let noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
-
-      if ((noiseOffset !== 0 && !noiseOffset) || Number.isNaN(noiseOffset)) {
-        noiseOffset = currentNoiseOffset
-      } else {
-        currentNoiseOffset = noiseOffset
-      }
-
-      positions[x] = positions[x];
-      positions[x + 1] = positions[x + 1] + noiseOffset;
-      positions[x + 2] = positions[x + 2];
-
-      const topLeft = zIndex * (cols + 1) + xIndex;
-      const topRight = topLeft + 1;
-      const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
-      const bottomRight = bottomLeft + 1;
-
-      // Create two triangles for the quad
-      indices.push(topLeft, bottomLeft, topRight); // Triangle 1
-      indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
-    }
-
-
-
-        
-
-    var TerrainInstance = filterSteepGeometry(geometry, .65, 'gray');
-    var TheNormalSphere = new Object3D();
-    
-    props.state.model.scene.position.set(
-      TerrainInstance.otherGeometry.attributes.position.array[105],
-      TerrainInstance.otherGeometry.attributes.position.array[106] + props.state.planet.radius + 10,
-      TerrainInstance.otherGeometry.attributes.position.array[107]
-    );
-
-    for (var x = 0; x < TerrainInstance.steepGeometry.attributes.normal.array.length; x += 3) {
-      const normalX = TerrainInstance.steepGeometry.attributes.normal.array[x];
-      const normalY = TerrainInstance.steepGeometry.attributes.normal.array[x + 1];
-      const normalZ = TerrainInstance.steepGeometry.attributes.normal.array[x + 2];
-    }
-
-
-    cliffsRef.current.geometry = TerrainInstance.steepGeometry;
-    cliffsRef.current.geometry.computeBoundingBox();
-
-    
-    for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
-      cliffColors.push(141 / 255, 148 / 255, 144 / 255);
-      cliffUvs.push(
-        (cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
-        (cliffsRef.current.geometry.attributes.position.array[x + 2] - cliffsRef.current.geometry.boundingBox.min.z) / cliffsRef.current.geometry.boundingBox.max.z
-      );
-    }
-
-
-    cliffsRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(cliffUvs, 2));
-    cliffsRef.current.material.map = cliffTexture
-    cliffsRef.current.geometry.attributes.position.needsUpdate = true
-
-    grassesRef.current.geometry = TerrainInstance.otherGeometry;
-
-
     var dists = new Set()
     var growing = false
     var grown = 0
     let grassInstances = []
     let grassInstanceIndex = 0;
     var shadesOfGrass = ['#a5b53e','#bdca51','#899b29','#788d1c','#88981a','#b4c454','#b4cc4e']
-
     for (var i = 0; i < rows; i++) {
       var onrun = false
       var runcount = 0
@@ -258,12 +150,7 @@ function Planet(props) {
         let b = (i + 1) + j * (rows + 1);
         let c = (i + 1) + (j + 1) * (rows + 1);
         let d = i + (j + 1) * (rows + 1);
-        
-
-        const TheDandilion = new Object3D();
-        const TheDandelionBall = new Object3D();
-        const TheBlade = new Object3D();
-        
+                
         const ta = new Vector3(
           surfaceRef.current.geometry.attributes.position.array[a * 3],
           surfaceRef.current.geometry.attributes.position.array[a * 3 + 1] + props.state.planet.radius,
@@ -287,7 +174,6 @@ function Planet(props) {
         )
 
             
-
         let triangle = new Triangle(
             ta, tb, tc
         );
@@ -303,7 +189,7 @@ function Planet(props) {
 
         if (sa < 0.75 || sb < 0.75) continue
 
-        var inSOI = true
+        var inSOI = tb.distanceTo(props.state.model.scene.position) < 350
         if (inSOI) {
           if (true) {
             if (!onrun) {
@@ -313,7 +199,7 @@ function Planet(props) {
             runcount++
             var pos;
             var green = false
-            var clusterCount = Math.random() < 0.33 ? randomInRange(100, 190) : Math.floor(randomInRange(100, 130))//smallGrass ? Math.floor(randomInRange(80, 10)) : 1
+            var clusterCount = Math.random() < 0.33 ? randomInRange(100, 200) : Math.floor(randomInRange(100, 150))//smallGrass ? Math.floor(randomInRange(80, 10)) : 1
             if (Math.random() < 0.25) {
               clusterCount = randomInRange(10, 50)
               green = true
@@ -349,7 +235,7 @@ function Planet(props) {
                 grassInstances.push({
                   dummy,
                   instanceIndex: grassInstanceIndex,
-                  color: Math.random() < 0.05 ? cl : (Math.random() < 0.5 ? new Color('#66c204') : new Color('#26c201'))
+                  color: Math.random() < 0.5 ? new Color('#90b529') : (Math.random() < 0.9 ? new Color('#74ac1e') : new Color('#729b18'))
                 })
 
                 grassInstanceIndex++;
@@ -448,27 +334,132 @@ function Planet(props) {
       grassesInstanceMesh.setColorAt(grassInstance.instanceIndex, grassInstance.color);
     }
 
+    grassesInstanceMesh.name = 'grass'
     fiber.scene.add(grassesInstanceMesh);
+  }, [surfaceRef, props.state.model.scene.position])
+
+  useEffect(() => {
+    const rows = 30;
+    const cols = 30;
+    const zeds = 30;
+
+    const amplitude = 70;
+    const halfAmplitude = amplitude / 2;
+
+
+    const geometry = new PlaneGeometry(350, 350, rows, cols);
+    geometry.vertexColors = true;
+
+
+    for (var x = 0; x < geometry.attributes.position.array.length; x += 3) {
+      var y = geometry.attributes.position.array[x + 1];
+      geometry.attributes.position.array[x + 1] = geometry.attributes.position.array[x + 2];
+      geometry.attributes.position.array[x + 2] = y;
+    }
+
+    geometry.attributes.position.needsUpdate = true;
+
+    const positions = geometry.attributes.position.array;
+        
+    surfaceRef.current.geometry = geometry;
+    grassesRef.current.geometry = geometry;
+
+    const TOCENTER = props.state.model.scene.position.clone().normalize();
+    const noise = perlinNoise.generatePerlinNoise(
+      rows, 
+      cols, 
+      {
+        persistence: .005,
+        amplitude
+      }
+    );
+
+    const indices = [];
+
+    var grassesColors = []
+    var cliffColors = [];
+    var dandilionColors = [];
+    const cliffUvs = [];
+    const grassUvs = [];
+    var foundHobbitHole = false;
+    var dandelionIndex = 0;
+    var normalSphereIndex = 0;
+    var bladeIndex = 0;
+    var grassesIj = {}
+
+    var currentNoiseOffset = 0;
+    for (let x = 0; x < positions.length; x += 3) {
+      const xIndex = Math.floor((x / 3) % rows);
+      const zIndex = Math.floor((x / 3) / cols) + 2;
+      const noiseValue = noise[zIndex * cols + xIndex] * amplitude;
+      let noiseOffset = noiseValue > halfAmplitude ? noiseValue - halfAmplitude : -(halfAmplitude - noiseValue);
+
+      if ((noiseOffset !== 0 && !noiseOffset) || Number.isNaN(noiseOffset)) {
+        noiseOffset = currentNoiseOffset
+      } else {
+        currentNoiseOffset = noiseOffset
+      }
+
+      positions[x] = positions[x];
+      positions[x + 1] = positions[x + 1] + noiseOffset;
+      positions[x + 2] = positions[x + 2];
+
+      const topLeft = zIndex * (cols + 1) + xIndex;
+      const topRight = topLeft + 1;
+      const bottomLeft = (zIndex + 1) * (cols + 1) + xIndex;
+      const bottomRight = bottomLeft + 1;
+
+      // Create two triangles for the quad
+      indices.push(topLeft, bottomLeft, topRight); // Triangle 1
+      indices.push(topRight, bottomLeft, bottomRight); // Triangle 2
+    }
+     
+
+    var TerrainInstance = generateTerrainInstance(geometry, .65, 'gray');
+    var TheNormalSphere = new Object3D();
+    
+    props.state.model.scene.position.set(
+      TerrainInstance.otherGeometry.attributes.position.array[105],
+      TerrainInstance.otherGeometry.attributes.position.array[106] + props.state.planet.radius + 10,
+      TerrainInstance.otherGeometry.attributes.position.array[107]
+    );
+
+    for (var x = 0; x < TerrainInstance.steepGeometry.attributes.normal.array.length; x += 3) {
+      const normalX = TerrainInstance.steepGeometry.attributes.normal.array[x];
+      const normalY = TerrainInstance.steepGeometry.attributes.normal.array[x + 1];
+      const normalZ = TerrainInstance.steepGeometry.attributes.normal.array[x + 2];
+    }
+
+
+    cliffsRef.current.geometry = TerrainInstance.steepGeometry;
+    cliffsRef.current.geometry.computeBoundingBox();
+
+    
+    for (var x = 0; x < cliffsRef.current.geometry.attributes.position.array.length; x += 3) {
+      cliffColors.push(141 / 255, 148 / 255, 144 / 255);
+      cliffUvs.push(
+        (cliffsRef.current.geometry.attributes.position.array[x] - cliffsRef.current.geometry.boundingBox.min.x) / cliffsRef.current.geometry.boundingBox.max.x,
+        (cliffsRef.current.geometry.attributes.position.array[x + 2] - cliffsRef.current.geometry.boundingBox.min.z) / cliffsRef.current.geometry.boundingBox.max.z
+      );
+    }
+
+
+    cliffsRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(cliffUvs, 2));
+    cliffsRef.current.material.map = cliffTexture
+    cliffsRef.current.geometry.attributes.position.needsUpdate = true
+
+    grassesRef.current.geometry = TerrainInstance.otherGeometry;
+
+
+    
+
+    makeGrass()
+
+    
 
     grassesRef.current.geometry.computeBoundingBox();
     grassesRef.current.geometry.computeBoundingSphere();
     grassesRef.current.geometry.computeVertexNormals();
-    // console.log(grassesRef)
-    // grassesRef.current.geometry.setAttribute('uv', new Float32BufferAttribute(generatedUVs, 2));
-
-
-        // for (var x = 0; x < grassesRef.current.geometry.attributes.position.array.length; x += 3) {
-
-        //  const r = randomInRange(3, 7) / 255
-        //  const g = randomInRange(210, 252) / 255
-        //  const b = randomInRange(29, 10) / 255
-
-        //  grassesColors.push(r, g, b);
-        // }
-
-        // grassesRef.current.geometry.setAttribute('color', new Float32BufferAttribute(grassesColors, 3));
-        // grassesRef.current.geometry.needsUpdate = true;
-
 
     const oceanGeometry = new SphereGeometry(props.state.planet.radius, 11, 100);
     const planetOceanPositions = oceanGeometry.attributes.position.array;
@@ -494,13 +485,11 @@ function Planet(props) {
 
   }, []);
   
-
-
+  
 
   const planetCenter = useMemo(() => new Vector3(0, 0, 0), []);
   const seaLevel = useMemo(() => new Vector3(0, props.state.planet.radius, 0), []);
   const sphereColor = useMemo(() => 'white', []);
-  const surfaceRef = useRef();
   const [lakeNodes, setLakeNodes] = useState([]);
   const waterNormalsTexture = useMemo(() => new TextureLoader().load("/waternormals.jpg"), [])
   const [addedWaterTexture, setAddedWaterTexture] = useState(false);

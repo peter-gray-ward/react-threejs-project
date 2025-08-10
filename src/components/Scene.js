@@ -310,25 +310,25 @@ function Scene(props) {
 			<Planet {...props} />
 
 			{/*{ props.state.model.dial }*/}
-			<group ref={starGroupRef} position={[...props.state.model.scene.position]}>
+			<group name="star" ref={starGroupRef} position={[...props.state.model.scene.position]}>
 				{
 
 					starsGeometries.map((starGeometryOfCategory, i) => {
 		
-						return <points key={i} args={[starGeometryOfCategory, starsMaterials[i]]}/>
+						return <points name="star" key={i} args={[starGeometryOfCategory, starsMaterials[i]]}/>
 					}) 
 				}
 			</group>
 
 			{
 				props.state.sunTheta < Math.PI ? 
-				<instancedMesh ref={cloudsRef} args={[null, null, 3000]} castShadow={false} receiveShadow={true}>
+				<instancedMesh name="cloud" ref={cloudsRef} args={[null, null, 3000]} castShadow={false} receiveShadow={true}>
 						<sphereGeometry args={[1.2, 9, 9]} />
 		      			<meshBasicMaterial 
 		      				color="white" />
 
 				</instancedMesh> :
-				<instancedMesh ref={cloudsRef} args={[null, null, 3000]} castShadow={false} receiveShadow={true}>
+				<instancedMesh name="cloud" ref={cloudsRef} args={[null, null, 3000]} castShadow={false} receiveShadow={true}>
 					<sphereGeometry args={[1.2, 9, 9]} />
 	      			<meshStandardMaterial color="white" transparent opacity={0.8} />
 				</instancedMesh>

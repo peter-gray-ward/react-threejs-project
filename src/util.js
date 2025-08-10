@@ -100,7 +100,7 @@ export const computeSteepness = (a, b, c) => {
 };
 
 
-export const filterSteepGeometry = (geometry, steepnessThreshold) => {
+export const generateTerrainInstance = (geometry, steepnessThreshold) => {
   const upDirection = new Vector3(0, 1, 0);
   const positions = geometry.attributes.position.array; // Vertex positions
   const indices = geometry.index.array; // Indices (triangles)
@@ -178,7 +178,6 @@ export const filterSteepGeometry = (geometry, steepnessThreshold) => {
 
   const steepUVs = generateUVsFromXZ(steepPositions);
   const otherUVs = generateUVsFromXZ(otherPositions);
-
 
   // Create a new geometry
   const steepGeometry = new BufferGeometry();
