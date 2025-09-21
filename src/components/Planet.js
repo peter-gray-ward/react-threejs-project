@@ -200,7 +200,7 @@ function Planet(props) {
             var pos;
             var green = false
             var clusterCount = Math.random() < 0.33 ? randomInRange(100, 200) : Math.floor(randomInRange(100, 150))//smallGrass ? Math.floor(randomInRange(80, 10)) : 1
-            if (Math.random() < 0.25) {
+            if (Math.random() < 0.15) {
               clusterCount = randomInRange(10, 50)
               green = true
             }
